@@ -13,14 +13,20 @@ const props = withDefaults(
     sizes?: string
     /** El hero no debe cargar en lazy. */
     priority?: boolean
+    /** 'face' para recortes redondos donde la cara manda. */
+    gravity?: 'auto' | 'face' | 'center'
   }>(),
-  { ratio: '3:4', sizes: '(min-width: 768px) 50vw, 100vw', priority: false },
+  { ratio: '3:4', sizes: '(min-width: 768px) 50vw, 100vw', priority: false, gravity: 'auto' },
 )
 
 const loaded = ref(false)
 
-const src = computed(() => cldImage(props.publicId, { width: 1080, ratio: props.ratio }))
-const srcset = computed(() => cldSrcset(props.publicId, { ratio: props.ratio }))
+const src = computed(() =>
+  cldImage(props.publicId, { width: 1080, ratio: props.ratio, gravity: props.gravity }),
+)
+const srcset = computed(() =>
+  cldSrcset(props.publicId, { ratio: props.ratio, gravity: props.gravity }),
+)
 const placeholder = computed(() => cldBlur(props.publicId))
 
 const aspect = computed(() => props.ratio.replace(':', ' / '))
