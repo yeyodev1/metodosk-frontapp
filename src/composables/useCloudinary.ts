@@ -16,12 +16,18 @@ export interface ImageOptions {
   crop?: 'fill' | 'fit' | 'scale'
   /** Gravedad del recorte. 'auto' detecta el sujeto. */
   gravity?: 'auto' | 'face' | 'center'
+  /**
+   * Desenfoque hecho por Cloudinary (1–2000). Se usa para las capas de fondo
+   * del parallax: el navegador no paga el `filter: blur()` en cada frame.
+   */
+  blur?: number
 }
 
 const DEFAULT_WIDTHS = [480, 768, 1080, 1440, 1920]
 
-function transform({ width, ratio, crop = 'fill', gravity = 'auto' }: ImageOptions): string {
+function transform({ width, ratio, crop = 'fill', gravity = 'auto', blur }: ImageOptions): string {
   const parts = ['f_auto', 'q_auto', 'dpr_auto']
+  if (blur) parts.push(`e_blur:${Math.round(blur)}`)
   if (width) parts.push(`w_${width}`)
   if (ratio) parts.push(`ar_${ratio.replace(':', ':')}`)
   if (width || ratio) {
