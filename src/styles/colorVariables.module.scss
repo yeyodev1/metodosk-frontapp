@@ -1,19 +1,44 @@
-// Brand colors - customize per project
-$primary: #2094D2;
-$primary-dark: #010D27;
-$primary-light: #fefefe;
-$secondary: #2BBB92;
+// Paleta Método SK — sacada de la sesión de fotos:
+// ciclorama gris cálido, luz suave, activewear rosa/malva/vino/crema.
+// Editorial y femenino, no "gym agresivo".
 
-$white: #fefefe;
-$text-light: #fefefe;
-$text-secondary: #6b7280;
+$bone: #f6f1ec; // fondo base, cálido
+$cream: #fffdfb; // superficies elevadas
+$sand: #ede3da; // bloques suaves
+$clay: #e4d3c9; // superficies con más presencia
 
-// Alert colors
-$alert-warning: #f59e0b;
-$alert-info: #3b82f6;
-$alert-success: #10b981;
-$alert-error: #ef4444;
-$alert-warning-bg: rgba($alert-warning, 0.1);
-$alert-info-bg: rgba($alert-info, 0.1);
-$alert-success-bg: rgba($alert-success, 0.1);
-$alert-error-bg: rgba($alert-error, 0.1);
+$ink: #191413; // texto principal, negro cálido
+$ink-soft: #4a403c; // texto secundario
+$ink-muted: #8c7f78; // texto terciario / labels
+
+$rose: #c4877f; // acento principal
+$rose-deep: #a5655d; // hover / estados activos
+$rose-soft: #f2ddd8; // fondos de acento
+$wine: #6d3b46; // profundidad, precio, badges
+$sage: #8c9a85; // acento secundario, discreto
+
+$overlay: rgba(#100c0b, 0.55);
+
+// Compatibilidad con el scaffold base
+$primary: $rose;
+$primary-dark: $ink;
+$primary-light: $bone;
+$secondary: $wine;
+$white: $cream;
+$text-light: $cream;
+$text-secondary: $ink-soft;
+
+// Alertas
+$alert-warning: #d9a441;
+$alert-info: #6a8caf;
+$alert-success: #6f9a6a;
+$alert-error: #c2554f;
+$alert-warning-bg: rgba($alert-warning, 0.12);
+$alert-info-bg: rgba($alert-info, 0.12);
+$alert-success-bg: rgba($alert-success, 0.12);
+$alert-error-bg: rgba($alert-error, 0.12);
+
+// Sombras — muy suaves, nada de "card de dashboard"
+$shadow-sm: 0 1px 2px rgba($ink, 0.04), 0 4px 12px rgba($ink, 0.04);
+$shadow-md: 0 2px 6px rgba($ink, 0.05), 0 18px 40px rgba($ink, 0.08);
+$shadow-lg: 0 30px 70px rgba($ink, 0.14);
