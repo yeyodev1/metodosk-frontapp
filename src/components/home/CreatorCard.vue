@@ -39,26 +39,34 @@ const image = photo(props.creator.photo)
   flex-direction: column;
   align-items: center;
   gap: 0.4rem;
-  padding: 1.6rem 1.5rem;
+  padding: clamp(1.8rem, 3vw, 2.4rem) 1.6rem;
   text-align: center;
-  border: 1px solid rgba($cream, 0.18);
+  border: 1px solid rgba($cream, 0.16);
   border-radius: $radius-lg;
-  background-color: rgba($cream, 0.05);
-  backdrop-filter: blur(12px);
+  // Vidrio sobre las fotos del parallax: deja ver el fondo sin perder lectura.
+  background: linear-gradient(rgba($cream, 0.11), rgba($cream, 0.04));
+  backdrop-filter: blur(16px) saturate(1.1);
+  box-shadow: $shadow-lg;
   transition:
     border-color 0.4s $ease,
+    box-shadow 0.4s $ease,
     transform 0.4s $ease;
 
   &:hover {
-    border-color: rgba($rose, 0.6);
-    transform: translateY(-4px);
+    border-color: rgba($rose, 0.65);
+    box-shadow:
+      $shadow-lg,
+      0 0 0 1px rgba($rose, 0.25);
+    transform: translateY(-6px);
   }
 }
 
 .creator__photo {
-  width: 116px;
+  width: clamp(120px, 16vw, 148px);
   border-radius: 50%;
-  margin-bottom: 0.6rem;
+  margin-bottom: 0.8rem;
+  border: 2px solid rgba($rose, 0.55);
+  box-shadow: 0 12px 34px rgba(#100c0b, 0.55);
 }
 
 .creator__body {
@@ -69,12 +77,15 @@ const image = photo(props.creator.photo)
 
 .creator__role {
   @include eyebrow;
+  align-self: center;
+  padding: 0.28rem 0.7rem;
+  border-radius: $radius-pill;
+  background-color: rgba($rose, 0.18);
   color: $rose-soft;
 }
 
 .creator__name {
-  font-family: $font-display;
-  font-size: $text-xl;
+  @include display($text-xl);
   color: $cream;
 }
 
