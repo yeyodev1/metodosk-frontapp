@@ -5,31 +5,35 @@ const routes: Array<RouteRecordRaw> = [
     path: '/',
     name: 'Home',
     component: () => import('../views/HomeView.vue'),
-    meta: { title: 'Home' },
+    meta: { title: 'Método SK — Reto de 3 meses' },
+  },
+  {
+    // URL de respuesta de PayPhone: llega con ?id= y ?clientTransactionId=
+    path: '/pago/resultado',
+    name: 'PaymentResult',
+    component: () => import('../views/PaymentResultView.vue'),
+    meta: { title: 'Resultado del pago — Método SK' },
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+    component: () => import('../views/NotFoundView.vue'),
+    meta: { title: 'Página no encontrada — Método SK' },
   },
 ]
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
-  scrollBehavior() {
-    return { left: 0, top: 0, behavior: 'smooth' }
+  scrollBehavior(to, _from, savedPosition) {
+    if (to.hash) return { el: to.hash, behavior: 'smooth' }
+    return savedPosition ?? { left: 0, top: 0 }
   },
 })
 
-router.beforeEach((to, _from, next) => {
-  const hasToken = !!localStorage.getItem('access_token')
-  const requiresAuth = to.matched.some((record) => record.meta?.requiresAuth)
-
-  if (requiresAuth && !hasToken) {
-    return next({ path: '/login', replace: true })
-  }
-
-  if (to.path === '/login' && hasToken) {
-    return next({ path: '/', replace: true })
-  }
-
-  next()
+router.afterEach((to) => {
+  const title = to.meta?.title
+  if (typeof title === 'string') document.title = title
 })
 
 export default router
