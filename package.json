@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "media:prepare": "node scripts/prepare-media.mjs",
+    "media:upload": "node scripts/upload-cloudinary.mjs"
   },
   "dependencies": {
     "axios": "^1.13.2",
