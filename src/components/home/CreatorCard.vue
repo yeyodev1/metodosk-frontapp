@@ -15,6 +15,7 @@ const image = photo(props.creator.photo)
       :public-id="image.id"
       :alt="`${creator.name}, ${creator.role.toLowerCase()} del Método SK`"
       ratio="1:1"
+      gravity="face"
       sizes="(min-width: 768px) 20vw, 40vw"
     />
 
