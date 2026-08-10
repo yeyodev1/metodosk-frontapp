@@ -30,6 +30,7 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
       <nav class="header__nav" aria-label="Secciones">
         <a href="#retos">Los retos</a>
         <a href="#incluye">Qué incluye</a>
+        <a href="#nutricion">Nutrición</a>
         <a href="#precio">Precio</a>
         <a href="#faq">Preguntas</a>
       </nav>
