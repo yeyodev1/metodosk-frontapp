@@ -148,6 +148,65 @@ export const INCLUDES = {
   ],
 }
 
+/**
+ * La parte de nutrición del método — la arma Karen López.
+ * Se muestra en su propia sección para que quede claro qué entra por este lado.
+ */
+export const NUTRITION = {
+  eyebrow: 'La nutrición del método · Karen López',
+  title: '3 meses para cambiar tu forma de comer.',
+  intro:
+    'Un programa 100% online que te acompaña durante las 12 semanas con una metodología práctica, estructurada y enfocada en resultados.',
+  goals: {
+    title: 'Elige el objetivo que más se adapta a ti',
+    items: [
+      {
+        tag: 'Objetivo 01',
+        name: 'Pérdida de grasa',
+        text: 'Un plan diseñado para favorecer la pérdida de grasa y peso, manteniendo una alimentación equilibrada y suficiente.',
+      },
+      {
+        tag: 'Objetivo 02',
+        name: 'Ganancia de masa muscular',
+        text: 'Un plan enfocado en aumentar masa muscular y acompañar tu entrenamiento con una alimentación adecuada para crecer.',
+      },
+    ],
+  },
+  includes: {
+    title: 'Qué incluye la nutrición',
+    items: [
+      {
+        title: 'Planes de alimentación los 3 meses',
+        text: 'Con porciones establecidas y opciones prácticas para cada comida del día.',
+      },
+      {
+        title: 'Fotos de productos de tu ciudad',
+        text: 'Fotografías de productos disponibles según tu país y ciudad, para facilitar tus compras y elecciones.',
+      },
+      {
+        title: 'Recomendaciones de suplementación',
+        text: 'Según el objetivo que elijas dentro del programa. Nada genérico.',
+      },
+      {
+        title: '3 masterclasses nutricionales',
+        text: 'Una cada mes, con herramientas prácticas para manejar tu alimentación en la vida real.',
+      },
+      {
+        title: 'Videos educativos',
+        text: 'Consejos y estrategias para ayudarte a mantener la constancia durante todo el proceso.',
+      },
+      {
+        title: 'Grupo privado de Telegram',
+        text: 'Una comunidad de apoyo, motivación y acompañamiento durante las 12 semanas.',
+      },
+    ],
+  },
+  closing: {
+    title: 'No se trata solo de seguir un plan.',
+    text: 'Se trata de aprender a tomar mejores decisiones, entender tu alimentación y desarrollar herramientas que puedas seguir usando incluso después de terminar el reto.',
+  },
+}
+
 export const TIMELINE = {
   eyebrow: 'Cómo funciona',
   title: 'Tres meses, tres etapas',
@@ -216,9 +275,11 @@ export const PRICING = {
     'Plan de entrenamiento de 3 meses (casa y gimnasio)',
     'Movilidad y calentamiento en cada sesión',
     'Tres niveles: principiante, intermedio y avanzado',
-    'Plan de nutrición de 3 meses según tu reto',
+    'Plan de nutrición de 3 meses según tu objetivo',
+    '3 masterclasses nutricionales, una por mes',
+    'Videos educativos y recomendaciones de suplementación',
     'Guía del Método SK para registrar tu avance',
-    'Acceso a la comunidad del reto',
+    'Grupo privado de Telegram durante las 12 semanas',
   ],
   guarantees: ['Pago seguro con PayPhone', 'Visa · Mastercard · Diners · Discover'],
 }
