@@ -1,9 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+// Solo variables. Las fuentes se cargan con <link> en index.html y las
+// custom properties viven en global.scss: este archivo se inyecta en cada SFC
+// vía vite.config.ts, así que no debe emitir CSS o se duplicaría por componente.
 
-:root {
-  --font-montserrat: 'Montserrat', sans-serif;
-  --font-inter: 'Inter', sans-serif;
-}
-
-$font-principal: 'Montserrat', sans-serif;
-$font-secondary: 'Inter', sans-serif;
+// Display serif para titulares, Montserrat para todo lo demás.
+$font-display: 'Fraunces', 'Georgia', serif;
+$font-principal: 'Montserrat', system-ui, sans-serif;
+$font-secondary: 'Montserrat', system-ui, sans-serif;
