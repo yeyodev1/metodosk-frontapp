@@ -18,12 +18,12 @@ export const PHOTO = {
   promise: withAlt('sk-13', 'Scarlet Córdova, entrenadora del Método SK'),
   /** Reto SK Recomposición. */
   recomposicion: withAlt('sk-07', 'Abdomen definido tras el reto de recomposición'),
-  /** Reto SK Volumen. */
-  volumen: withAlt('sk-09', 'Entrenamiento de fuerza con mancuernas'),
+  /** Reto SK Volumen — el superávit se construye en la cocina, no solo entrenando. */
+  volumen: withAlt('sk-06', 'Karen López con un batido del plan de volumen'),
   /** Bloque de entrenamiento. */
   training: withAlt('sk-08', 'Sentadilla con mancuerna durante la rutina'),
   /** Bloque de nutrición. */
-  nutrition: withAlt('sk-06', 'Karen López con un batido del plan de nutrición'),
+  nutrition: withAlt('sk-05', 'Karen López, nutricionista del Método SK'),
   /** Guía impresa del Método SK. */
   guide: withAlt('sk-03', 'Scarlet Córdova y Karen López con la guía impresa del Método SK'),
   /** Cierre / último CTA. */
