@@ -31,7 +31,7 @@ export const CREATORS: Creator[] = [
     text: 'Arma el plan de comidas, las porciones y los intercambios de los 3 meses.',
     instagram: 'https://www.instagram.com/nutricionistakarenlopez',
     handle: '@nutricionistakarenlopez',
-    photo: 'sk-06',
+    photo: 'sk-05',
   },
 ]
 
