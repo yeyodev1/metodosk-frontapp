@@ -1,33 +1,33 @@
 <script setup lang="ts">
+import AppFooter from '@/layout/AppFooter.vue'
+import AppHeader from '@/layout/AppHeader.vue'
+import ChallengesSection from '@/components/home/ChallengesSection.vue'
+import FaqSection from '@/components/home/FaqSection.vue'
+import FinalCtaSection from '@/components/home/FinalCtaSection.vue'
+import ForWhoSection from '@/components/home/ForWhoSection.vue'
+import CommunitySection from '@/components/home/CommunitySection.vue'
+import HeroSection from '@/components/home/HeroSection.vue'
+import IncludesSection from '@/components/home/IncludesSection.vue'
+import PricingSection from '@/components/home/PricingSection.vue'
+import PromiseSection from '@/components/home/PromiseSection.vue'
+import TimelineSection from '@/components/home/TimelineSection.vue'
 </script>
 
 <template>
-  <div class="home-view">
-    <h1>Este es el HomeView de Yeyo</h1>
-    <p>metodosk-frontapp listo para trabajar</p>
-  </div>
+  <AppHeader />
+
+  <main>
+    <HeroSection />
+    <PromiseSection />
+    <ChallengesSection />
+    <IncludesSection />
+    <TimelineSection />
+    <ForWhoSection />
+    <CommunitySection />
+    <PricingSection />
+    <FaqSection />
+    <FinalCtaSection />
+  </main>
+
+  <AppFooter />
 </template>
-
-<style lang="scss" scoped>
-.home-view {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  gap: 1rem;
-
-  h1 {
-    font-family: $font-principal;
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: $primary;
-  }
-
-  p {
-    font-family: $font-principal;
-    font-size: 1.2rem;
-    color: $text-secondary;
-  }
-}
-</style>
