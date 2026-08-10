@@ -8,6 +8,7 @@ import ForWhoSection from '@/components/home/ForWhoSection.vue'
 import CommunitySection from '@/components/home/CommunitySection.vue'
 import HeroSection from '@/components/home/HeroSection.vue'
 import IncludesSection from '@/components/home/IncludesSection.vue'
+import NutritionSection from '@/components/home/NutritionSection.vue'
 import PricingSection from '@/components/home/PricingSection.vue'
 import PromiseSection from '@/components/home/PromiseSection.vue'
 import TimelineSection from '@/components/home/TimelineSection.vue'
@@ -21,6 +22,7 @@ import TimelineSection from '@/components/home/TimelineSection.vue'
     <PromiseSection />
     <ChallengesSection />
     <IncludesSection />
+    <NutritionSection />
     <TimelineSection />
     <ForWhoSection />
     <CommunitySection />
