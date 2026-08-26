@@ -35,14 +35,14 @@ const routes: Array<RouteRecordRaw> = [
     meta: { title: 'Crear contraseña — Método SK', guestOnly: true },
   },
   {
-    // Todo lo privado comparte el marco con barra lateral.
+    // La app de la alumna: barra arriba y contenido a pantalla completa.
     path: '/',
-    component: () => import('../layout/PanelLayout.vue'),
+    component: () => import('../layout/AppLayout.vue'),
     meta: { requiresAuth: true },
     children: [
       {
-        // La academia: lo que recibe la alumna. La administración entra a la
-        // misma pantalla en modo vista previa, no a una versión aparte.
+        // Lo que recibe la alumna. La administración entra a esta misma
+        // pantalla en vista previa, no a una versión aparte.
         path: 'academia',
         name: 'Academy',
         component: () => import('../views/member/AcademyView.vue'),
@@ -54,6 +54,14 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('../views/member/MyAccountView.vue'),
         meta: { title: 'Mi cuenta — Método SK', requiresAuth: true },
       },
+    ],
+  },
+  {
+    // El panel es su propio producto, con su propio marco.
+    path: '/',
+    component: () => import('../layout/AdminLayout.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true },
+    children: [
       {
         path: 'admin',
         name: 'AdminOrders',
