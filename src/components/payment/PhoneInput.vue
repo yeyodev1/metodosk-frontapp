@@ -83,6 +83,10 @@ function onCountryChange(event: Event) {
 </template>
 
 <style lang="scss" scoped>
+/* Los estilos de .field input viven scoped en CheckoutForm, así que no llegan
+   hasta acá: se replican para que el campo se vea igual que los demás. */
+$field-border: 1px solid rgba($ink, 0.16);
+
 .phone {
   display: flex;
   align-items: stretch;
@@ -93,37 +97,47 @@ function onCountryChange(event: Event) {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0 0.7rem;
+  gap: 0.4rem;
+  flex: 0 0 auto;
+  padding: 0.85rem 0.85rem;
+  border: $field-border;
   border-radius: $radius-sm;
-  background-color: rgba($ink, 0.05);
-  border: 1px solid transparent;
-  transition: border-color 0.25s $ease, background-color 0.25s $ease;
+  background-color: $bone;
+  cursor: pointer;
+  transition:
+    border-color 0.3s $ease,
+    background-color 0.3s $ease;
+
+  &:hover {
+    background-color: $cream;
+  }
 
   &:focus-within {
-    border-color: $ink;
-    background-color: rgba($ink, 0.07);
+    border-color: $rose-deep;
+    background-color: $cream;
   }
 }
 
 .phone__flag {
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   line-height: 1;
 }
 
 .phone__dial {
-  font-size: $text-sm;
+  font-size: $text-base;
   color: $ink;
   white-space: nowrap;
+  line-height: 1;
 }
 
 .phone__caret {
-  font-size: 0.7rem;
-  color: rgba($ink, 0.5);
+  font-size: 0.65rem;
+  line-height: 1;
+  color: rgba($ink, 0.45);
 }
 
-/* El select real va encima, invisible: así el desplegable es el nativo
-   del sistema y funciona bien en móvil. */
+/* El select real va encima, invisible: así el desplegable es el nativo del
+   sistema, que en móvil se comporta mucho mejor que uno hecho a mano. */
 .phone__select {
   position: absolute;
   inset: 0;
@@ -132,14 +146,38 @@ function onCountryChange(event: Event) {
   opacity: 0;
   cursor: pointer;
   appearance: none;
+  border: none;
 }
 
 .phone__number {
   flex: 1 1 auto;
   min-width: 0;
+  padding: 0.85rem 1rem;
+  border: $field-border;
+  border-radius: $radius-sm;
+  background-color: $bone;
+  font-size: $text-base;
+  font-family: inherit;
+  color: $ink;
+  transition:
+    border-color 0.3s $ease,
+    background-color 0.3s $ease;
+
+  &::placeholder {
+    color: rgba($ink, 0.35);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: $rose-deep;
+    background-color: $cream;
+  }
 }
 
-.phone--invalid .phone__country {
-  border-color: $alert-error;
+.phone--invalid {
+  .phone__country,
+  .phone__number {
+    border-color: $alert-error;
+  }
 }
 </style>
