@@ -101,12 +101,17 @@ onMounted(async () => {
         </button>
       </div>
 
-      <p v-if="user?.mustChangePassword" class="aviso-clave">
-        Estás usando la contraseña que te enviamos por correo. Cámbiala por una tuya.
-      </p>
-      <p v-if="passOk" class="ok">{{ passOk }}</p>
+      <Transition name="aviso">
+        <p v-if="user?.mustChangePassword" class="aviso-clave">
+          Estás usando la contraseña que te enviamos por correo. Cámbiala por una tuya.
+        </p>
+      </Transition>
+      <Transition name="aviso">
+        <p v-if="passOk" class="ok">{{ passOk }}</p>
+      </Transition>
 
-      <form v-if="cambiando" class="form" novalidate @submit.prevent="guardarPassword">
+      <Transition name="aviso">
+        <form v-if="cambiando" class="form" novalidate @submit.prevent="guardarPassword">
         <label class="field">
           <span>Contraseña actual</span>
           <input v-model="passForm.current" type="password" autocomplete="current-password" required />
@@ -120,14 +125,15 @@ onMounted(async () => {
           <span>Repite la nueva</span>
           <input v-model="passForm.repeat" type="password" autocomplete="new-password" required />
         </label>
-        <p v-if="passError" class="error">{{ passError }}</p>
-        <div class="acciones">
+          <p v-if="passError" class="error">{{ passError }}</p>
+          <div class="acciones">
           <BaseButton type="submit" :disabled="guardando">
             {{ guardando ? 'Guardando…' : 'Guardar' }}
           </BaseButton>
-          <button type="button" class="link" @click="cambiando = false">Cancelar</button>
-        </div>
-      </form>
+            <button type="button" class="link" @click="cambiando = false">Cancelar</button>
+          </div>
+        </form>
+      </Transition>
     </section>
 
     <section class="bloque">

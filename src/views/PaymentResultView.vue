@@ -172,7 +172,8 @@ const COPY: Record<State, { title: string; text: string }> = {
         </div>
       </dl>
 
-      <div v-if="access" class="access">
+      <Transition name="aviso">
+        <div v-if="access" class="access">
         <p class="access__title">Tu acceso</p>
         <dl class="access__rows">
           <div v-if="access.challenge">
@@ -221,11 +222,16 @@ const COPY: Record<State, { title: string; text: string }> = {
                 {{ resending ? 'Enviando…' : 'Reenviar' }}
               </BaseButton>
             </div>
-            <p v-if="resendOk" class="access__ok">{{ resendOk }}</p>
-            <p v-if="resendError" class="access__error">{{ resendError }}</p>
-          </form>
+            <Transition name="aviso">
+              <p v-if="resendOk" class="access__ok">{{ resendOk }}</p>
+            </Transition>
+            <Transition name="aviso">
+              <p v-if="resendError" class="access__error">{{ resendError }}</p>
+            </Transition>
+            </form>
+          </div>
         </div>
-      </div>
+      </Transition>
 
       <p v-if="errorMessage" class="result__error">{{ errorMessage }}</p>
 
