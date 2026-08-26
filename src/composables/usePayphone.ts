@@ -28,6 +28,8 @@ export interface PayphoneTransaction {
   lang: string
   defaultMethod: string
   timeZone: number
+  /** A dónde vuelve PayPhone tras el pago, con ?id y ?clientTransactionId. */
+  responseUrl: string
   email?: string
   phoneNumber?: string
   documentId?: string
@@ -92,6 +94,19 @@ export interface BuildOptions {
   phoneNumber?: string
 }
 
+/** Ruta a la que PayPhone devuelve a la usuaria al terminar. */
+const RESULT_PATH = '/pago/resultado'
+
+/**
+ * Se arma con el origin actual en vez de fijarla: así el pago vuelve al sitio
+ * desde el que se inició —producción, túnel o local— sin depender de la URL
+ * que esté configurada en el panel de PayPhone.
+ */
+function responseUrl(planId: string): string {
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://metodosk.ec'
+  return `${origin}${RESULT_PATH}?plan=${encodeURIComponent(planId)}`
+}
+
 /**
  * PayPhone exige amount = amountWithoutTax + amountWithTax + tax + service + tip.
  * Acá el precio es final y sin impuesto desglosado, así que todo va en
@@ -113,6 +128,7 @@ export function buildTransaction(options: BuildOptions): PayphoneTransaction {
     lang: 'es',
     defaultMethod: 'card',
     timeZone: TIME_ZONE,
+    responseUrl: responseUrl(options.planId),
     email: options.email,
     phoneNumber: options.phoneNumber,
   }
