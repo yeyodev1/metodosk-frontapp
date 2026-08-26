@@ -4,8 +4,22 @@ export interface PayphoneConfirmation {
   transactionStatus: 'Approved' | 'Canceled' | string
   clientTransactionId: string
   authorizationCode?: string
+  /** Monto cobrado, en centavos. */
   amount: number
   message?: string
+  challenge?: string | null
+  accessMonths?: number
+  /** Fecha ISO hasta la que dura el acceso. */
+  accessUntil?: string | null
+  /** Correo al que se envió la confirmación. */
+  email?: string | null
+  emailSent?: boolean
+}
+
+export interface ResendResult {
+  sent: boolean
+  email: string | null
+  accessUntil: string | null
 }
 
 /**
@@ -35,6 +49,16 @@ class PaymentService extends APIBase {
       id,
       clientTxId,
       contact,
+    })
+    return response.data
+  }
+
+  /** Reenvía la confirmación; sin `email` va a la dirección del pago. */
+  async resend(id: string, clientTxId: string, email?: string) {
+    const response = await this.post<ResendResult>('payments/resend', {
+      id,
+      clientTxId,
+      email,
     })
     return response.data
   }
