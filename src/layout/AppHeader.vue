@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { RouterLink } from 'vue-router'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import { useCheckout } from '@/composables/useCheckout'
 import { BRAND, PRICING } from '@/config/site'
@@ -63,6 +64,7 @@ onUnmounted(() => {
 
       <nav class="header__nav" aria-label="Secciones">
         <a v-for="link in LINKS" :key="link.href" :href="link.href">{{ link.label }}</a>
+        <RouterLink to="/login" class="header__login">Entrar</RouterLink>
       </nav>
 
       <BaseButton class="header__cta" @click="open()">{{ PRICING.cta }}</BaseButton>
@@ -99,6 +101,9 @@ onUnmounted(() => {
 
           <div class="menu__foot" :style="{ '--i': LINKS.length }">
             <BaseButton size="lg" block @click="openCheckout">{{ PRICING.cta }}</BaseButton>
+            <RouterLink to="/mi-cuenta" class="menu__login" @click="menuOpen = false">
+              Ya compré · Entrar a mi cuenta
+            </RouterLink>
             <a class="menu__whatsapp" :href="BRAND.whatsapp" target="_blank" rel="noopener">
               Escríbenos por WhatsApp
             </a>
@@ -334,6 +339,18 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   gap: $space-sm;
+}
+
+.header__login {
+  font-weight: 600;
+  color: $ink;
+}
+
+.menu__login {
+  font-size: $text-sm;
+  color: $cream;
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }
 
 .menu__whatsapp {

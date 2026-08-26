@@ -21,16 +21,38 @@ const routes: Array<RouteRecordRaw> = [
     meta: { title: 'Resultado del pago — Método SK' },
   },
   {
-    path: '/admin/login',
-    name: 'AdminLogin',
-    component: () => import('../views/admin/AdminLoginView.vue'),
-    meta: { title: 'Entrar — Método SK' },
+    // Login único: el rol decide a dónde va después de entrar.
+    path: '/login',
+    alias: ['/admin/login'],
+    name: 'Login',
+    component: () => import('../views/auth/LoginView.vue'),
+    meta: { title: 'Entrar — Método SK', guestOnly: true },
   },
   {
-    path: '/admin',
-    name: 'AdminOrders',
-    component: () => import('../views/admin/AdminOrdersView.vue'),
-    meta: { title: 'Compras — Método SK', requiresAuth: true },
+    path: '/registro',
+    name: 'Register',
+    component: () => import('../views/auth/RegisterView.vue'),
+    meta: { title: 'Crear contraseña — Método SK', guestOnly: true },
+  },
+  {
+    // Todo lo privado comparte el marco con barra lateral.
+    path: '/',
+    component: () => import('../layout/PanelLayout.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: 'mi-cuenta',
+        name: 'MyAccount',
+        component: () => import('../views/member/MyAccountView.vue'),
+        meta: { title: 'La academia — Método SK', requiresAuth: true },
+      },
+      {
+        path: 'admin',
+        name: 'AdminOrders',
+        component: () => import('../views/admin/AdminOrdersView.vue'),
+        meta: { title: 'Compras — Método SK', requiresAuth: true, requiresAdmin: true },
+      },
+    ],
   },
   {
     path: '/:pathMatch(.*)*',
@@ -50,14 +72,35 @@ const router = createRouter({
 })
 
 /**
- * Puerta del panel. Solo mira si hay token: la validez la decide el backend,
- * que responde 401 y ahí se cierra la sesión.
+ * Puerta de las rutas privadas.
+ *
+ * La sesión se recupera del backend porque el rol no se puede confiar al
+ * navegador: quien edite el localStorage no debe entrar al panel.
  */
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
+  const { useSessionStore, homeForRole } = await import('../stores/session')
+  const session = useSessionStore()
+
+  if (to.meta?.requiresAuth || to.meta?.guestOnly) {
+    await session.restore()
+  }
+
+  if (to.meta?.guestOnly && session.user) {
+    return homeForRole(session.user.role)
+  }
+
   if (!to.meta?.requiresAuth) return true
-  const token = localStorage.getItem('access_token')
-  if (token) return true
-  return { name: 'AdminLogin', query: { redirect: to.fullPath } }
+
+  if (!session.user) {
+    return { name: 'Login', query: { redirect: to.fullPath } }
+  }
+
+  // Una compradora que apunte a /admin va a su propia área, no a un 403.
+  if (to.meta?.requiresAdmin && session.user.role !== 'admin') {
+    return homeForRole(session.user.role)
+  }
+
+  return true
 })
 
 router.afterEach((to) => {

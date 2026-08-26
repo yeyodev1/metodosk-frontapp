@@ -196,7 +196,7 @@ const COPY: Record<State, { title: string; text: string }> = {
         <div class="access__mail">
           <p class="access__mail-text">
             <template v-if="access.email">
-              Enviamos la confirmación a <strong>{{ access.email }}</strong>.
+              Enviamos tus datos de acceso a <strong>{{ access.email }}</strong>.
             </template>
             <template v-else>
               Escribe tu correo para enviarte la confirmación.
@@ -235,7 +235,8 @@ const COPY: Record<State, { title: string; text: string }> = {
       </p>
 
       <div class="result__actions">
-        <BaseButton href="/">Volver al inicio</BaseButton>
+        <BaseButton v-if="access" href="/login" size="lg">Entrar a mi cuenta</BaseButton>
+        <BaseButton :variant="access ? 'ghost' : 'primary'" href="/">Volver al inicio</BaseButton>
       </div>
     </section>
   </main>

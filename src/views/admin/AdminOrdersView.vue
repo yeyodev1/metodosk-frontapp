@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import BaseButton from '@/components/ui/BaseButton.vue'
 import adminService, { type AdminOrder, type OrdersResponse } from '@/services/adminService'
-import { useUserStore } from '@/stores/user'
+import { useSessionStore } from '@/stores/session'
 
 const router = useRouter()
-const userStore = useUserStore()
+const session = useSessionStore()
 
 const data = ref<OrdersResponse | null>(null)
 const loading = ref(false)
@@ -49,16 +48,14 @@ async function load() {
     })
   } catch (e: unknown) {
     const err = e as { status?: number; message?: string }
-    if (err.status === 401) return salir()
+    if (err.status === 401) {
+      session.clear()
+      return router.replace('/login')
+    }
     error.value = err.message ?? 'No pudimos cargar las compras'
   } finally {
     loading.value = false
   }
-}
-
-function salir() {
-  userStore.clear()
-  router.replace('/admin/login')
 }
 
 onMounted(load)
@@ -68,10 +65,9 @@ onMounted(load)
   <main class="panel">
     <header class="panel__head">
       <div>
-        <p class="panel__eyebrow">Método SK</p>
+        <p class="panel__eyebrow">Administración</p>
         <h1 class="panel__title">Compras</h1>
       </div>
-      <BaseButton variant="ghost" @click="salir">Salir</BaseButton>
     </header>
 
     <section v-if="data" class="cards">
@@ -148,9 +144,8 @@ onMounted(load)
 
 <style lang="scss" scoped>
 .panel {
-  min-height: 100vh;
   padding: clamp(1.5rem, 5vw, 3rem);
-  background-color: $sand;
+  padding-top: clamp(4.2rem, 8vw, 3rem);
 }
 
 .panel__head {
