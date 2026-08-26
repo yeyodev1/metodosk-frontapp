@@ -4,12 +4,13 @@ import { useRouter } from 'vue-router'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import CheckoutForm from './CheckoutForm.vue'
 import { useCheckout } from '@/composables/useCheckout'
+import { CHALLENGES } from '@/config/site'
 import { buildTransaction, renderPayphoneBox } from '@/composables/usePayphone'
 import { PAYMENT_MODE, PRICES, formatUsd } from '@/config/payment'
 import type { CheckoutContact } from './checkout'
 
 const router = useRouter()
-const { isOpen, selected, close } = useCheckout()
+const { isOpen, selected, needsChoice, select, close } = useCheckout()
 
 const dialog = ref<HTMLElement | null>(null)
 const status = ref<'form' | 'paying' | 'error'>('form')
@@ -85,8 +86,14 @@ async function submit(contact: CheckoutContact) {
 
           <div class="checkout__summary">
             <p class="checkout__eyebrow">Reto Método SK · 3 meses</p>
-            <h2 id="checkout-title" class="checkout__plan">{{ selected.name }}</h2>
-            <p class="checkout__claim">{{ selected.claim }}</p>
+            <template v-if="needsChoice">
+              <h2 id="checkout-title" class="checkout__plan">Elige tu reto</h2>
+              <p class="checkout__claim">Los dos duran 3 meses y cuestan lo mismo.</p>
+            </template>
+            <template v-else>
+              <h2 id="checkout-title" class="checkout__plan">{{ selected.name }}</h2>
+              <p class="checkout__claim">{{ selected.claim }}</p>
+            </template>
 
             <p class="checkout__amount">
               {{ formatUsd(PRICES.presale) }}
@@ -100,7 +107,22 @@ async function submit(contact: CheckoutContact) {
           </div>
 
           <div class="checkout__body">
-            <CheckoutForm v-if="status === 'form'" @submit="submit" />
+            <div v-if="needsChoice" class="checkout__choice">
+              <p class="checkout__choice-lead">¿Cuál de los dos quieres hacer?</p>
+              <button
+                v-for="challenge in CHALLENGES"
+                :key="challenge.id"
+                type="button"
+                class="checkout__option"
+                @click="select(challenge.id)"
+              >
+                <span class="checkout__option-name">{{ challenge.name }}</span>
+                <span class="checkout__option-claim">{{ challenge.claim }}</span>
+                <span class="checkout__option-for">{{ challenge.forWho }}</span>
+              </button>
+            </div>
+
+            <CheckoutForm v-else-if="status === 'form'" @submit="submit" />
 
             <div v-else-if="status === 'paying'" class="checkout__box">
               <p class="checkout__loading">Abriendo la pasarela segura de PayPhone…</p>
@@ -227,6 +249,52 @@ async function submit(contact: CheckoutContact) {
 .checkout__body {
   flex: 1 1 320px;
   padding: clamp(1.6rem, 4vw, 2.4rem);
+}
+
+.checkout__choice {
+  display: flex;
+  flex-direction: column;
+  gap: $space-sm;
+}
+
+.checkout__choice-lead {
+  font-size: $text-sm;
+  color: $ink-soft;
+}
+
+.checkout__option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1rem 1.1rem;
+  text-align: left;
+  border: 1px solid rgba($ink, 0.14);
+  border-radius: $radius-sm;
+  background-color: transparent;
+  transition: border-color 0.25s $ease, background-color 0.25s $ease;
+
+  @include focus-ring($rose);
+
+  &:hover {
+    border-color: $ink;
+    background-color: rgba($ink, 0.04);
+  }
+}
+
+.checkout__option-name {
+  font-family: $font-display;
+  font-size: $text-lg;
+  color: $ink;
+}
+
+.checkout__option-claim {
+  font-size: $text-sm;
+  color: $ink-soft;
+}
+
+.checkout__option-for {
+  font-size: $text-xs;
+  color: rgba($ink, 0.55);
 }
 
 .checkout__box,
