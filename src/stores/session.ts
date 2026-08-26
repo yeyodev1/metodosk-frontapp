@@ -5,7 +5,7 @@ const TOKEN_KEY = 'access_token'
 
 /** A dónde va cada rol después de entrar. */
 export function homeForRole(role: SessionUser['role'] | null): string {
-  return role === 'admin' ? '/admin' : '/mi-cuenta'
+  return role === 'admin' ? '/admin' : '/academia'
 }
 
 export const useSessionStore = defineStore('session', {

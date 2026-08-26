@@ -101,8 +101,8 @@ onUnmounted(() => {
 
           <div class="menu__foot" :style="{ '--i': LINKS.length }">
             <BaseButton size="lg" block @click="openCheckout">{{ PRICING.cta }}</BaseButton>
-            <RouterLink to="/mi-cuenta" class="menu__login" @click="menuOpen = false">
-              Ya compré · Entrar a mi cuenta
+            <RouterLink to="/academia" class="menu__login" @click="menuOpen = false">
+              Ya compré · Entrar a la academia
             </RouterLink>
             <a class="menu__whatsapp" :href="BRAND.whatsapp" target="_blank" rel="noopener">
               Escríbenos por WhatsApp

@@ -41,10 +41,18 @@ const routes: Array<RouteRecordRaw> = [
     meta: { requiresAuth: true },
     children: [
       {
+        // La academia: lo que recibe la alumna. La administración entra a la
+        // misma pantalla en modo vista previa, no a una versión aparte.
+        path: 'academia',
+        name: 'Academy',
+        component: () => import('../views/member/AcademyView.vue'),
+        meta: { title: 'La academia — Método SK', requiresAuth: true },
+      },
+      {
         path: 'mi-cuenta',
         name: 'MyAccount',
         component: () => import('../views/member/MyAccountView.vue'),
-        meta: { title: 'La academia — Método SK', requiresAuth: true },
+        meta: { title: 'Mi cuenta — Método SK', requiresAuth: true },
       },
       {
         path: 'admin',
