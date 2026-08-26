@@ -147,110 +147,118 @@ const COPY: Record<State, { title: string; text: string }> = {
 </script>
 
 <template>
-  <main class="result">
-    <section class="result__card">
-      <p class="result__eyebrow">Método SK · Reto de 3 meses</p>
-      <h1 class="result__title">{{ COPY[state].title }}</h1>
-      <p class="result__text">{{ COPY[state].text }}</p>
+  <div class="vista-resultado">
+    <main class="result">
+      <section class="result__card">
+        <p class="result__eyebrow">Método SK · Reto de 3 meses</p>
+        <h1 class="result__title">{{ COPY[state].title }}</h1>
+        <p class="result__text">{{ COPY[state].text }}</p>
 
-      <dl v-if="clientTransactionId || transactionId" class="result__meta">
-        <div v-if="plan">
-          <dt>Reto</dt>
-          <dd>{{ plan }}</dd>
-        </div>
-        <div v-if="clientTransactionId">
-          <dt>Referencia</dt>
-          <dd>{{ clientTransactionId }}</dd>
-        </div>
-        <div v-if="transactionId">
-          <dt>ID PayPhone</dt>
-          <dd>{{ transactionId }}</dd>
-        </div>
-        <div v-if="authorizationCode">
-          <dt>Autorización</dt>
-          <dd>{{ authorizationCode }}</dd>
-        </div>
-      </dl>
-
-      <Transition name="aviso">
-        <div v-if="access" class="access">
-        <p class="access__title">Tu acceso</p>
-        <dl class="access__rows">
-          <div v-if="access.challenge">
+        <dl v-if="clientTransactionId || transactionId" class="result__meta">
+          <div v-if="plan">
             <dt>Reto</dt>
-            <dd>{{ access.challenge }}</dd>
+            <dd>{{ plan }}</dd>
           </div>
-          <div>
-            <dt>Pago</dt>
-            <dd>{{ amountLabel }}</dd>
+          <div v-if="clientTransactionId">
+            <dt>Referencia</dt>
+            <dd>{{ clientTransactionId }}</dd>
           </div>
-          <div>
-            <dt>Duración</dt>
-            <dd>{{ access.accessMonths }} meses</dd>
+          <div v-if="transactionId">
+            <dt>ID PayPhone</dt>
+            <dd>{{ transactionId }}</dd>
           </div>
-          <div v-if="accessUntilLabel">
-            <dt>Acceso hasta</dt>
-            <dd>{{ accessUntilLabel }}</dd>
+          <div v-if="authorizationCode">
+            <dt>Autorización</dt>
+            <dd>{{ authorizationCode }}</dd>
           </div>
         </dl>
 
-        <div class="access__mail">
-          <p class="access__mail-text">
-            <template v-if="access.email">
-              Enviamos tus datos de acceso a <strong>{{ access.email }}</strong>.
-            </template>
-            <template v-else>
-              Escribe tu correo para enviarte la confirmación.
-            </template>
-          </p>
-
-          <form class="access__form" novalidate @submit.prevent="resendEmail">
-            <label class="access__label" for="resend-email">
-              ¿No te llegó, o lo quieres en otro correo?
-            </label>
-            <div class="access__row">
-              <input
-                id="resend-email"
-                v-model="resendTo"
-                type="email"
-                inputmode="email"
-                autocomplete="email"
-                class="access__input"
-                :placeholder="access.email || 'tu@correo.com'"
-              />
-              <BaseButton type="submit" :disabled="resending">
-                {{ resending ? 'Enviando…' : 'Reenviar' }}
-              </BaseButton>
+        <Transition name="aviso">
+          <div v-if="access" class="access">
+          <p class="access__title">Tu acceso</p>
+          <dl class="access__rows">
+            <div v-if="access.challenge">
+              <dt>Reto</dt>
+              <dd>{{ access.challenge }}</dd>
             </div>
-            <Transition name="aviso">
-              <p v-if="resendOk" class="access__ok">{{ resendOk }}</p>
-            </Transition>
-            <Transition name="aviso">
-              <p v-if="resendError" class="access__error">{{ resendError }}</p>
-            </Transition>
-            </form>
+            <div>
+              <dt>Pago</dt>
+              <dd>{{ amountLabel }}</dd>
+            </div>
+            <div>
+              <dt>Duración</dt>
+              <dd>{{ access.accessMonths }} meses</dd>
+            </div>
+            <div v-if="accessUntilLabel">
+              <dt>Acceso hasta</dt>
+              <dd>{{ accessUntilLabel }}</dd>
+            </div>
+          </dl>
+
+          <div class="access__mail">
+            <p class="access__mail-text">
+              <template v-if="access.email">
+                Enviamos tus datos de acceso a <strong>{{ access.email }}</strong>.
+              </template>
+              <template v-else>
+                Escribe tu correo para enviarte la confirmación.
+              </template>
+            </p>
+
+            <form class="access__form" novalidate @submit.prevent="resendEmail">
+              <label class="access__label" for="resend-email">
+                ¿No te llegó, o lo quieres en otro correo?
+              </label>
+              <div class="access__row">
+                <input
+                  id="resend-email"
+                  v-model="resendTo"
+                  type="email"
+                  inputmode="email"
+                  autocomplete="email"
+                  class="access__input"
+                  :placeholder="access.email || 'tu@correo.com'"
+                />
+                <BaseButton type="submit" :disabled="resending">
+                  {{ resending ? 'Enviando…' : 'Reenviar' }}
+                </BaseButton>
+              </div>
+              <Transition name="aviso">
+                <p v-if="resendOk" class="access__ok">{{ resendOk }}</p>
+              </Transition>
+              <Transition name="aviso">
+                <p v-if="resendError" class="access__error">{{ resendError }}</p>
+              </Transition>
+              </form>
+            </div>
           </div>
+        </Transition>
+
+        <p v-if="errorMessage" class="result__error">{{ errorMessage }}</p>
+
+        <p v-if="PAYMENT_MODE === 'simulation'" class="result__demo">
+          Modo demostración activo — cambia <code>VITE_PAYPHONE_MODE</code> a
+          <code>live</code> cuando el backend confirme transacciones.
+        </p>
+
+        <div class="result__actions">
+          <BaseButton v-if="access" href="/login" size="lg">Entrar a mi cuenta</BaseButton>
+          <BaseButton :variant="access ? 'ghost' : 'primary'" href="/">Volver al inicio</BaseButton>
         </div>
-      </Transition>
+      </section>
+    </main>
 
-      <p v-if="errorMessage" class="result__error">{{ errorMessage }}</p>
-
-      <p v-if="PAYMENT_MODE === 'simulation'" class="result__demo">
-        Modo demostración activo — cambia <code>VITE_PAYPHONE_MODE</code> a
-        <code>live</code> cuando el backend confirme transacciones.
-      </p>
-
-      <div class="result__actions">
-        <BaseButton v-if="access" href="/login" size="lg">Entrar a mi cuenta</BaseButton>
-        <BaseButton :variant="access ? 'ghost' : 'primary'" href="/">Volver al inicio</BaseButton>
-      </div>
-    </section>
-  </main>
-
-  <AppFooter />
+    <AppFooter />
+  </div>
 </template>
 
 <style lang="scss" scoped>
+.vista-resultado {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+}
+
 .access {
   display: flex;
   flex-direction: column;

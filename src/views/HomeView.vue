@@ -15,21 +15,31 @@ import TimelineSection from '@/components/home/TimelineSection.vue'
 </script>
 
 <template>
-  <AppHeader />
+  <div class="vista-home">
+    <AppHeader />
 
-  <main>
-    <HeroSection />
-    <PromiseSection />
-    <ChallengesSection />
-    <IncludesSection />
-    <NutritionSection />
-    <TimelineSection />
-    <ForWhoSection />
-    <CommunitySection />
-    <PricingSection />
-    <FaqSection />
-    <FinalCtaSection />
-  </main>
+    <main>
+      <HeroSection />
+      <PromiseSection />
+      <ChallengesSection />
+      <IncludesSection />
+      <NutritionSection />
+      <TimelineSection />
+      <ForWhoSection />
+      <CommunitySection />
+      <PricingSection />
+      <FaqSection />
+      <FinalCtaSection />
+    </main>
 
-  <AppFooter />
+    <AppFooter />
+  </div>
 </template>
+
+<style lang="scss" scoped>
+.vista-home {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+}
+</style>
