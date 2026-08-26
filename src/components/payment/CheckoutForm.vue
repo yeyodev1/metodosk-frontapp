@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { reactive, ref, watch } from 'vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import { validateContact, type CheckoutContact, type CheckoutErrors } from './checkout'
+import PhoneInput from './PhoneInput.vue'
 import { PAYMENT_MODE } from '@/config/payment'
 
 const emit = defineEmits<{ submit: [contact: CheckoutContact] }>()
@@ -9,13 +10,24 @@ const emit = defineEmits<{ submit: [contact: CheckoutContact] }>()
 const form = reactive<CheckoutContact>({ name: '', email: '', phone: '' })
 const errors = ref<CheckoutErrors>({})
 
+/** El teléfono tiene su propio campo con selector de país. */
 const FIELDS = [
   { key: 'name', label: 'Nombre completo', type: 'text', autocomplete: 'name' },
   { key: 'email', label: 'Correo electrónico', type: 'email', autocomplete: 'email' },
-  { key: 'phone', label: 'WhatsApp', type: 'tel', autocomplete: 'tel' },
 ] as const
 
+const submitted = ref(false)
+
+/**
+ * Antes del primer intento no se marca nada; después, los errores se van
+ * limpiando a medida que la usuaria corrige, en vez de quedarse en rojo.
+ */
+watch(form, () => {
+  if (submitted.value) errors.value = validateContact(form)
+})
+
 function onSubmit() {
+  submitted.value = true
   errors.value = validateContact(form)
   if (Object.keys(errors.value).length === 0) emit('submit', { ...form })
 }
@@ -38,6 +50,17 @@ function onSubmit() {
       <p v-if="errors[field.key]" :id="`error-${field.key}`" class="field__error">
         {{ errors[field.key] }}
       </p>
+    </div>
+
+    <div class="field">
+      <label for="checkout-phone">WhatsApp</label>
+      <PhoneInput
+        id="checkout-phone"
+        v-model="form.phone"
+        :invalid="Boolean(errors.phone)"
+        :described-by="errors.phone ? 'error-phone' : undefined"
+      />
+      <p v-if="errors.phone" id="error-phone" class="field__error">{{ errors.phone }}</p>
     </div>
 
     <BaseButton type="submit" size="lg" block>
