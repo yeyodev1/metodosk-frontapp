@@ -31,7 +31,6 @@ export interface PayphoneTransaction {
   /** A dónde vuelve PayPhone tras el pago, con ?id y ?clientTransactionId. */
   responseUrl: string
   email?: string
-  phoneNumber?: string
   documentId?: string
 }
 
@@ -91,7 +90,6 @@ export interface BuildOptions {
   amount: number
   reference: string
   email?: string
-  phoneNumber?: string
 }
 
 /** Ruta a la que PayPhone devuelve a la usuaria al terminar. */
@@ -130,7 +128,11 @@ export function buildTransaction(options: BuildOptions): PayphoneTransaction {
     timeZone: TIME_ZONE,
     responseUrl: responseUrl(options.planId),
     email: options.email,
-    phoneNumber: options.phoneNumber,
+    // phoneNumber se omite a propósito: la Cajita no lee el código de país del
+    // valor que recibe. Deja su selector en +1 y mete la cadena entera en el
+    // campo nacional, así que un +593… quedaba como +1 593…. Sin el dato,
+    // PayPhone lo pide con su propio selector y el número sale bien.
+    // El teléfono que captura nuestro formulario se usa para el contacto.
   }
 }
 

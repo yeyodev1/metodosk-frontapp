@@ -83,7 +83,6 @@ async function submit(contact: CheckoutContact) {
     amount: PRICES.presale,
     reference: `Método SK · ${selected.value.name} · ${contact.name}`,
     email: contact.email,
-    phoneNumber: contact.phone,
   })
 
   // Modo simulación: no se contacta a PayPhone ni se cobra nada.
