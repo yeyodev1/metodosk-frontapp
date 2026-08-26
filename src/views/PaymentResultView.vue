@@ -3,7 +3,6 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import AppFooter from '@/layout/AppFooter.vue'
-import { BRAND } from '@/config/site'
 import { PAYMENT_MODE } from '@/config/payment'
 import paymentService from '@/services/paymentService'
 import { forgetCheckout, recallCheckout } from '@/components/payment/pendingCheckout'
@@ -19,6 +18,58 @@ type State = 'simulated' | 'confirming' | 'approved' | 'rejected' | 'error' | 'u
 const confirmState = ref<State | null>(null)
 const authorizationCode = ref('')
 const errorMessage = ref('')
+
+/** Datos del acceso que devuelve el backend al confirmar. */
+const access = ref<{
+  challenge: string | null
+  accessMonths: number
+  accessUntil: string | null
+  amount: number
+  email: string | null
+} | null>(null)
+
+// Reenvío del correo, opcionalmente a otra dirección.
+const resendTo = ref('')
+const resending = ref(false)
+const resendOk = ref('')
+const resendError = ref('')
+
+const accessUntilLabel = computed(() => {
+  const iso = access.value?.accessUntil
+  if (!iso) return ''
+  return new Date(iso).toLocaleDateString('es-EC', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
+})
+
+const amountLabel = computed(() =>
+  access.value ? `$${(access.value.amount / 100).toFixed(2)} USD` : '',
+)
+
+async function resendEmail() {
+  const destino = resendTo.value.trim()
+  resending.value = true
+  resendOk.value = ''
+  resendError.value = ''
+  try {
+    const r = await paymentService.resend(
+      transactionId.value,
+      clientTransactionId.value,
+      destino || undefined,
+    )
+    resendOk.value = r.sent
+      ? `Te lo enviamos a ${r.email}.`
+      : 'No pudimos enviarlo. Intenta de nuevo en un momento.'
+    if (r.sent) resendTo.value = ''
+  } catch (error: unknown) {
+    const e = error as { message?: string }
+    resendError.value = e.message ?? 'No pudimos reenviarlo.'
+  } finally {
+    resending.value = false
+  }
+}
 
 /**
  * PayPhone redirige acá con `id` y `clientTransactionId`, y reversa el cobro si
@@ -46,6 +97,15 @@ onMounted(async () => {
     forgetCheckout()
     authorizationCode.value = result.authorizationCode ?? ''
     confirmState.value = result.transactionStatus === 'Approved' ? 'approved' : 'rejected'
+    if (confirmState.value === 'approved') {
+      access.value = {
+        challenge: result.challenge ?? plan.value ?? null,
+        accessMonths: result.accessMonths ?? 3,
+        accessUntil: result.accessUntil ?? null,
+        amount: result.amount,
+        email: result.email ?? null,
+      }
+    }
     if (confirmState.value === 'rejected') {
       errorMessage.value = result.message ?? ''
     }
@@ -112,6 +172,61 @@ const COPY: Record<State, { title: string; text: string }> = {
         </div>
       </dl>
 
+      <div v-if="access" class="access">
+        <p class="access__title">Tu acceso</p>
+        <dl class="access__rows">
+          <div v-if="access.challenge">
+            <dt>Reto</dt>
+            <dd>{{ access.challenge }}</dd>
+          </div>
+          <div>
+            <dt>Pago</dt>
+            <dd>{{ amountLabel }}</dd>
+          </div>
+          <div>
+            <dt>Duración</dt>
+            <dd>{{ access.accessMonths }} meses</dd>
+          </div>
+          <div v-if="accessUntilLabel">
+            <dt>Acceso hasta</dt>
+            <dd>{{ accessUntilLabel }}</dd>
+          </div>
+        </dl>
+
+        <div class="access__mail">
+          <p class="access__mail-text">
+            <template v-if="access.email">
+              Enviamos la confirmación a <strong>{{ access.email }}</strong>.
+            </template>
+            <template v-else>
+              Escribe tu correo para enviarte la confirmación.
+            </template>
+          </p>
+
+          <form class="access__form" novalidate @submit.prevent="resendEmail">
+            <label class="access__label" for="resend-email">
+              ¿No te llegó, o lo quieres en otro correo?
+            </label>
+            <div class="access__row">
+              <input
+                id="resend-email"
+                v-model="resendTo"
+                type="email"
+                inputmode="email"
+                autocomplete="email"
+                class="access__input"
+                :placeholder="access.email || 'tu@correo.com'"
+              />
+              <BaseButton type="submit" :disabled="resending">
+                {{ resending ? 'Enviando…' : 'Reenviar' }}
+              </BaseButton>
+            </div>
+            <p v-if="resendOk" class="access__ok">{{ resendOk }}</p>
+            <p v-if="resendError" class="access__error">{{ resendError }}</p>
+          </form>
+        </div>
+      </div>
+
       <p v-if="errorMessage" class="result__error">{{ errorMessage }}</p>
 
       <p v-if="PAYMENT_MODE === 'simulation'" class="result__demo">
@@ -121,7 +236,6 @@ const COPY: Record<State, { title: string; text: string }> = {
 
       <div class="result__actions">
         <BaseButton href="/">Volver al inicio</BaseButton>
-        <BaseButton variant="ghost" :href="BRAND.whatsapp">Escribirnos</BaseButton>
       </div>
     </section>
   </main>
@@ -130,6 +244,115 @@ const COPY: Record<State, { title: string; text: string }> = {
 </template>
 
 <style lang="scss" scoped>
+.access {
+  display: flex;
+  flex-direction: column;
+  gap: $space-md;
+  padding: clamp(1.1rem, 4vw, 1.5rem);
+  border: 1px solid rgba($ink, 0.12);
+  border-radius: $radius-md;
+  background-color: $bone;
+  text-align: left;
+}
+
+.access__title {
+  @include eyebrow;
+  color: $rose-deep;
+}
+
+.access__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  margin: 0;
+
+  > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-block: 0.55rem;
+    border-bottom: 1px solid rgba($ink, 0.08);
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  dt {
+    font-size: $text-sm;
+    color: $ink-soft;
+  }
+
+  dd {
+    margin: 0;
+    font-size: $text-sm;
+    font-weight: 600;
+    color: $ink;
+    text-align: right;
+  }
+}
+
+.access__mail {
+  display: flex;
+  flex-direction: column;
+  gap: $space-sm;
+  padding-top: $space-sm;
+  border-top: 1px solid rgba($ink, 0.1);
+}
+
+.access__mail-text {
+  font-size: $text-sm;
+  color: $ink-soft;
+  line-height: 1.5;
+}
+
+.access__form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.access__label {
+  font-size: $text-xs;
+  color: $ink-muted;
+}
+
+.access__row {
+  display: flex;
+  gap: 0.5rem;
+
+  @include until('sm') {
+    flex-direction: column;
+  }
+}
+
+.access__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0.8rem 1rem;
+  border: 1px solid rgba($ink, 0.16);
+  border-radius: $radius-sm;
+  background-color: $cream;
+  font-family: inherit;
+  font-size: $text-base;
+  color: $ink;
+
+  &:focus {
+    outline: none;
+    border-color: $rose-deep;
+  }
+}
+
+.access__ok {
+  font-size: $text-sm;
+  color: #1b7f4d;
+}
+
+.access__error {
+  font-size: $text-sm;
+  color: $alert-error;
+}
+
 .result {
   display: flex;
   align-items: center;
