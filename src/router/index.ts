@@ -9,7 +9,13 @@ const routes: Array<RouteRecordRaw> = [
   },
   {
     // URL de respuesta de PayPhone: llega con ?id= y ?clientTransactionId=
+    //
+    // La Cajita ignora el responseUrl que le enviamos y usa el que esté
+    // configurado en el panel de PayPhone, que hoy apunta a /pay-response.
+    // Se aceptan ambas rutas para no depender de esa configuración: si no
+    // resuelve, la confirmación nunca corre y PayPhone reversa el cobro.
     path: '/pago/resultado',
+    alias: ['/pay-response'],
     name: 'PaymentResult',
     component: () => import('../views/PaymentResultView.vue'),
     meta: { title: 'Resultado del pago — Método SK' },
