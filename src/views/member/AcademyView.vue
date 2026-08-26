@@ -84,30 +84,21 @@ onMounted(async () => {
 
 <template>
   <main class="academia">
-    <!-- Vista previa: queda claro que no es la cuenta de una alumna -->
-    <Transition name="aviso">
-      <div v-if="esAdmin" class="preview">
-        <div>
-          <p class="preview__title">Estás viendo la academia como la ve una alumna</p>
-          <p class="preview__text">
-            Mismo contenido, mismo orden. Elige el reto para revisar cada versión.
-          </p>
-        </div>
-        <label class="preview__pick">
-          <span>Reto</span>
-          <select v-model="retoPreview">
-            <option v-for="c in CHALLENGES" :key="c.id" :value="c.name">{{ c.name }}</option>
-          </select>
-        </label>
-      </div>
-    </Transition>
-
     <header class="hola">
       <p class="hola__eyebrow">Método SK · Reto de 3 meses</p>
       <h1 class="hola__title">
         Hola<span v-if="nombre">, {{ nombre }}</span>
       </h1>
-      <p class="hola__reto">{{ reto }}</p>
+      <div class="hola__reto">
+        <span class="hola__chip">{{ reto }}</span>
+        <!-- La cuenta de administración no compró reto: elige cuál revisar -->
+        <label v-if="esAdmin" class="hola__pick">
+          <span>Ver el reto</span>
+          <select v-model="retoPreview">
+            <option v-for="c in CHALLENGES" :key="c.id" :value="c.name">{{ c.name }}</option>
+          </select>
+        </label>
+      </div>
     </header>
 
     <!-- El avance del reto, no un contador de días sueltos -->
@@ -209,52 +200,8 @@ onMounted(async () => {
 
 <style lang="scss" scoped>
 .academia {
-  padding: clamp(1.5rem, 4vw, 3rem);
-  padding-top: clamp(4.2rem, 8vw, 3rem);
-  max-width: 1100px;
-}
-
-/* ── Vista previa de la administración ── */
-.preview {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: $space-sm;
-  margin-bottom: $space-md;
-  padding: 0.9rem 1.1rem;
-  border: 1px dashed rgba($wine, 0.35);
-  border-radius: $radius-md;
-  background-color: rgba($rose-soft, 0.5);
-}
-
-.preview__title {
-  font-size: $text-sm;
-  font-weight: 600;
-  color: $wine;
-}
-
-.preview__text {
-  font-size: $text-xs;
-  color: $ink-soft;
-}
-
-.preview__pick {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: $text-xs;
-  color: $ink-muted;
-
-  select {
-    padding: 0.45rem 0.7rem;
-    border: 1px solid rgba($ink, 0.18);
-    border-radius: $radius-pill;
-    background-color: $cream;
-    font-family: inherit;
-    font-size: $text-xs;
-    color: $ink;
-  }
+  /* Pantalla completa: la app no es una página centrada */
+  padding: clamp(1.4rem, 3vw, 2.5rem) clamp(1rem, 3vw, 2.5rem) 4rem;
 }
 
 /* ── Saludo ── */
@@ -274,9 +221,37 @@ onMounted(async () => {
 }
 
 .hola__reto {
-  margin-top: 0.3rem;
-  font-size: $text-base;
-  color: $ink-soft;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.7rem;
+  margin-top: 0.55rem;
+}
+
+.hola__chip {
+  padding: 0.32rem 0.9rem;
+  border-radius: $radius-pill;
+  background-color: $rose-soft;
+  font-size: $text-sm;
+  color: $wine;
+}
+
+.hola__pick {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: $text-xs;
+  color: $ink-muted;
+
+  select {
+    padding: 0.35rem 0.7rem;
+    border: 1px solid rgba($ink, 0.18);
+    border-radius: $radius-pill;
+    background-color: $cream;
+    font-family: inherit;
+    font-size: $text-xs;
+    color: $ink;
+  }
 }
 
 /* ── Avance del reto ── */
@@ -379,9 +354,19 @@ onMounted(async () => {
 /* ── Módulos ── */
 .modulos {
   margin-top: $space-lg;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr;
   gap: $space-sm;
+
+  @include from('lg') {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.modulos__title {
+  @include from('lg') {
+    grid-column: 1 / -1;
+  }
 }
 
 .modulos__title {
@@ -400,7 +385,7 @@ onMounted(async () => {
   transition: transform 0.4s $ease, box-shadow 0.4s $ease;
 
   @include from('md') {
-    grid-template-columns: 240px 1fr;
+    grid-template-columns: 200px 1fr;
   }
 
   &:hover {

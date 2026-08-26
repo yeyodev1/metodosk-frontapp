@@ -67,6 +67,7 @@ onMounted(load)
       <div>
         <p class="compras__eyebrow">Administración</p>
         <h1 class="compras__title">Compras</h1>
+        <p class="compras__sub">Cada pago confirmado por PayPhone, con el acceso que abrió.</p>
       </div>
       <p v-if="data" class="compras__meta">
         {{ data.orders.length }}
@@ -148,9 +149,7 @@ onMounted(load)
 
 <style lang="scss" scoped>
 .compras {
-  max-width: 1180px;
-  padding: clamp(1.5rem, 4vw, 3rem);
-  padding-top: clamp(4.2rem, 8vw, 3rem);
+  padding: 0;
 }
 
 .compras__head {
@@ -172,6 +171,12 @@ onMounted(load)
   font-size: $display-sm;
   line-height: 1.05;
   color: $ink;
+}
+
+.compras__sub {
+  margin-top: 0.3rem;
+  font-size: $text-sm;
+  color: $ink-soft;
 }
 
 .compras__meta {
