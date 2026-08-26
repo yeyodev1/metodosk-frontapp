@@ -129,3 +129,44 @@ select {
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+/* ───────────────────────────────────────────────────────────────
+   Transición compartida de avisos, errores y bloques que aparecen.
+   Se usa como <Transition name="aviso"> en cualquier vista.
+   Sale más rápido de lo que entra: al cerrar, estorba.
+   ─────────────────────────────────────────────────────────────── */
+.aviso-enter-active {
+  transition:
+    opacity 0.34s $ease,
+    transform 0.34s $ease,
+    max-height 0.34s $ease;
+}
+
+.aviso-leave-active {
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease,
+    max-height 0.18s ease;
+}
+
+.aviso-enter-from,
+.aviso-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+  max-height: 0;
+  overflow: hidden;
+}
+
+.aviso-enter-to,
+.aviso-leave-from {
+  opacity: 1;
+  transform: none;
+  max-height: 40rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aviso-enter-active,
+  .aviso-leave-active {
+    transition-duration: 0.01ms;
+  }
+}
