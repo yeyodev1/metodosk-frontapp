@@ -66,8 +66,11 @@ function volver() {
 <template>
   <AuthShell
     eyebrow="Crear contraseña"
-    title="Primero se compra el reto"
-    lead="La cuenta se crea con tu compra. Escribe el correo que usaste al pagar y te decimos qué sigue."
+    title="Tu cuenta nace con tu compra"
+    lead="Escribe el correo que usaste al pagar y te decimos qué sigue."
+    quote="El acceso no se registra. Se compra."
+    quote-foot="Si ya pagaste, tu cuenta ya existe: acá solo le pones contraseña."
+    photo="metodosk/sk-12"
   >
     <!-- Paso 1: comprobar que ese correo compró -->
     <form v-if="step === 'email'" class="form" novalidate @submit.prevent="verificarCorreo">
@@ -77,7 +80,9 @@ function volver() {
         <span class="field__hint">El mismo con el que pagaste en PayPhone.</span>
       </label>
 
-      <p v-if="error" class="form__error">{{ error }}</p>
+      <Transition name="aviso">
+        <p v-if="error" class="form__error">{{ error }}</p>
+      </Transition>
 
       <BaseButton type="submit" size="lg" block :disabled="loading">
         {{ loading ? 'Comprobando…' : 'Continuar' }}
@@ -85,21 +90,25 @@ function volver() {
     </form>
 
     <!-- Sin compra: se dice claro y se ofrece comprar -->
-    <div v-if="sinCompra" class="aviso">
-      <p class="aviso__title">Ese correo no tiene una compra</p>
-      <p class="aviso__text">
-        El acceso al reto no se registra: <strong>se compra</strong>. Si ya pagaste, revisa que sea
-        el mismo correo que usaste en PayPhone — a veces se paga con otro.
-      </p>
-      <BaseButton href="/#precio" size="lg" block>Ver el reto y comprar</BaseButton>
-    </div>
+    <Transition name="aviso">
+      <div v-if="sinCompra" class="aviso">
+        <p class="aviso__title">Ese correo no tiene una compra</p>
+        <p class="aviso__text">
+          El acceso al reto no se registra: <strong>se compra</strong>. Si ya pagaste, revisa que sea
+          el mismo correo que usaste en PayPhone — a veces se paga con otro.
+        </p>
+        <BaseButton href="/#precio" size="lg" block>Ver el reto y comprar</BaseButton>
+      </div>
+    </Transition>
 
     <!-- Ya tiene contraseña: al login -->
-    <div v-if="yaTieneCuenta" class="aviso">
-      <p class="aviso__title">Ya tienes cuenta</p>
-      <p class="aviso__text">Ese correo ya tiene una contraseña creada. Entra directamente.</p>
-      <BaseButton href="/login" size="lg" block>Ir a entrar</BaseButton>
-    </div>
+    <Transition name="aviso">
+      <div v-if="yaTieneCuenta" class="aviso">
+        <p class="aviso__title">Ya tienes cuenta</p>
+        <p class="aviso__text">Ese correo ya tiene una contraseña creada. Entra directamente.</p>
+        <BaseButton href="/login" size="lg" block>Ir a entrar</BaseButton>
+      </div>
+    </Transition>
 
     <!-- Paso 2: crear la contraseña -->
     <form v-if="step === 'password'" class="form" novalidate @submit.prevent="crearCuenta">
@@ -129,7 +138,9 @@ function volver() {
         <input v-model="form.repeat" type="password" autocomplete="new-password" required />
       </label>
 
-      <p v-if="error" class="form__error">{{ error }}</p>
+      <Transition name="aviso">
+        <p v-if="error" class="form__error">{{ error }}</p>
+      </Transition>
 
       <BaseButton type="submit" size="lg" block :disabled="loading">
         {{ loading ? 'Creando…' : 'Crear mi contraseña' }}

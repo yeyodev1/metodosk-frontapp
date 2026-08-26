@@ -36,7 +36,10 @@ async function onSubmit() {
   <AuthShell
     eyebrow="Tu cuenta"
     title="Entra a tu reto"
-    lead="Usa el correo con el que compraste."
+    lead="Con el correo que usaste al pagar."
+    quote="Tu reto sigue donde lo dejaste."
+    quote-foot="Entrenamiento y nutrición de 3 meses, por Scarlet Córdova y Karen López."
+    photo="metodosk/sk-04"
   >
     <form class="form" novalidate @submit.prevent="onSubmit">
       <label class="field">
@@ -49,7 +52,9 @@ async function onSubmit() {
         <input v-model="form.password" type="password" autocomplete="current-password" required />
       </label>
 
-      <p v-if="error" class="form__error">{{ error }}</p>
+      <Transition name="aviso">
+        <p v-if="error" class="form__error">{{ error }}</p>
+      </Transition>
 
       <BaseButton type="submit" size="lg" block :disabled="loading">
         {{ loading ? 'Entrando…' : 'Entrar' }}
