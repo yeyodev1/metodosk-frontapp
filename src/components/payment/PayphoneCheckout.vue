@@ -8,6 +8,7 @@ import { CHALLENGES } from '@/config/site'
 import { buildTransaction, renderPayphoneBox } from '@/composables/usePayphone'
 import { PAYMENT_MODE, PRICES, formatUsd } from '@/config/payment'
 import type { CheckoutContact } from './checkout'
+import { rememberCheckout } from './pendingCheckout'
 import type { Challenge } from '@/config/site'
 
 const router = useRouter()
@@ -98,6 +99,12 @@ async function submit(contact: CheckoutContact) {
     })
     return
   }
+
+  // PayPhone nos saca del sitio: el contacto se guarda para recuperarlo al volver.
+  rememberCheckout(transaction.clientTransactionId, {
+    ...contact,
+    challenge: selected.value.name,
+  })
 
   status.value = 'paying'
   try {

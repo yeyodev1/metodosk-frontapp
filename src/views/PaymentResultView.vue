@@ -6,6 +6,7 @@ import AppFooter from '@/layout/AppFooter.vue'
 import { BRAND } from '@/config/site'
 import { PAYMENT_MODE } from '@/config/payment'
 import paymentService from '@/services/paymentService'
+import { forgetCheckout, recallCheckout } from '@/components/payment/pendingCheckout'
 
 const route = useRoute()
 
@@ -36,7 +37,13 @@ onMounted(async () => {
 
   confirmState.value = 'confirming'
   try {
-    const result = await paymentService.confirm(transactionId.value, clientTransactionId.value)
+    const contacto = recallCheckout(clientTransactionId.value) ?? undefined
+    const result = await paymentService.confirm(
+      transactionId.value,
+      clientTransactionId.value,
+      contacto,
+    )
+    forgetCheckout()
     authorizationCode.value = result.authorizationCode ?? ''
     confirmState.value = result.transactionStatus === 'Approved' ? 'approved' : 'rejected'
     if (confirmState.value === 'rejected') {

@@ -18,12 +18,23 @@ export interface PayphoneConfirmation {
  * Este servicio queda listo apuntando a nuestro backend (aún no existe); el
  * backend es el que habla con PayPhone.
  */
+export interface ConfirmContact {
+  name?: string
+  email?: string
+  phone?: string
+  challenge?: string
+}
+
 class PaymentService extends APIBase {
-  /** TODO(backend): implementar POST /payments/confirm en el API. */
-  async confirm(id: string, clientTxId: string) {
+  /**
+   * El contacto es opcional: si no llega, el backend usa el correo que
+   * devuelve PayPhone. Sirve para el correo de acceso y para el registro.
+   */
+  async confirm(id: string, clientTxId: string, contact?: ConfirmContact) {
     const response = await this.post<PayphoneConfirmation>('payments/confirm', {
       id,
       clientTxId,
+      contact,
     })
     return response.data
   }
