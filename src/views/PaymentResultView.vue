@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import AppFooter from '@/layout/AppFooter.vue'
 import { BRAND } from '@/config/site'
 import { PAYMENT_MODE } from '@/config/payment'
+import paymentService from '@/services/paymentService'
 
 const route = useRoute()
 
@@ -12,31 +13,70 @@ const clientTransactionId = computed(() => String(route.query.clientTransactionI
 const transactionId = computed(() => String(route.query.id ?? ''))
 const plan = computed(() => String(route.query.plan ?? ''))
 
+type State = 'simulated' | 'confirming' | 'approved' | 'rejected' | 'error' | 'unknown'
+
+const confirmState = ref<State | null>(null)
+const authorizationCode = ref('')
+const errorMessage = ref('')
+
 /**
- * PayPhone redirige acá con `id` y `clientTransactionId`. La confirmación real
- * (POST /api/confirm) requiere el token secreto, así que la hará el backend
- * cuando exista — ver src/services/paymentService.ts. Por ahora esta vista solo
- * muestra el resultado.
+ * PayPhone redirige acá con `id` y `clientTransactionId`, y reversa el cobro si
+ * nadie lo confirma en 5 minutos. La confirmación necesita el token secreto,
+ * así que la hace el backend: acá solo la disparamos y mostramos el resultado.
  */
-const state = computed(() => {
-  if (route.query.status === 'simulated') return 'simulated'
-  return transactionId.value ? 'pending' : 'unknown'
+onMounted(async () => {
+  if (route.query.status === 'simulated') {
+    confirmState.value = 'simulated'
+    return
+  }
+  if (!transactionId.value || !clientTransactionId.value) {
+    confirmState.value = 'unknown'
+    return
+  }
+
+  confirmState.value = 'confirming'
+  try {
+    const result = await paymentService.confirm(transactionId.value, clientTransactionId.value)
+    authorizationCode.value = result.authorizationCode ?? ''
+    confirmState.value = result.transactionStatus === 'Approved' ? 'approved' : 'rejected'
+    if (confirmState.value === 'rejected') {
+      errorMessage.value = result.message ?? ''
+    }
+  } catch (error: unknown) {
+    const e = error as { message?: string }
+    errorMessage.value = e.message ?? ''
+    confirmState.value = 'error'
+  }
 })
 
-const COPY = {
+const state = computed<State>(() => confirmState.value ?? 'confirming')
+
+const COPY: Record<State, { title: string; text: string }> = {
   simulated: {
     title: '¡Listo! (simulación)',
     text: 'Este es el recorrido completo del checkout en modo demostración. No se realizó ningún cobro real.',
   },
-  pending: {
-    title: 'Recibimos tu pago',
-    text: 'Estamos confirmando la transacción con PayPhone. En cuanto quede confirmada te llega el acceso al reto por correo.',
+  confirming: {
+    title: 'Confirmando tu pago',
+    text: 'Estamos verificando la transacción con PayPhone. Esto toma unos segundos, no cierres esta página.',
+  },
+  approved: {
+    title: '¡Bienvenida al reto!',
+    text: 'Tu pago quedó confirmado. En breve te llega al correo el acceso al reto de 3 meses.',
+  },
+  rejected: {
+    title: 'El pago no se completó',
+    text: 'PayPhone no aprobó la transacción, así que no se te cobró nada. Puedes intentarlo de nuevo o escribirnos.',
+  },
+  error: {
+    title: 'No pudimos confirmar el pago',
+    text: 'Tuvimos un problema al verificar la transacción. Escríbenos con tu referencia y lo resolvemos enseguida.',
   },
   unknown: {
     title: 'No encontramos la transacción',
     text: 'Si ya hiciste el pago escríbenos y lo revisamos contigo enseguida.',
   },
-} as const
+}
 </script>
 
 <template>
@@ -59,7 +99,13 @@ const COPY = {
           <dt>ID PayPhone</dt>
           <dd>{{ transactionId }}</dd>
         </div>
+        <div v-if="authorizationCode">
+          <dt>Autorización</dt>
+          <dd>{{ authorizationCode }}</dd>
+        </div>
       </dl>
+
+      <p v-if="errorMessage" class="result__error">{{ errorMessage }}</p>
 
       <p v-if="PAYMENT_MODE === 'simulation'" class="result__demo">
         Modo demostración activo — cambia <code>VITE_PAYPHONE_MODE</code> a
@@ -134,6 +180,12 @@ const COPY = {
     font-size: $text-xs;
     word-break: break-all;
   }
+}
+
+.result__error {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #b3261e;
 }
 
 .result__demo {
