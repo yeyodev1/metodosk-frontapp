@@ -8,13 +8,55 @@ import { CHALLENGES } from '@/config/site'
 import { buildTransaction, renderPayphoneBox } from '@/composables/usePayphone'
 import { PAYMENT_MODE, PRICES, formatUsd } from '@/config/payment'
 import type { CheckoutContact } from './checkout'
+import type { Challenge } from '@/config/site'
 
 const router = useRouter()
 const { isOpen, selected, needsChoice, select, close } = useCheckout()
 
 const dialog = ref<HTMLElement | null>(null)
+const body = ref<HTMLElement | null>(null)
 const status = ref<'form' | 'paying' | 'error'>('form')
 const errorMessage = ref('')
+
+/** Reto marcado por la usuaria; se resalta un instante antes de avanzar. */
+const chosenId = ref<Challenge['id'] | null>(null)
+
+/**
+ * Al elegir dejamos que el resalte se vea antes de cambiar de paso: sin esa
+ * pausa el clic no se siente registrado.
+ */
+async function choose(id: Challenge['id']) {
+  if (chosenId.value) return
+  chosenId.value = id
+  await new Promise((resolve) => setTimeout(resolve, 220))
+  select(id)
+}
+
+/**
+ * El alto del modal cambia entre un paso y otro. Sin animarlo, el diálogo
+ * pega un salto: acá se fija el alto de salida y se interpola hasta el nuevo.
+ */
+let heightBefore = 0
+
+function lockHeight() {
+  const el = body.value
+  if (!el) return
+  heightBefore = el.offsetHeight
+  el.style.height = `${heightBefore}px`
+}
+
+function growHeight() {
+  const el = body.value
+  if (!el) return
+  const target = el.scrollHeight
+  el.style.height = `${heightBefore}px`
+  void el.offsetHeight // fuerza reflow para que la transición arranque
+  el.style.height = `${target}px`
+}
+
+function releaseHeight() {
+  if (body.value) body.value.style.height = ''
+}
 
 function onKeydown(event: KeyboardEvent) {
   if (event.key === 'Escape') close()
@@ -25,6 +67,8 @@ watch(isOpen, async (open) => {
   if (open) {
     status.value = 'form'
     errorMessage.value = ''
+    chosenId.value = null
+    releaseHeight()
     window.addEventListener('keydown', onKeydown)
     await nextTick()
     dialog.value?.focus()
@@ -86,14 +130,16 @@ async function submit(contact: CheckoutContact) {
 
           <div class="checkout__summary">
             <p class="checkout__eyebrow">Reto Método SK · 3 meses</p>
-            <template v-if="needsChoice">
-              <h2 id="checkout-title" class="checkout__plan">Elige tu reto</h2>
-              <p class="checkout__claim">Los dos duran 3 meses y cuestan lo mismo.</p>
-            </template>
-            <template v-else>
-              <h2 id="checkout-title" class="checkout__plan">{{ selected.name }}</h2>
-              <p class="checkout__claim">{{ selected.claim }}</p>
-            </template>
+            <Transition name="swap">
+              <div v-if="needsChoice" key="choice" class="checkout__heading">
+                <h2 id="checkout-title" class="checkout__plan">Elige tu reto</h2>
+                <p class="checkout__claim">Los dos duran 3 meses y cuestan lo mismo.</p>
+              </div>
+              <div v-else :key="selected.id" class="checkout__heading">
+                <h2 id="checkout-title" class="checkout__plan">{{ selected.name }}</h2>
+                <p class="checkout__claim">{{ selected.claim }}</p>
+              </div>
+            </Transition>
 
             <p class="checkout__amount">
               {{ formatUsd(PRICES.presale) }}
@@ -106,33 +152,44 @@ async function submit(contact: CheckoutContact) {
             </p>
           </div>
 
-          <div class="checkout__body">
-            <div v-if="needsChoice" class="checkout__choice">
-              <p class="checkout__choice-lead">¿Cuál de los dos quieres hacer?</p>
-              <button
-                v-for="challenge in CHALLENGES"
-                :key="challenge.id"
-                type="button"
-                class="checkout__option"
-                @click="select(challenge.id)"
-              >
-                <span class="checkout__option-name">{{ challenge.name }}</span>
-                <span class="checkout__option-claim">{{ challenge.claim }}</span>
-                <span class="checkout__option-for">{{ challenge.forWho }}</span>
-              </button>
-            </div>
+          <div ref="body" class="checkout__body">
+            <Transition
+              name="step"
+              @before-leave="lockHeight"
+              @enter="growHeight"
+              @after-enter="releaseHeight"
+            >
+              <div v-if="needsChoice" key="choice" class="checkout__choice">
+                <p class="checkout__choice-lead">¿Cuál de los dos quieres hacer?</p>
+                <button
+                  v-for="challenge in CHALLENGES"
+                  :key="challenge.id"
+                  type="button"
+                  class="checkout__option"
+                  :class="{
+                    'checkout__option--chosen': chosenId === challenge.id,
+                    'checkout__option--fading': chosenId && chosenId !== challenge.id,
+                  }"
+                  @click="choose(challenge.id)"
+                >
+                  <span class="checkout__option-name">{{ challenge.name }}</span>
+                  <span class="checkout__option-claim">{{ challenge.claim }}</span>
+                  <span class="checkout__option-for">{{ challenge.forWho }}</span>
+                </button>
+              </div>
 
-            <CheckoutForm v-else-if="status === 'form'" @submit="submit" />
+              <CheckoutForm v-else-if="status === 'form'" key="form" @submit="submit" />
 
-            <div v-else-if="status === 'paying'" class="checkout__box">
-              <p class="checkout__loading">Abriendo la pasarela segura de PayPhone…</p>
-              <div id="pp-button" />
-            </div>
+              <div v-else-if="status === 'paying'" key="paying" class="checkout__box">
+                <p class="checkout__loading">Abriendo la pasarela segura de PayPhone…</p>
+                <div id="pp-button" />
+              </div>
 
-            <div v-else class="checkout__error">
-              <p>{{ errorMessage }}</p>
-              <BaseButton variant="ghost" @click="status = 'form'">Intentar de nuevo</BaseButton>
-            </div>
+              <div v-else key="error" class="checkout__error">
+                <p>{{ errorMessage }}</p>
+                <BaseButton variant="ghost" @click="status = 'form'">Intentar de nuevo</BaseButton>
+              </div>
+            </Transition>
           </div>
         </div>
       </div>
@@ -192,6 +249,7 @@ async function submit(contact: CheckoutContact) {
 }
 
 .checkout__summary {
+  position: relative;
   flex: 1 1 260px;
   display: flex;
   flex-direction: column;
@@ -247,8 +305,18 @@ async function submit(contact: CheckoutContact) {
 }
 
 .checkout__body {
+  position: relative;
   flex: 1 1 320px;
   padding: clamp(1.6rem, 4vw, 2.4rem);
+  // El alto lo fija el JS durante el cambio de paso para que no salte.
+  overflow: hidden;
+  transition: height 0.45s $ease;
+}
+
+.checkout__heading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
 }
 
 .checkout__choice {
@@ -271,13 +339,38 @@ async function submit(contact: CheckoutContact) {
   border: 1px solid rgba($ink, 0.14);
   border-radius: $radius-sm;
   background-color: transparent;
-  transition: border-color 0.25s $ease, background-color 0.25s $ease;
+  transition:
+    border-color 0.3s $ease,
+    background-color 0.3s $ease,
+    box-shadow 0.3s $ease,
+    transform 0.3s $ease,
+    opacity 0.3s $ease;
 
   @include focus-ring($rose);
 
   &:hover {
     border-color: $ink;
     background-color: rgba($ink, 0.04);
+    transform: translateY(-2px);
+    box-shadow: $shadow-sm;
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  /** El reto elegido se afirma un instante antes de pasar al formulario. */
+  &--chosen {
+    border-color: $ink;
+    background-color: rgba($ink, 0.06);
+    box-shadow: $shadow-md;
+    transform: translateY(-2px) scale(1.015);
+  }
+
+  /** El otro se retira, para que la elección quede clara. */
+  &--fading {
+    opacity: 0.28;
+    transform: scale(0.985);
   }
 }
 
@@ -312,6 +405,61 @@ async function submit(contact: CheckoutContact) {
 .checkout__error p {
   color: $alert-error;
   font-size: $text-sm;
+}
+
+/* Cambio de paso dentro del modal: elegir reto -> formulario -> pasarela.
+   El que sale se posiciona absoluto para que ambos se crucen y el modal
+   nunca quede vacío. */
+.step-enter-active {
+  transition: opacity 0.34s $ease, transform 0.34s $ease;
+}
+
+.step-leave-active {
+  position: absolute;
+  inset: clamp(1.6rem, 4vw, 2.4rem);
+  bottom: auto;
+  transition: opacity 0.22s $ease, transform 0.22s $ease;
+}
+
+.step-enter-from {
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+.step-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+/* Título del panel oscuro: "Elige tu reto" -> nombre del reto. */
+.swap-enter-active {
+  transition: opacity 0.36s $ease, transform 0.36s $ease;
+}
+
+.swap-leave-active {
+  position: absolute;
+  transition: opacity 0.2s $ease, transform 0.2s $ease;
+}
+
+.swap-enter-from {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.swap-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .step-enter-active,
+  .step-leave-active,
+  .swap-enter-active,
+  .swap-leave-active,
+  .checkout__body,
+  .checkout__option {
+    transition-duration: 0.01ms;
+  }
 }
 
 .modal-enter-active,
