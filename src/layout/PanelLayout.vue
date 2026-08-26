@@ -2,6 +2,11 @@
 /**
  * Marco de las pantallas privadas, con barra lateral.
  *
+ * La clase raíz se llama `shell` a propósito: los estilos con scope del padre
+ * también se aplican a la raíz del componente hijo, y cuando esto se llamaba
+ * `.panel` le imponía `display: flex` a la vista de compras, que usaba el mismo
+ * nombre. La pantalla salía en columnas descuadradas.
+ *
  * Los enlaces se arman según el rol: la administración ve todo, incluida el
  * área de la academia, y la compradora solo lo suyo.
  */
@@ -23,11 +28,16 @@ interface Enlace {
 
 const ENLACES: Enlace[] = [
   { to: '/admin', label: 'Compras', hint: 'Quién compró y cuánto', soloAdmin: true },
-  { to: '/mi-cuenta', label: 'La academia', hint: 'Tu reto y tu acceso' },
+  { to: '/academia', label: 'La academia', hint: 'El método por dentro' },
+  { to: '/mi-cuenta', label: 'Mi cuenta', hint: 'Tus datos y tu contraseña' },
 ]
 
 const enlaces = computed(() =>
-  ENLACES.filter((e) => !e.soloAdmin || session.isAdmin),
+  ENLACES.filter((e) => !e.soloAdmin || session.isAdmin).map((e) =>
+    e.to === '/academia' && session.isAdmin
+      ? { ...e, hint: 'Vista previa de la alumna' }
+      : e,
+  ),
 )
 
 const inicial = computed(() => (session.user?.name || session.user?.email || '?')[0]?.toUpperCase())
@@ -39,9 +49,9 @@ function salir() {
 </script>
 
 <template>
-  <div class="panel" :class="{ 'panel--open': abierto }">
+  <div class="shell" :class="{ 'shell--open': abierto }">
     <button
-      class="panel__burger"
+      class="shell__burger"
       type="button"
       :aria-expanded="abierto"
       :aria-label="abierto ? 'Cerrar menú' : 'Abrir menú'"
@@ -51,7 +61,7 @@ function salir() {
     </button>
 
     <!-- Tapa el contenido en móvil cuando la barra está abierta -->
-    <div v-if="abierto" class="panel__scrim" @click="abierto = false" />
+    <div v-if="abierto" class="shell__scrim" @click="abierto = false" />
 
     <aside class="side">
       <RouterLink to="/" class="side__brand">
@@ -90,7 +100,7 @@ function salir() {
       </div>
     </aside>
 
-    <div class="panel__body">
+    <div class="shell__body">
       <RouterView />
     </div>
   </div>
@@ -99,13 +109,13 @@ function salir() {
 <style lang="scss" scoped>
 $side-w: 268px;
 
-.panel {
+.shell {
   display: flex;
   min-height: 100vh;
   background-color: $sand;
 }
 
-.panel__body {
+.shell__body {
   flex: 1 1 auto;
   min-width: 0;
 
@@ -134,7 +144,7 @@ $side-w: 268px;
   }
 }
 
-.panel--open .side {
+.shell--open .side {
   transform: none;
 }
 
@@ -267,7 +277,7 @@ $side-w: 268px;
 }
 
 /* ─────────── Abrir en móvil ─────────── */
-.panel__burger {
+.shell__burger {
   position: fixed;
   top: 1rem;
   left: 1rem;
@@ -298,15 +308,15 @@ $side-w: 268px;
   }
 }
 
-.panel--open .panel__burger span:first-child {
+.shell--open .shell__burger span:first-child {
   transform: translateY(3.25px) rotate(45deg);
 }
 
-.panel--open .panel__burger span:last-child {
+.shell--open .shell__burger span:last-child {
   transform: translateY(-3.25px) rotate(-45deg);
 }
 
-.panel__scrim {
+.shell__scrim {
   position: fixed;
   inset: 0;
   z-index: 65;

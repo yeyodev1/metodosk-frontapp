@@ -62,12 +62,16 @@ onMounted(load)
 </script>
 
 <template>
-  <main class="panel">
-    <header class="panel__head">
+  <main class="compras">
+    <header class="compras__head">
       <div>
-        <p class="panel__eyebrow">Administración</p>
-        <h1 class="panel__title">Compras</h1>
+        <p class="compras__eyebrow">Administración</p>
+        <h1 class="compras__title">Compras</h1>
       </div>
+      <p v-if="data" class="compras__meta">
+        {{ data.orders.length }}
+        {{ data.orders.length === 1 ? 'compra listada' : 'compras listadas' }}
+      </p>
     </header>
 
     <section v-if="data" class="cards">
@@ -79,9 +83,9 @@ onMounted(load)
         <span class="card__value">{{ data.resumen.aprobadas }}</span>
         <span class="card__label">Aprobadas</span>
       </div>
-      <div class="card">
+      <div class="card card--fuerte">
         <span class="card__value">{{ recaudado }}</span>
-        <span class="card__label">Recaudado (real)</span>
+        <span class="card__label">Recaudado · solo pagos reales</span>
       </div>
     </section>
 
@@ -95,9 +99,9 @@ onMounted(load)
       </select>
     </div>
 
-    <p v-if="error" class="panel__error">{{ error }}</p>
-    <p v-else-if="loading" class="panel__empty">Cargando…</p>
-    <p v-else-if="!data?.orders.length" class="panel__empty">
+    <p v-if="error" class="compras__error">{{ error }}</p>
+    <p v-else-if="loading" class="compras__empty">Cargando…</p>
+    <p v-else-if="!data?.orders.length" class="compras__empty">
       Todavía no hay compras registradas.
     </p>
 
@@ -143,49 +147,73 @@ onMounted(load)
 </template>
 
 <style lang="scss" scoped>
-.panel {
-  padding: clamp(1.5rem, 5vw, 3rem);
+.compras {
+  max-width: 1180px;
+  padding: clamp(1.5rem, 4vw, 3rem);
   padding-top: clamp(4.2rem, 8vw, 3rem);
 }
 
-.panel__head {
+.compras__head {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
+  align-items: flex-end;
   justify-content: space-between;
-  gap: 1rem;
+  gap: $space-sm;
   margin-bottom: $space-md;
 }
 
-.panel__eyebrow {
+.compras__eyebrow {
   @include eyebrow;
   color: $rose-deep;
 }
 
-.panel__title {
+.compras__title {
   font-family: $font-display;
-  font-size: $text-xl;
+  font-size: $display-sm;
+  line-height: 1.05;
   color: $ink;
 }
 
+.compras__meta {
+  font-size: $text-xs;
+  color: $ink-muted;
+}
+
+/* ── Resumen ── */
 .cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: $space-sm;
   margin-bottom: $space-md;
 }
 
 .card {
+  flex: 1 1 190px;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
-  padding: 1.1rem 1.2rem;
+  gap: 0.15rem;
+  padding: 1.1rem 1.3rem;
   border-radius: $radius-md;
   background-color: $cream;
 }
 
+.card--fuerte {
+  background-color: $ink;
+
+  .card__value {
+    color: $cream;
+  }
+
+  .card__label {
+    color: rgba($cream, 0.55);
+  }
+}
+
 .card__value {
   font-family: $font-display;
-  font-size: 1.7rem;
+  font-size: 1.9rem;
+  line-height: 1.1;
   color: $ink;
 }
 
@@ -194,6 +222,7 @@ onMounted(load)
   color: $ink-muted;
 }
 
+/* ── Filtros ── */
 .filtros {
   display: flex;
   gap: 0.6rem;
@@ -202,22 +231,28 @@ onMounted(load)
 
   input,
   select {
-    padding: 0.7rem 0.9rem;
-    border: 1px solid rgba($ink, 0.16);
-    border-radius: $radius-sm;
+    padding: 0.75rem 1rem;
+    border: 1px solid rgba($ink, 0.14);
+    border-radius: $radius-pill;
     background-color: $cream;
     font-family: inherit;
     font-size: $text-sm;
     color: $ink;
+    transition: border-color 0.3s $ease;
+
+    &:focus {
+      border-color: rgba($ink, 0.4);
+      outline: none;
+    }
   }
 
   input {
-    flex: 1 1 260px;
+    flex: 1 1 280px;
   }
 }
 
-.panel__empty,
-.panel__error {
+.compras__empty,
+.compras__error {
   padding: $space-md;
   border-radius: $radius-md;
   background-color: $cream;
@@ -225,13 +260,15 @@ onMounted(load)
   color: $ink-soft;
 }
 
-.panel__error {
+.compras__error {
+  background-color: $alert-error-bg;
   color: $alert-error;
 }
 
+/* ── Tabla ── */
 .tabla-wrap {
   overflow-x: auto;
-  border-radius: $radius-md;
+  border-radius: $radius-lg;
   background-color: $cream;
 }
 
@@ -241,21 +278,35 @@ onMounted(load)
   font-size: $text-sm;
 
   th {
-    padding: 0.9rem 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    padding: 0.9rem 1.1rem;
     text-align: left;
-    font-size: $text-xs;
-    letter-spacing: 0.08em;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
     color: $ink-muted;
+    background-color: $cream;
     border-bottom: 1px solid rgba($ink, 0.1);
     white-space: nowrap;
   }
 
   td {
-    padding: 0.9rem 1rem;
+    padding: 0.95rem 1.1rem;
     border-bottom: 1px solid rgba($ink, 0.06);
     color: $ink;
     vertical-align: top;
+    white-space: nowrap;
+  }
+
+  tbody tr {
+    transition: background-color 0.25s $ease;
+
+    &:hover {
+      background-color: rgba($sand, 0.5);
+    }
   }
 
   tr:last-child td {
@@ -274,7 +325,7 @@ onMounted(load)
   margin-left: 0.35rem;
   padding: 0.1rem 0.45rem;
   border-radius: $radius-pill;
-  font-size: 0.68rem;
+  font-size: 0.66rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
@@ -285,20 +336,21 @@ onMounted(load)
 }
 
 .tag--warn {
-  background-color: rgba($alert-error, 0.12);
+  background-color: $alert-error-bg;
   color: $alert-error;
 }
 
 .estado {
   display: inline-block;
-  padding: 0.2rem 0.6rem;
+  padding: 0.25rem 0.7rem;
   border-radius: $radius-pill;
   font-size: $text-xs;
+  white-space: nowrap;
 }
 
 .estado--approved {
-  background-color: rgba(#1b7f4d, 0.12);
-  color: #1b7f4d;
+  background-color: $alert-success-bg;
+  color: #4a7a45;
 }
 
 .estado--canceled,
