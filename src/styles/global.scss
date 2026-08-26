@@ -133,40 +133,45 @@ select {
 /* ───────────────────────────────────────────────────────────────
    Transición compartida de avisos, errores y bloques que aparecen.
    Se usa como <Transition name="aviso"> en cualquier vista.
-   Sale más rápido de lo que entra: al cerrar, estorba.
+
+   Igual que la transición de vistas: se anima con @keyframes y sin regla
+   `aviso-enter-from`, para que el estado natural del elemento sea visible.
+   Si la animación no llega a correr, el aviso se ve igual — un mensaje de
+   error que no aparece es peor que uno que aparece sin animación.
    ─────────────────────────────────────────────────────────────── */
 .aviso-enter-active {
-  transition:
-    opacity 0.34s $ease,
-    transform 0.34s $ease,
-    max-height 0.34s $ease;
+  animation: aviso-in 0.32s $ease;
 }
 
 .aviso-leave-active {
-  transition:
-    opacity 0.18s ease,
-    transform 0.18s ease,
-    max-height 0.18s ease;
+  animation: aviso-out 0.16s ease-in forwards;
 }
 
-.aviso-enter-from,
-.aviso-leave-to {
-  opacity: 0;
-  transform: translateY(-6px);
-  max-height: 0;
-  overflow: hidden;
+@keyframes aviso-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
-.aviso-enter-to,
-.aviso-leave-from {
-  opacity: 1;
-  transform: none;
-  max-height: 40rem;
+@keyframes aviso-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .aviso-enter-active,
   .aviso-leave-active {
-    transition-duration: 0.01ms;
+    animation-duration: 0.01ms;
   }
 }

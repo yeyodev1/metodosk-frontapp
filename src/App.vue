@@ -5,11 +5,26 @@ import PayphoneCheckout from '@/components/payment/PayphoneCheckout.vue'
 <template>
   <div class="app-container">
     <!--
-      Transición entre vistas. `mode="out-in"` evita que las dos pantallas se
-      pisen: con layouts de alto completo, superponerlas se ve como un salto.
+      Transición entre vistas.
+
+      SIN `mode="out-in"` a propósito. Con out-in, montar la vista nueva depende
+      de que la salida avise que terminó; si ese aviso no llega, no se monta
+      nada y la pantalla queda en blanco. Es lo que pasaba al ir del home al
+      login: el home mide más de 13.000px, quedaba en opacity 0 antes de
+      empezar a salir, ninguna propiedad cambiaba, el navegador no disparaba
+      `transitionend` y la navegación moría ahí. Recargar lo arreglaba porque
+      no había vista anterior de la que salir.
+
+      Cruzándolas, la entrante se monta siempre, pase lo que pase con la que
+      sale. Solo se anima la opacidad: mover con `transform` un elemento de esa
+      altura obliga a componer la página entera.
+
+      La saliente se saca del flujo para que no empuje a la entrante mientras
+      ambas coexisten ese instante.
+
     -->
     <RouterView v-slot="{ Component, route }">
-      <Transition name="page" mode="out-in">
+      <Transition name="page">
         <component :is="Component" :key="route.path" />
       </Transition>
     </RouterView>
@@ -25,34 +40,52 @@ import PayphoneCheckout from '@/components/payment/PayphoneCheckout.vue'
   min-height: 100vh;
 }
 
-/* La entrante sube apenas; la saliente se va hacia arriba. Corta y sobria:
-   una transición larga entre pantallas se siente lenta, no elegante. */
+/**
+ * Se anima con @keyframes, no con transition, y a propósito NO existe una
+ * regla `.page-enter-from { opacity: 0 }`.
+ *
+ * Con transition, la vista arranca en opacity 0 y solo se vuelve visible
+ * cuando Vue quita esa clase en el siguiente frame. Si ese frame se demora
+ * —pestaña en segundo plano, hilo principal ocupado, el home mide más de
+ * 13.000px— la clase se queda pegada y la página entera queda invisible.
+ * Era exactamente el bug: en blanco al navegar, bien al recargar.
+ *
+ * Con keyframes el estado natural del elemento es visible; la animación solo
+ * lo atenúa mientras corre. Si nunca llega a correr, se ve sin animación.
+ * Falla visible, no en blanco.
+ */
 .page-enter-active {
-  transition:
-    opacity 0.34s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: page-in 0.28s ease-out;
 }
 
 .page-leave-active {
-  transition:
-    opacity 0.2s ease,
-    transform 0.2s ease;
+  position: absolute;
+  inset: 0;
+  animation: page-out 0.16s ease-in forwards;
 }
 
-.page-enter-from {
-  opacity: 0;
-  transform: translateY(10px);
+@keyframes page-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
-.page-leave-to {
-  opacity: 0;
-  transform: translateY(-6px);
+@keyframes page-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .page-enter-active,
   .page-leave-active {
-    transition-duration: 0.01ms;
+    animation-duration: 0.01ms;
   }
 }
 </style>
