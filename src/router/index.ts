@@ -21,6 +21,18 @@ const routes: Array<RouteRecordRaw> = [
     meta: { title: 'Resultado del pago — Método SK' },
   },
   {
+    path: '/admin/login',
+    name: 'AdminLogin',
+    component: () => import('../views/admin/AdminLoginView.vue'),
+    meta: { title: 'Entrar — Método SK' },
+  },
+  {
+    path: '/admin',
+    name: 'AdminOrders',
+    component: () => import('../views/admin/AdminOrdersView.vue'),
+    meta: { title: 'Compras — Método SK', requiresAuth: true },
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: () => import('../views/NotFoundView.vue'),
@@ -35,6 +47,17 @@ const router = createRouter({
     if (to.hash) return { el: to.hash, behavior: 'smooth' }
     return savedPosition ?? { left: 0, top: 0 }
   },
+})
+
+/**
+ * Puerta del panel. Solo mira si hay token: la validez la decide el backend,
+ * que responde 401 y ahí se cierra la sesión.
+ */
+router.beforeEach((to) => {
+  if (!to.meta?.requiresAuth) return true
+  const token = localStorage.getItem('access_token')
+  if (token) return true
+  return { name: 'AdminLogin', query: { redirect: to.fullPath } }
 })
 
 router.afterEach((to) => {
