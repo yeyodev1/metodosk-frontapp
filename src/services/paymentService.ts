@@ -39,7 +39,25 @@ export interface ConfirmContact {
   challenge?: string
 }
 
+export interface MiPago {
+  id: string
+  referencia: string
+  status: 'approved' | 'canceled' | 'failed'
+  amountCents: number
+  currency: string
+  challenge: string | null
+  accessUntil: string | null
+  authorizationCode: string | null
+  createdAt: string
+}
+
 class PaymentService extends APIBase {
+  /** Las compras de quien tiene la sesión abierta. */
+  async mine() {
+    const { data } = await this.get<{ pagos: MiPago[] }>('payments/mine')
+    return data.pagos
+  }
+
   /**
    * El contacto es opcional: si no llega, el backend usa el correo que
    * devuelve PayPhone. Sirve para el correo de acceso y para el registro.
