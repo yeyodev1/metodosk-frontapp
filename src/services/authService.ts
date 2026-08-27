@@ -8,6 +8,8 @@ export interface SessionUser {
   name: string
   role: UserRole
   challenge: string | null
+  /** Todos los retos comprados. Puede tener los dos. */
+  challenges: string[]
   accessUntil: string | null
   /** true si el acceso sigue vigente hoy. */
   accessActive: boolean

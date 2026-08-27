@@ -20,6 +20,8 @@ export interface CursoAlumna {
   order: number
   unlockMonth: number
   coverPhoto: string | null
+  /** A qué reto pertenece, para agruparlos si compró los dos. */
+  challenge: Audiencia
   estado: 'abierto' | 'proximamente' | 'cerrado'
   welcomeVideo: { embedUrl: string; thumbnail: string | null; completed: boolean } | null
   lessons: Array<{
