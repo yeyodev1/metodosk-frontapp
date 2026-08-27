@@ -81,6 +81,12 @@ const routes: Array<RouteRecordRaw> = [
         meta: { title: 'Compras — Método SK', requiresAuth: true, requiresAdmin: true },
       },
       {
+        path: 'admin/comentarios',
+        name: 'AdminComments',
+        component: () => import('../views/admin/AdminCommentsView.vue'),
+        meta: { title: 'Comentarios — Método SK', requiresAuth: true, requiresAdmin: true },
+      },
+      {
         path: 'admin/cursos',
         name: 'AdminCourses',
         component: () => import('../views/admin/AdminCoursesView.vue'),
