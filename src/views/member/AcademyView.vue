@@ -10,6 +10,7 @@
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import CldImage from '@/components/ui/CldImage.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
+import MisRetos from '@/components/member/MisRetos.vue'
 import courseService, { type CursoAlumna } from '@/services/courseService'
 import progressService, { type MiAvance } from '@/services/progressService'
 import { useVideoProgress } from '@/composables/useVideoProgress'
@@ -86,10 +87,6 @@ async function cargarAvance() {
 /** La cuenta de administración no compró reto: elige cuál revisar. */
 const retoPreview = ref(CHALLENGES[0]!.name)
 
-const reto = computed(() =>
-  esAdmin.value ? retoPreview.value : user.value?.challenge || 'Tu reto',
-)
-
 const OPCIONES_RETO = CHALLENGES.map((c) => ({
   value: c.name,
   label: c.name,
@@ -124,6 +121,18 @@ const fechaFin = computed(() =>
 )
 
 const nombre = computed(() => user.value?.name?.split(' ')[0] || '')
+
+/** Con los dos retos comprados, cada curso tiene que decir a cuál pertenece. */
+const variosRetos = computed(() => {
+  if (esAdmin.value) return false
+  return (user.value?.challenges?.length ?? 0) > 1
+})
+
+const NOMBRE_RETO: Record<string, string> = {
+  recomposicion: 'SK Recomposición',
+  volumen: 'SK Volumen',
+  ambas: 'Los dos retos',
+}
 
 const ETIQUETA: Record<CursoAlumna['estado'], string> = {
   abierto: 'Disponible',
@@ -190,13 +199,11 @@ onMounted(async () => {
       <h1 class="hola__title">
         Hola<span v-if="nombre">, {{ nombre }}</span>
       </h1>
-      <div class="hola__reto">
-        <span class="hola__chip">{{ reto }}</span>
+      <div v-if="esAdmin" class="hola__reto">
         <BaseSelect
-          v-if="esAdmin"
           v-model="retoPreview"
           :options="OPCIONES_RETO"
-          label="Ver el reto"
+          label="Ver como quien compró"
         />
       </div>
     </header>
@@ -237,8 +244,12 @@ onMounted(async () => {
       <a class="cerrado__cta" href="/#precio">Ver el reto</a>
     </section>
 
+    <MisRetos :preview="esAdmin ? retoPreview : null" class="bloque-retos" />
+
     <section class="modulos">
-      <h2 class="modulos__title">Tu método, por dentro</h2>
+      <h2 class="modulos__title">
+        {{ variosRetos ? 'El material de tus retos' : 'Tu método, por dentro' }}
+      </h2>
 
       <p v-if="error" class="aviso aviso--error">{{ error }}</p>
       <p v-else-if="cargando" class="aviso">Cargando tu reto…</p>
@@ -268,6 +279,7 @@ onMounted(async () => {
               class="modulo__estado"
               :class="{ 'modulo__estado--pronto': c.estado !== 'abierto' }"
             >{{ etiqueta(c) }}</span>
+            <span v-if="variosRetos" class="modulo__reto">{{ NOMBRE_RETO[c.challenge] }}</span>
           </p>
           <h3 class="modulo__title">{{ c.title }}</h3>
           <p class="modulo__claim">{{ c.summary }}</p>
@@ -408,14 +420,6 @@ onMounted(async () => {
   align-items: center;
   gap: 0.7rem;
   margin-top: 0.55rem;
-}
-
-.hola__chip {
-  padding: 0.32rem 0.9rem;
-  border-radius: $radius-pill;
-  background-color: $rose-soft;
-  font-size: $text-sm;
-  color: $wine;
 }
 
 /* ── Avance del reto ── */
@@ -560,6 +564,10 @@ onMounted(async () => {
 }
 
 /* ── Cursos ── */
+.bloque-retos {
+  margin-top: $space-lg;
+}
+
 .modulos {
   margin-top: $space-lg;
   display: grid;
@@ -663,6 +671,15 @@ onMounted(async () => {
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: #4a7a45;
+}
+
+.modulo__reto {
+  padding: 0.14rem 0.6rem;
+  border-radius: $radius-pill;
+  background-color: $rose-soft;
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  color: $wine;
 }
 
 .modulo__estado--pronto {

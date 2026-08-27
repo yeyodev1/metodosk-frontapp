@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { reactive, ref, watch } from 'vue'
+import { useCheckout } from '@/composables/useCheckout'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import { validateContact, type CheckoutContact, type CheckoutErrors } from './checkout'
 import PhoneInput from './PhoneInput.vue'
@@ -7,7 +8,20 @@ import { PAYMENT_MODE } from '@/config/payment'
 
 const emit = defineEmits<{ submit: [contact: CheckoutContact] }>()
 
-const form = reactive<CheckoutContact>({ name: '', email: '', phone: '' })
+const { prefill } = useCheckout()
+
+/**
+ * Quien ya tiene sesión no vuelve a escribir sus datos.
+ *
+ * Es la alumna sumando el segundo reto: pedirle otra vez nombre y correo la
+ * hace dudar de si está comprando en la cuenta correcta, y un correo distinto
+ * al de su cuenta le abriría el acceso en otro lado.
+ */
+const form = reactive<CheckoutContact>({
+  name: prefill.value?.name || '',
+  email: prefill.value?.email || '',
+  phone: '',
+})
 const errors = ref<CheckoutErrors>({})
 
 /** El teléfono tiene su propio campo con selector de país. */
