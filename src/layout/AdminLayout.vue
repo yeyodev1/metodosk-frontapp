@@ -10,6 +10,7 @@
 import { ref } from 'vue'
 import { RouterLink, RouterView, useRouter } from 'vue-router'
 import { useSessionStore } from '@/stores/session'
+import ConfirmModal from '@/components/ui/ConfirmModal.vue'
 import '@/plugins/icons'
 import { BRAND } from '@/config/site'
 
@@ -22,6 +23,10 @@ const ENLACES = [
   { to: '/admin/cursos', label: 'Cursos', hint: 'La ruta del método y sus videos', icono: 'film' },
   { to: '/admin/comentarios', label: 'Comentarios', hint: 'Lo que preguntan las alumnas', icono: 'comments' },
 ]
+
+// Cerrar sesión se pregunta: es un clic de más contra volver a escribir la
+// contraseña, y el botón está justo debajo de la navegación.
+const confirmandoSalida = ref(false)
 
 function salir() {
   session.clear()
@@ -59,7 +64,7 @@ function salir() {
           <FaIcon :icon="['fab', 'whatsapp']" /> WhatsApp
         </a>
         <p class="side__role">Panel de administración</p>
-        <button type="button" class="side__exit" @click="salir">
+        <button type="button" class="side__exit" @click="confirmandoSalida = true">
           <FaIcon icon="right-from-bracket" /> Cerrar sesión
         </button>
       </div>
@@ -89,6 +94,17 @@ function salir() {
         <RouterView />
       </main>
     </div>
+
+    <ConfirmModal
+      :open="confirmandoSalida"
+      title="¿Cerrar sesión?"
+      message="Sales del panel y vuelves al inicio de sesión. Nada de lo que hiciste se pierde."
+      confirm-label="Cerrar sesión"
+      cancel-label="Quedarme"
+      icono="right-from-bracket"
+      @confirm="salir"
+      @cancel="confirmandoSalida = false"
+    />
 
     <Transition name="veil">
       <div v-if="abierto" class="scrim" @click="abierto = false" />

@@ -14,6 +14,7 @@
 import { computed, ref, watch } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useSessionStore } from '@/stores/session'
+import ConfirmModal from '@/components/ui/ConfirmModal.vue'
 import '@/plugins/icons'
 import { BRAND } from '@/config/site'
 
@@ -37,6 +38,10 @@ const nombre = computed(() => session.user?.name?.split(' ')[0] || 'Mi cuenta')
 
 // Navegar en móvil cierra el menú: dejarlo abierto tapa lo que se acaba de abrir.
 watch(() => route.fullPath, () => (abierto.value = false))
+
+// Cerrar sesión se pregunta: es un clic de más contra volver a escribir la
+// contraseña, y el botón está justo debajo de la navegación.
+const confirmandoSalida = ref(false)
 
 function salir() {
   session.clear()
@@ -83,7 +88,7 @@ function salir() {
           </span>
         </div>
 
-        <button type="button" class="side__exit" @click="salir">
+        <button type="button" class="side__exit" @click="confirmandoSalida = true">
           <FaIcon icon="right-from-bracket" /> Cerrar sesión
         </button>
       </div>
@@ -118,6 +123,17 @@ function salir() {
         <RouterView />
       </main>
     </div>
+
+    <ConfirmModal
+      :open="confirmandoSalida"
+      title="¿Cerrar sesión?"
+      message="Sales de tu cuenta y vuelves al inicio de sesión. Tu avance y tus datos quedan guardados."
+      confirm-label="Cerrar sesión"
+      cancel-label="Quedarme"
+      icono="right-from-bracket"
+      @confirm="salir"
+      @cancel="confirmandoSalida = false"
+    />
 
     <Transition name="veil">
       <div v-if="abierto" class="scrim" @click="abierto = false" />
