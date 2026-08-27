@@ -10,6 +10,7 @@
 import { ref } from 'vue'
 import { RouterLink, RouterView, useRouter } from 'vue-router'
 import { useSessionStore } from '@/stores/session'
+import '@/plugins/icons'
 import { BRAND } from '@/config/site'
 
 const router = useRouter()
@@ -17,8 +18,9 @@ const session = useSessionStore()
 const abierto = ref(false)
 
 const ENLACES = [
-  { to: '/admin', label: 'Compras', hint: 'Quién compró y cuánto' },
-  { to: '/admin/cursos', label: 'Cursos', hint: 'La ruta del método y sus videos' },
+  { to: '/admin', label: 'Compras', hint: 'Quién compró y cuánto', icono: 'bag-shopping' },
+  { to: '/admin/cursos', label: 'Cursos', hint: 'La ruta del método y sus videos', icono: 'film' },
+  { to: '/admin/comentarios', label: 'Comentarios', hint: 'Lo que preguntan las alumnas', icono: 'comments' },
 ]
 
 function salir() {
@@ -44,15 +46,22 @@ function salir() {
           :class="{ 'side__link--active': $route.path === e.to }"
           @click="abierto = false"
         >
-          <span class="side__link-label">{{ e.label }}</span>
-          <span class="side__link-hint">{{ e.hint }}</span>
+          <span class="side__link-icono"><FaIcon :icon="e.icono" /></span>
+          <span class="side__link-texto">
+            <span class="side__link-label">{{ e.label }}</span>
+            <span class="side__link-hint">{{ e.hint }}</span>
+          </span>
         </RouterLink>
       </nav>
 
       <div class="side__foot">
-        <a class="side__wa" :href="BRAND.whatsapp" target="_blank" rel="noopener">WhatsApp</a>
+        <a class="side__wa" :href="BRAND.whatsapp" target="_blank" rel="noopener">
+          <FaIcon :icon="['fab', 'whatsapp']" /> WhatsApp
+        </a>
         <p class="side__role">Panel de administración</p>
-        <button type="button" class="side__exit" @click="salir">Cerrar sesión</button>
+        <button type="button" class="side__exit" @click="salir">
+          <FaIcon icon="right-from-bracket" /> Cerrar sesión
+        </button>
       </div>
     </aside>
 
@@ -223,9 +232,9 @@ $side-w: 260px;
 
 .side__link {
   display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  padding: 0.8rem 0.9rem;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.75rem 0.85rem;
   border-radius: $radius-sm;
   color: rgba($cream, 0.7);
   transition: background-color 0.28s $ease, color 0.28s $ease;
@@ -239,6 +248,31 @@ $side-w: 260px;
 .side__link--active {
   background-color: rgba($rose-soft, 0.16);
   color: $cream;
+}
+
+.side__link-icono {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: $radius-sm;
+  background-color: rgba($cream, 0.07);
+  font-size: 0.78rem;
+  transition: background-color 0.28s $ease, color 0.28s $ease;
+}
+
+.side__link--active .side__link-icono {
+  background-color: $rose-soft;
+  color: $ink;
+}
+
+.side__link-texto {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
 }
 
 .side__link-label {
@@ -260,10 +294,16 @@ $side-w: 260px;
 }
 
 .side__wa {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
   font-size: $text-xs;
   color: rgba($cream, 0.6);
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  transition: color 0.24s $ease;
+
+  &:hover {
+    color: $cream;
+  }
 }
 
 .side__role {
@@ -272,6 +312,10 @@ $side-w: 260px;
 }
 
 .side__exit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
   padding: 0.6rem;
   border: 1px solid rgba($cream, 0.2);
   border-radius: $radius-pill;

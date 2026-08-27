@@ -14,6 +14,7 @@
 import { computed, ref, watch } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useSessionStore } from '@/stores/session'
+import '@/plugins/icons'
 import { BRAND } from '@/config/site'
 
 const route = useRoute()
@@ -22,10 +23,10 @@ const session = useSessionStore()
 const abierto = ref(false)
 
 const ENLACES = [
-  { to: '/academia', label: 'Mi reto', hint: 'Tus cursos y tu avance' },
-  { to: '/bienvenida', label: 'Empieza aquí', hint: 'El video de bienvenida' },
-  { to: '/mis-pagos', label: 'Mis pagos', hint: 'Lo que pagaste y tu acceso' },
-  { to: '/mi-cuenta', label: 'Mi cuenta', hint: 'Tus datos y tu contraseña' },
+  { to: '/academia', label: 'Mi reto', hint: 'Tus cursos y tu avance', icono: 'dumbbell' },
+  { to: '/bienvenida', label: 'Empieza aquí', hint: 'El video de bienvenida', icono: 'circle-play' },
+  { to: '/mis-pagos', label: 'Mis pagos', hint: 'Lo que pagaste y tu acceso', icono: 'credit-card' },
+  { to: '/mi-cuenta', label: 'Mi cuenta', hint: 'Tus datos y tu contraseña', icono: 'user' },
 ]
 
 const inicial = computed(() =>
@@ -59,14 +60,17 @@ function salir() {
           class="side__link"
           active-class="side__link--active"
         >
-          <span class="side__link-label">{{ e.label }}</span>
-          <span class="side__link-hint">{{ e.hint }}</span>
+          <span class="side__link-icono"><FaIcon :icon="e.icono" /></span>
+          <span class="side__link-texto">
+            <span class="side__link-label">{{ e.label }}</span>
+            <span class="side__link-hint">{{ e.hint }}</span>
+          </span>
         </RouterLink>
       </nav>
 
       <div class="side__foot">
         <a class="side__wa" :href="BRAND.whatsapp" target="_blank" rel="noopener">
-          Escríbenos por WhatsApp
+          <FaIcon :icon="['fab', 'whatsapp']" /> Escríbenos por WhatsApp
         </a>
 
         <div class="side__user">
@@ -79,7 +83,9 @@ function salir() {
           </span>
         </div>
 
-        <button type="button" class="side__exit" @click="salir">Cerrar sesión</button>
+        <button type="button" class="side__exit" @click="salir">
+          <FaIcon icon="right-from-bracket" /> Cerrar sesión
+        </button>
       </div>
     </aside>
 
@@ -259,8 +265,8 @@ $side-w: 250px;
 
 .side__link {
   display: flex;
-  flex-direction: column;
-  gap: 0.12rem;
+  align-items: center;
+  gap: 0.7rem;
   padding: 0.75rem 0.85rem;
   border-radius: $radius-sm;
   color: rgba($cream, 0.7);
@@ -275,6 +281,33 @@ $side-w: 250px;
 .side__link--active {
   background-color: rgba($rose-soft, 0.16);
   color: $cream;
+}
+
+/* El icono en su propia caja: los enlaces se alinean por el texto aunque los
+   glifos midan distinto. */
+.side__link-icono {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: $radius-sm;
+  background-color: rgba($cream, 0.07);
+  font-size: 0.78rem;
+  transition: background-color 0.28s $ease, color 0.28s $ease;
+}
+
+.side__link--active .side__link-icono {
+  background-color: $rose-soft;
+  color: $ink;
+}
+
+.side__link-texto {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
 }
 
 .side__link-label {
@@ -296,10 +329,16 @@ $side-w: 250px;
 }
 
 .side__wa {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
   font-size: $text-xs;
   color: rgba($cream, 0.6);
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  transition: color 0.24s $ease;
+
+  &:hover {
+    color: $cream;
+  }
 }
 
 .side__user {
@@ -339,6 +378,10 @@ $side-w: 250px;
 }
 
 .side__exit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
   padding: 0.6rem;
   border: 1px solid rgba($cream, 0.2);
   border-radius: $radius-pill;
