@@ -36,6 +36,8 @@ import {
   faSpinner,
   faXmark,
   faBars,
+  faCamera,
+  faImages,
 } from '@fortawesome/free-solid-svg-icons'
 import { faWhatsapp } from '@fortawesome/free-brands-svg-icons'
 
@@ -70,5 +72,7 @@ library.add(
   faSpinner,
   faXmark,
   faBars,
+  faCamera,
+  faImages,
   faWhatsapp,
 )
