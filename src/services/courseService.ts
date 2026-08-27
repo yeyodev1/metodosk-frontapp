@@ -21,7 +21,7 @@ export interface CursoAlumna {
   unlockMonth: number
   coverPhoto: string | null
   estado: 'abierto' | 'proximamente' | 'cerrado'
-  welcomeVideo: { embedUrl: string; thumbnail: string | null } | null
+  welcomeVideo: { embedUrl: string; thumbnail: string | null; completed: boolean } | null
   lessons: Array<{
     id: string
     title: string
@@ -30,6 +30,9 @@ export interface CursoAlumna {
     embedUrl: string | null
     fileUrl: string | null
     durationSeconds: number | null
+    /** Dónde se quedó y si ya la terminó. */
+    seconds: number
+    completed: boolean
   }>
 }
 
