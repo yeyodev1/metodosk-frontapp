@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import BaseSelect from '@/components/ui/BaseSelect.vue'
 import adminService, { type AdminOrder, type OrdersResponse } from '@/services/adminService'
 import { useSessionStore } from '@/stores/session'
 
@@ -16,6 +17,13 @@ const status = ref('')
 const usd = (cents: number) => `$${(cents / 100).toFixed(2)}`
 
 const recaudado = computed(() => usd(data.value?.resumen.recaudadoCentavos ?? 0))
+
+const ESTADOS_FILTRO = [
+  { value: '', label: 'Todos los estados' },
+  { value: 'approved', label: 'Aprobadas' },
+  { value: 'canceled', label: 'Canceladas' },
+  { value: 'failed', label: 'Fallidas' },
+]
 
 const ESTADOS: Record<AdminOrder['status'], string> = {
   approved: 'Aprobada',
@@ -92,12 +100,7 @@ onMounted(load)
 
     <div class="filtros">
       <input v-model="search" type="search" placeholder="Buscar por nombre, correo o referencia" />
-      <select v-model="status">
-        <option value="">Todos los estados</option>
-        <option value="approved">Aprobadas</option>
-        <option value="canceled">Canceladas</option>
-        <option value="failed">Fallidas</option>
-      </select>
+      <BaseSelect v-model="status" :options="ESTADOS_FILTRO" />
     </div>
 
     <p v-if="error" class="compras__error">{{ error }}</p>
@@ -234,8 +237,7 @@ onMounted(load)
   margin-bottom: $space-md;
   flex-wrap: wrap;
 
-  input,
-  select {
+  input {
     padding: 0.75rem 1rem;
     border: 1px solid rgba($ink, 0.14);
     border-radius: $radius-pill;

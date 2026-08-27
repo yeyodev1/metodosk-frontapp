@@ -4,6 +4,7 @@
  * Emite siempre el número en formato internacional (+593995254965).
  */
 import { computed, ref, watch } from 'vue'
+import BaseSelect from '@/components/ui/BaseSelect.vue'
 import {
   COUNTRIES,
   DEFAULT_COUNTRY,
@@ -45,28 +46,30 @@ watch(country, () => {
   emit('update:modelValue', toE164(raw.value, country.value))
 })
 
-function onCountryChange(event: Event) {
-  country.value = findCountry((event.target as HTMLSelectElement).value)
-}
+/**
+ * Los países como opciones del selector propio.
+ *
+ * En el botón solo caben bandera y prefijo; el nombre completo va en la lista,
+ * que es donde de verdad se elige.
+ */
+const OPCIONES = COUNTRIES.map((c) => ({
+  value: c.code,
+  label: `${c.flag} ${c.name}`,
+  hint: `+${c.dial}`,
+  short: `${c.flag} +${c.dial}`,
+}))
+
+const codigo = computed({
+  get: () => country.value.code,
+  set: (code: string) => {
+    country.value = findCountry(code)
+  },
+})
 </script>
 
 <template>
   <div class="phone" :class="{ 'phone--invalid': invalid }">
-    <div class="phone__country">
-      <span class="phone__flag" aria-hidden="true">{{ country.flag }}</span>
-      <span class="phone__dial">+{{ country.dial }}</span>
-      <select
-        class="phone__select"
-        :value="country.code"
-        aria-label="País"
-        @change="onCountryChange"
-      >
-        <option v-for="option in COUNTRIES" :key="option.code" :value="option.code">
-          {{ option.flag }} {{ option.name }} (+{{ option.dial }})
-        </option>
-      </select>
-      <span class="phone__caret" aria-hidden="true">▾</span>
-    </div>
+    <BaseSelect v-model="codigo" :options="OPCIONES" class="phone__country" />
 
     <input
       :id="props.id"
@@ -93,60 +96,27 @@ $field-border: 1px solid rgba($ink, 0.16);
   gap: 0.5rem;
 }
 
+/* El botón del selector se iguala al campo de al lado: son un solo control
+   partido en dos, y si no comparten alto y borde se nota. */
 .phone__country {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
   flex: 0 0 auto;
-  padding: 0.85rem 0.85rem;
-  border: $field-border;
-  border-radius: $radius-sm;
-  background-color: $bone;
-  cursor: pointer;
-  transition:
-    border-color 0.3s $ease,
-    background-color 0.3s $ease;
 
-  &:hover {
-    background-color: $cream;
+  :deep(.sel__trigger) {
+    padding: 0.85rem 0.9rem;
+    border: $field-border;
+    border-radius: $radius-sm;
+    background-color: $bone;
+    font-size: $text-base;
+
+    &:hover {
+      background-color: $cream;
+    }
   }
 
-  &:focus-within {
+  :deep(.sel__trigger:focus-visible) {
     border-color: $rose-deep;
     background-color: $cream;
   }
-}
-
-.phone__flag {
-  font-size: 1.1rem;
-  line-height: 1;
-}
-
-.phone__dial {
-  font-size: $text-base;
-  color: $ink;
-  white-space: nowrap;
-  line-height: 1;
-}
-
-.phone__caret {
-  font-size: 0.65rem;
-  line-height: 1;
-  color: rgba($ink, 0.45);
-}
-
-/* El select real va encima, invisible: así el desplegable es el nativo del
-   sistema, que en móvil se comporta mucho mejor que uno hecho a mano. */
-.phone__select {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  cursor: pointer;
-  appearance: none;
-  border: none;
 }
 
 .phone__number {
@@ -175,8 +145,11 @@ $field-border: 1px solid rgba($ink, 0.16);
 }
 
 .phone--invalid {
-  .phone__country,
   .phone__number {
+    border-color: $alert-error;
+  }
+
+  .phone__country :deep(.sel__trigger) {
     border-color: $alert-error;
   }
 }
