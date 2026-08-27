@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import * as tus from 'tus-js-client'
-import courseService from '@/services/courseService'
+import type { SubidaFirmada } from '@/services/courseService'
 
 /**
  * Sube un video directo del navegador a Bunny.
@@ -17,13 +17,20 @@ export function useBunnyUpload() {
   const progreso = ref(0)
   const error = ref('')
 
-  async function subir(courseId: string, destino: string, archivo: File): Promise<boolean> {
+  /**
+   * `preparar` la pide quien llama, porque un video de curso y el VSL se
+   * firman en endpoints distintos y la subida en sí es idéntica para los dos.
+   */
+  async function subir(
+    preparar: (nombre: string) => Promise<SubidaFirmada>,
+    archivo: File,
+  ): Promise<boolean> {
     subiendo.value = true
     progreso.value = 0
     error.value = ''
 
     try {
-      const firma = await courseService.prepararVideo(courseId, destino, archivo.name)
+      const firma = await preparar(archivo.name)
 
       await new Promise<void>((resolve, reject) => {
         const upload = new tus.Upload(archivo, {
