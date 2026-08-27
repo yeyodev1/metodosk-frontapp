@@ -7,10 +7,12 @@
  * la estructura ya se vendió, así que ocultarla la dejaría creyendo que compró
  * menos de lo que compró.
  */
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import CldImage from '@/components/ui/CldImage.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import courseService, { type CursoAlumna } from '@/services/courseService'
+import progressService, { type MiAvance } from '@/services/progressService'
+import { useVideoProgress } from '@/composables/useVideoProgress'
 import { useSessionStore } from '@/stores/session'
 import { CHALLENGES } from '@/config/site'
 import { ETAPAS, SEMANAS } from '@/config/academy'
@@ -23,6 +25,63 @@ const cursos = ref<CursoAlumna[]>([])
 const cargando = ref(true)
 const error = ref('')
 const abierto = ref<CursoAlumna | null>(null)
+
+/* ── Avance ─────────────────────────────────────────────────────────────────
+   Lo calcula el backend y no cada pantalla: si la barra del curso y la del
+   método se computaran por separado, acabarían diciendo cosas distintas. */
+const avance = ref<MiAvance | null>(null)
+
+const porcentajeMetodo = computed(() => avance.value?.porcentajeTotal ?? 0)
+
+function avanceDe(courseId: string) {
+  return avance.value?.cursos.find((c) => c.courseId === courseId) ?? null
+}
+
+/* ── El video que se está viendo ────────────────────────────────────────── */
+type Reproduciendo = { lessonId: string; title: string; embedUrl: string }
+
+const viendo = ref<Reproduciendo | null>(null)
+const marco = ref<HTMLIFrameElement | null>(null)
+const marcando = ref(false)
+const { terminado, seguir, soltar } = useVideoProgress()
+
+async function ver(curso: CursoAlumna, leccion: { id: string; title: string; embedUrl: string | null; seconds: number }) {
+  if (!leccion.embedUrl) return
+  soltar()
+  viendo.value = { lessonId: leccion.id, title: leccion.title, embedUrl: leccion.embedUrl }
+  await nextTick()
+  seguir(marco.value, curso.id, leccion.id, leccion.seconds)
+}
+
+/**
+ * Marcar a mano.
+ *
+ * El reproductor va en otro marco, y hay navegadores y extensiones que no
+ * dejan pasar sus mensajes. Sin este botón, una alumna en ese caso vería su
+ * avance congelado sin poder hacer nada.
+ */
+async function marcarVista(curso: CursoAlumna, lessonId: string) {
+  marcando.value = true
+  try {
+    await progressService.marcarVista(curso.id, lessonId)
+    await cargarAvance()
+    const l = curso.lessons.find((x) => x.id === lessonId)
+    if (l) l.completed = true
+    if (lessonId === 'welcome' && curso.welcomeVideo) curso.welcomeVideo.completed = true
+  } catch {
+    // Si falla, el estado real sigue siendo el del servidor: no se miente acá.
+  } finally {
+    marcando.value = false
+  }
+}
+
+async function cargarAvance() {
+  try {
+    avance.value = await progressService.mio()
+  } catch {
+    // Sin avance la academia se ve igual, solo sin barras.
+  }
+}
 
 /** La cuenta de administración no compró reto: elige cuál revisar. */
 const retoPreview = ref(CHALLENGES[0]!.name)
@@ -55,7 +114,7 @@ const semana = computed(() => {
 
 const mes = computed(() => Math.min(Math.ceil(semana.value / 4), 3))
 const etapa = computed(() => ETAPAS.find((e) => e.mes === mes.value)!)
-const avance = computed(() => Math.round((semana.value / SEMANAS) * 100))
+const avanceSemanas = computed(() => Math.round((semana.value / SEMANAS) * 100))
 const activo = computed(() => esAdmin.value || Boolean(user.value?.accessActive))
 
 const fechaFin = computed(() =>
@@ -86,12 +145,17 @@ function duracion(segundos: number | null) {
 function abrir(curso: CursoAlumna) {
   if (curso.estado !== 'abierto') return
   abierto.value = curso
+  viendo.value = null
   document.body.style.overflow = 'hidden'
 }
 
 function cerrar() {
+  // Guardar antes de desmontar: cerrar es cuando más avance se pierde.
+  soltar()
+  viendo.value = null
   abierto.value = null
   document.body.style.overflow = ''
+  cargarAvance()
 }
 
 async function cargar() {
@@ -108,9 +172,14 @@ async function cargar() {
 
 watch(mes, cargar)
 
+// El video terminó: el avance ya se guardó, falta reflejarlo en las barras.
+watch(terminado, (fin) => {
+  if (fin) cargarAvance()
+})
+
 onMounted(async () => {
   if (!session.user) await session.restore()
-  await cargar()
+  await Promise.all([cargar(), cargarAvance()])
 })
 </script>
 
@@ -153,7 +222,10 @@ onMounted(async () => {
           :class="{ 'rail__week--done': n <= semana }"
         />
       </div>
-      <p class="rail__pct">{{ avance }}% del reto</p>
+      <div class="rail__pies">
+        <p class="rail__pct">{{ avanceSemanas }}% del tiempo</p>
+        <p class="rail__pct rail__pct--metodo">{{ porcentajeMetodo }}% del método visto</p>
+      </div>
     </section>
 
     <section v-else class="cerrado">
@@ -202,6 +274,16 @@ onMounted(async () => {
           <p v-if="c.lessons.length" class="modulo__clases">
             {{ c.lessons.length }} {{ c.lessons.length === 1 ? 'clase' : 'clases' }}
           </p>
+
+          <!-- El avance de este curso, solo cuando ya empezó -->
+          <div v-if="avanceDe(c.id)?.vistos" class="mini">
+            <span class="mini__riel">
+              <span class="mini__relleno" :style="{ width: `${avanceDe(c.id)!.porcentaje}%` }" />
+            </span>
+            <span class="mini__texto">
+              {{ avanceDe(c.id)!.vistos }} de {{ avanceDe(c.id)!.total }}
+            </span>
+          </div>
           <button
             type="button"
             class="modulo__cta"
@@ -224,28 +306,68 @@ onMounted(async () => {
           <h3 class="modal__title">{{ abierto.title }}</h3>
           <p class="modal__text">{{ abierto.summary }}</p>
 
-          <div v-if="abierto.welcomeVideo" class="video">
+          <!-- El reproductor: la clase elegida, o la bienvenida por defecto -->
+          <div v-if="viendo || abierto.welcomeVideo" class="video">
             <iframe
-              :src="abierto.welcomeVideo.embedUrl"
+              ref="marco"
+              :key="viendo?.lessonId || 'welcome'"
+              :src="viendo?.embedUrl || abierto.welcomeVideo!.embedUrl"
               loading="lazy"
               allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen"
               allowfullscreen
-              title="Video de bienvenida"
+              :title="viendo?.title || 'Video de bienvenida'"
             />
+          </div>
+
+          <div v-if="viendo || abierto.welcomeVideo" class="viendo">
+            <p class="viendo__title">{{ viendo?.title || 'Video de bienvenida' }}</p>
+            <button
+              type="button"
+              class="viendo__marcar"
+              :disabled="marcando"
+              @click="marcarVista(abierto, viendo?.lessonId || 'welcome')"
+            >
+              Marcar como vista
+            </button>
           </div>
 
           <h4 class="modal__sub">Clases</h4>
           <ul v-if="abierto.lessons.length" class="clases">
-            <li v-for="l in abierto.lessons" :key="l.id" class="clase">
-              <span class="clase__num">{{ String(l.order).padStart(2, '0') }}</span>
-              <span class="clase__texto">
-                <span class="clase__title">{{ l.title }}</span>
-                <span v-if="l.summary" class="clase__sum">{{ l.summary }}</span>
-              </span>
-              <span v-if="duracion(l.durationSeconds)" class="clase__dur">
-                {{ duracion(l.durationSeconds) }}
-              </span>
-              <span v-else-if="!l.embedUrl" class="clase__dur">Próximamente</span>
+            <li v-for="l in abierto.lessons" :key="l.id">
+              <button
+                type="button"
+                class="clase"
+                :class="{
+                  'clase--activa': viendo?.lessonId === l.id,
+                  'clase--vista': l.completed,
+                }"
+                :disabled="!l.embedUrl"
+                @click="ver(abierto, l)"
+              >
+                <span class="clase__tick" aria-hidden="true">
+                  <svg v-if="l.completed" viewBox="0 0 12 12" width="11" height="11">
+                    <path
+                      d="M1.5 6.2 4.4 9l6-6.4"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                  <span v-else class="clase__num">{{ String(l.order).padStart(2, '0') }}</span>
+                </span>
+                <span class="clase__texto">
+                  <span class="clase__title">{{ l.title }}</span>
+                  <span v-if="l.summary" class="clase__sum">{{ l.summary }}</span>
+                </span>
+                <span v-if="l.completed" class="clase__dur">Vista</span>
+                <span v-else-if="l.seconds > 10" class="clase__dur">A medias</span>
+                <span v-else-if="duracion(l.durationSeconds)" class="clase__dur">
+                  {{ duracion(l.durationSeconds) }}
+                </span>
+                <span v-else-if="!l.embedUrl" class="clase__dur">Próximamente</span>
+              </button>
             </li>
           </ul>
           <p v-else class="aviso">Las clases de este curso se publican pronto.</p>
@@ -357,10 +479,54 @@ onMounted(async () => {
   background-color: $rose;
 }
 
-.rail__pct {
+.rail__pies {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
   margin-top: 0.5rem;
+}
+
+.rail__pct {
   font-size: $text-xs;
   color: rgba($cream, 0.5);
+}
+
+.rail__pct--metodo {
+  color: $rose-soft;
+}
+
+/* Avance del curso en su tarjeta */
+.mini {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 260px;
+  margin-top: 0.2rem;
+}
+
+.mini__riel {
+  flex: 1 1 auto;
+  height: 4px;
+  border-radius: $radius-pill;
+  background-color: rgba($ink, 0.1);
+  overflow: hidden;
+}
+
+.mini__relleno {
+  display: block;
+  height: 100%;
+  border-radius: $radius-pill;
+  background-color: $rose;
+  transition: width 0.5s $ease;
+}
+
+.mini__texto {
+  flex: none;
+  font-size: $text-xs;
+  color: $ink-muted;
 }
 
 /* ── Acceso terminado ── */
@@ -650,19 +816,95 @@ onMounted(async () => {
   list-style: none;
 }
 
+/* El video que se está viendo */
+.viendo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin: -0.8rem 0 $space-md;
+}
+
+.viendo__title {
+  font-size: $text-sm;
+  color: $ink;
+}
+
+.viendo__marcar {
+  padding: 0.35rem 0.85rem;
+  border: 1px solid rgba($ink, 0.2);
+  border-radius: $radius-pill;
+  background: none;
+  font-family: inherit;
+  font-size: $text-xs;
+  color: $ink-soft;
+  cursor: pointer;
+  transition: border-color 0.28s $ease, color 0.28s $ease;
+
+  &:hover:not(:disabled) {
+    border-color: $ink;
+    color: $ink;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  @include focus-ring;
+}
+
 .clase {
   display: flex;
   align-items: flex-start;
   gap: 0.7rem;
+  width: 100%;
   padding: 0.7rem 0.85rem;
+  border: none;
   border-radius: $radius-sm;
   background-color: $cream;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.26s $ease;
+
+  &:hover:not(:disabled) {
+    background-color: $sand;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  @include focus-ring;
+}
+
+.clase--activa {
+  background-color: $rose-soft;
+}
+
+.clase__tick {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: rgba($ink, 0.06);
+  color: $ink-muted;
+}
+
+.clase--vista .clase__tick {
+  background-color: $alert-success-bg;
+  color: #4a7a45;
 }
 
 .clase__num {
-  flex: none;
   font-family: $font-display;
-  font-size: $text-sm;
+  font-size: 0.72rem;
   font-style: italic;
   color: $rose-deep;
 }
