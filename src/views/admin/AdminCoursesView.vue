@@ -8,7 +8,7 @@
  * Nada se publica solo. Un curso nace en borrador y hay que decir que está
  * listo — subir un video no debería exponerlo a las alumnas antes de revisarlo.
  */
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import courseService, { type CursoAdmin, type Audiencia, type EstadoCurso, type VideoBunny } from '@/services/courseService'
 import settingsService from '@/services/settingsService'
@@ -209,6 +209,66 @@ async function quitarVsl() {
   await cargarVsl()
 }
 
+/**
+ * Los videos que Bunny todavía está procesando.
+ *
+ * Codificar tarda de un minuto a media hora, y no avisa. Sin esto, quien sube
+ * un video ve "procesando" para siempre salvo que recargue a ciegas: el panel
+ * pregunta solo mientras haya algo en vuelo, y para en cuanto no queda nada.
+ */
+const enVuelo = computed(() => {
+  const pendientes: Array<{ courseId: string; destino: string }> = []
+  if (vsl.value && vsl.value.status !== 'listo' && vsl.value.status !== 'error') {
+    pendientes.push({ courseId: 'vsl', destino: 'vsl' })
+  }
+  for (const c of cursos.value) {
+    if (c.welcomeVideo && c.welcomeVideo.status !== 'listo' && c.welcomeVideo.status !== 'error') {
+      pendientes.push({ courseId: c.id, destino: 'welcome' })
+    }
+    for (const l of c.lessons) {
+      if (l.video && l.video.status !== 'listo' && l.video.status !== 'error') {
+        pendientes.push({ courseId: c.id, destino: l.id })
+      }
+    }
+  }
+  return pendientes
+})
+
+const revisando = ref(false)
+let reloj: ReturnType<typeof setInterval> | null = null
+
+async function revisarPendientes() {
+  if (revisando.value || !enVuelo.value.length) return
+  revisando.value = true
+  try {
+    await Promise.all(
+      enVuelo.value.map((p) =>
+        p.destino === 'vsl'
+          ? settingsService.estadoVsl().catch(() => undefined)
+          : courseService.estadoVideo(p.courseId, p.destino).catch(() => undefined),
+      ),
+    )
+    await Promise.all([cargar(), cargarVsl()])
+  } finally {
+    revisando.value = false
+  }
+}
+
+// Cada minuto mientras haya algo procesando. Más seguido no adelanta nada:
+// Bunny no va más rápido porque se le pregunte.
+watch(enVuelo, (pendientes) => {
+  if (pendientes.length && !reloj) {
+    reloj = setInterval(revisarPendientes, 60_000)
+  } else if (!pendientes.length && reloj) {
+    clearInterval(reloj)
+    reloj = null
+  }
+})
+
+onBeforeUnmount(() => {
+  if (reloj) clearInterval(reloj)
+})
+
 const ESTADO_VIDEO: Record<string, string> = {
   subiendo: 'Subiendo…',
   procesando: 'Bunny lo está procesando',
@@ -239,6 +299,19 @@ onMounted(() => {
       <code>BUNNY_STREAM_API_KEY</code>, <code>BUNNY_STREAM_LIBRARY_ID</code> y
       <code>BUNNY_STREAM_CDN_HOSTNAME</code> en el backend.
     </p>
+
+    <Transition name="aviso">
+      <p v-if="enVuelo.length" class="aviso aviso--proceso">
+        <span>
+          Bunny está procesando {{ enVuelo.length }}
+          {{ enVuelo.length === 1 ? 'video' : 'videos' }}. Puede tardar de un minuto a media hora;
+          se revisa solo cada minuto y aparece cuando esté listo.
+        </span>
+        <button type="button" class="link" :disabled="revisando" @click="revisarPendientes">
+          {{ revisando ? 'Revisando…' : 'Revisar ahora' }}
+        </button>
+      </p>
+    </Transition>
 
     <p v-if="error" class="aviso aviso--error">{{ error }}</p>
     <p v-if="errorSubida" class="aviso aviso--error">{{ errorSubida }}</p>
@@ -489,6 +562,16 @@ onMounted(() => {
 
 .aviso--warn {
   background-color: $alert-warning-bg;
+  color: $ink;
+}
+
+.aviso--proceso {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  background-color: $alert-info-bg;
   color: $ink;
 }
 
