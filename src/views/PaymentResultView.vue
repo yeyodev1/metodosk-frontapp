@@ -3,6 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import VslPlayer from '@/components/ui/VslPlayer.vue'
+import ConfirmModal from '@/components/ui/ConfirmModal.vue'
 import settingsService, { type Vsl } from '@/services/settingsService'
 import AppFooter from '@/layout/AppFooter.vue'
 import { PAYMENT_MODE } from '@/config/payment'
@@ -50,7 +51,30 @@ const amountLabel = computed(() =>
   access.value ? `$${(access.value.amount / 100).toFixed(2)} USD` : '',
 )
 
+/**
+ * Mandar el acceso a otro correo se pregunta antes.
+ *
+ * Ese correo lleva la contraseña de la cuenta. Un dedo torpe en un correo mal
+ * escrito manda las credenciales de la compradora a un desconocido, y eso no
+ * se deshace. Al correo de la compra se reenvía sin preguntar: ahí ya estaba.
+ */
+const confirmandoEnvio = ref(false)
+
+const otroCorreo = computed(() => {
+  const destino = resendTo.value.trim().toLowerCase()
+  return Boolean(destino) && destino !== (access.value?.email || '').toLowerCase()
+})
+
+function pedirReenvio() {
+  if (otroCorreo.value) {
+    confirmandoEnvio.value = true
+    return
+  }
+  resendEmail()
+}
+
 async function resendEmail() {
+  confirmandoEnvio.value = false
   const destino = resendTo.value.trim()
   resending.value = true
   resendOk.value = ''
@@ -257,7 +281,7 @@ const COPY: Record<State, { title: string; text: string }> = {
               </template>
             </p>
 
-            <form class="access__form" novalidate @submit.prevent="resendEmail">
+            <form class="access__form" novalidate @submit.prevent="pedirReenvio">
               <label class="access__label" for="resend-email">
                 ¿No te llegó, o lo quieres en otro correo?
               </label>
@@ -305,6 +329,18 @@ const COPY: Record<State, { title: string; text: string }> = {
           <BaseButton :variant="access ? 'ghost' : 'primary'" href="/">Volver al inicio</BaseButton>
         </div>
       </section>
+
+      <ConfirmModal
+        :open="confirmandoEnvio"
+        title="¿Enviarlo a otro correo?"
+        :message="`Vamos a mandar tus datos de acceso, con tu contraseña, a ${resendTo.trim()}. Revisa que esté bien escrito antes de seguir.`"
+        confirm-label="Enviar ahí"
+        cancel-label="Revisar el correo"
+        icono="paper-plane"
+        :loading="resending"
+        @confirm="resendEmail"
+        @cancel="confirmandoEnvio = false"
+      />
     </main>
 
     <AppFooter />

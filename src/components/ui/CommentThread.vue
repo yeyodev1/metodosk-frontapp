@@ -10,6 +10,7 @@
  * texto se devuelve al campo en vez de perderse.
  */
 import { computed, onMounted, ref, watch } from 'vue'
+import ConfirmModal from '@/components/ui/ConfirmModal.vue'
 import commentService, { type Comentario } from '@/services/commentService'
 import { useSessionStore } from '@/stores/session'
 
@@ -96,15 +97,26 @@ async function responder(padre: Comentario) {
   }
 }
 
-async function borrar(id: string) {
+// Se pregunta antes: un comentario borrado no se recupera, y el botón está
+// a un dedo de "Responder".
+const porBorrar = ref<string | null>(null)
+const borrando = ref(false)
+
+async function borrar() {
+  const id = porBorrar.value
+  if (!id) return
+  borrando.value = true
   try {
     await commentService.borrar(id)
     comentarios.value = comentarios.value.filter((c) => c.id !== id)
     for (const c of comentarios.value) {
       c.respuestas = c.respuestas.filter((r) => r.id !== id)
     }
+    porBorrar.value = null
   } catch {
     error.value = 'No pudimos borrar el comentario'
+  } finally {
+    borrando.value = false
   }
 }
 
@@ -177,7 +189,7 @@ onMounted(cargar)
             >
               <FaIcon icon="reply" /> Responder
             </button>
-            <button v-if="c.mine" type="button" class="mini mini--danger" @click="borrar(c.id)">
+            <button v-if="c.mine" type="button" class="mini mini--danger" @click="porBorrar = c.id">
               <FaIcon icon="trash" /> Borrar
             </button>
           </div>
@@ -203,7 +215,7 @@ onMounted(cargar)
                   <span class="comentario__fecha">{{ cuando(r.createdAt) }}</span>
                 </p>
                 <p class="comentario__texto">{{ r.body }}</p>
-                <button v-if="r.mine" type="button" class="mini mini--danger" @click="borrar(r.id)">
+                <button v-if="r.mine" type="button" class="mini mini--danger" @click="porBorrar = r.id">
                   <FaIcon icon="trash" /> Borrar
                 </button>
               </div>
@@ -212,6 +224,17 @@ onMounted(cargar)
         </div>
       </li>
     </ul>
+    <ConfirmModal
+      :open="Boolean(porBorrar)"
+      title="¿Borrar tu comentario?"
+      message="Desaparece del hilo junto con sus respuestas. No se puede recuperar."
+      confirm-label="Borrarlo"
+      cancel-label="Dejarlo"
+      danger
+      :loading="borrando"
+      @confirm="borrar"
+      @cancel="porBorrar = null"
+    />
   </section>
 </template>
 

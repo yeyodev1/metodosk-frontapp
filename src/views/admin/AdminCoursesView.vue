@@ -10,6 +10,7 @@
  */
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
+import ConfirmModal from '@/components/ui/ConfirmModal.vue'
 import courseService, { type CursoAdmin, type Audiencia, type EstadoCurso, type VideoBunny } from '@/services/courseService'
 import settingsService from '@/services/settingsService'
 import { useBunnyUpload } from '@/composables/useBunnyUpload'
@@ -135,10 +136,23 @@ async function mover(id: string, direccion: -1 | 1) {
   await cargar()
 }
 
-async function eliminar(curso: CursoAdmin) {
-  if (!confirm(`¿Eliminar "${curso.title}"? Se borran también sus videos de Bunny.`)) return
-  await courseService.eliminar(curso.id)
-  await cargar()
+/* Lo que no se puede deshacer se pregunta antes, y el aviso dice exactamente
+   qué se pierde: los videos también se borran de Bunny. */
+const porEliminar = ref<CursoAdmin | null>(null)
+const eliminando = ref(false)
+
+async function eliminar() {
+  if (!porEliminar.value) return
+  eliminando.value = true
+  try {
+    await courseService.eliminar(porEliminar.value.id)
+    porEliminar.value = null
+    await cargar()
+  } catch (e: unknown) {
+    error.value = (e as { message?: string }).message ?? 'No pudimos eliminar el curso'
+  } finally {
+    eliminando.value = false
+  }
 }
 
 async function agregarClase(curso: CursoAdmin) {
@@ -203,10 +217,18 @@ async function elegirVsl(evento: Event) {
   }
 }
 
+const confirmandoVsl = ref(false)
+const quitandoVsl = ref(false)
+
 async function quitarVsl() {
-  if (!confirm('¿Quitar el video de bienvenida? Se borra también de Bunny.')) return
-  await settingsService.borrarVsl()
-  await cargarVsl()
+  quitandoVsl.value = true
+  try {
+    await settingsService.borrarVsl()
+    confirmandoVsl.value = false
+    await cargarVsl()
+  } finally {
+    quitandoVsl.value = false
+  }
 }
 
 /**
@@ -341,7 +363,7 @@ onMounted(() => {
             @change="elegirVsl($event)"
           />
         </label>
-        <button v-if="vsl" type="button" class="link link--danger" @click="quitarVsl">
+        <button v-if="vsl" type="button" class="link link--danger" @click="confirmandoVsl = true">
           Quitar
         </button>
       </div>
@@ -493,7 +515,7 @@ onMounted(() => {
 
           <div class="curso__acciones">
             <button type="button" class="link" @click="abrirEdicion(c)">Editar</button>
-            <button type="button" class="link link--danger" @click="eliminar(c)">Eliminar</button>
+            <button type="button" class="link link--danger" @click="porEliminar = c">Eliminar</button>
           </div>
         </div>
       </li>
@@ -502,6 +524,29 @@ onMounted(() => {
     <p v-else-if="!cargando" class="aviso">
       Todavía no hay cursos. Empieza subiendo el primero de la ruta.
     </p>
+    <ConfirmModal
+      :open="Boolean(porEliminar)"
+      title="¿Eliminar este curso?"
+      :message="`Se borra «${porEliminar?.title}» junto con sus clases y sus videos en Bunny. Esto no se puede deshacer.`"
+      confirm-label="Eliminar el curso"
+      cancel-label="Conservarlo"
+      danger
+      :loading="eliminando"
+      @confirm="eliminar"
+      @cancel="porEliminar = null"
+    />
+
+    <ConfirmModal
+      :open="confirmandoVsl"
+      title="¿Quitar el video de bienvenida?"
+      message="Deja de reproducirse al confirmar el pago y desaparece de «Empieza aquí». El video también se borra de Bunny."
+      confirm-label="Quitar el video"
+      cancel-label="Dejarlo"
+      danger
+      :loading="quitandoVsl"
+      @confirm="quitarVsl"
+      @cancel="confirmandoVsl = false"
+    />
   </div>
 </template>
 

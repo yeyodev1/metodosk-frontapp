@@ -10,6 +10,7 @@
  * puede deshacer. Borrar existe, pero es para spam.
  */
 import { computed, onMounted, ref } from 'vue'
+import ConfirmModal from '@/components/ui/ConfirmModal.vue'
 import commentService, { type ComentarioAdmin } from '@/services/commentService'
 import courseService, { type CursoAdmin } from '@/services/courseService'
 
@@ -80,15 +81,21 @@ async function alternarOculto(c: ComentarioAdmin) {
   }
 }
 
-async function eliminar(c: ComentarioAdmin) {
-  if (!confirm(`¿Eliminar el comentario de ${c.authorName}? También se borran sus respuestas.`)) {
-    return
-  }
+const porEliminar = ref<ComentarioAdmin | null>(null)
+const eliminando = ref(false)
+
+async function eliminar() {
+  const c = porEliminar.value
+  if (!c) return
+  eliminando.value = true
   try {
     await commentService.eliminar(c.id)
     comentarios.value = comentarios.value.filter((x) => x.id !== c.id)
+    porEliminar.value = null
   } catch {
     error.value = 'No pudimos eliminarlo'
+  } finally {
+    eliminando.value = false
   }
 }
 
@@ -155,12 +162,23 @@ onMounted(cargar)
             <FaIcon :icon="c.hidden ? 'eye' : 'eye-slash'" />
             {{ c.hidden ? 'Mostrar' : 'Ocultar' }}
           </button>
-          <button type="button" class="mini mini--danger" @click="eliminar(c)">
+          <button type="button" class="mini mini--danger" @click="porEliminar = c">
             <FaIcon icon="trash" /> Eliminar
           </button>
         </div>
       </li>
     </ul>
+    <ConfirmModal
+      :open="Boolean(porEliminar)"
+      title="¿Eliminar el comentario?"
+      :message="`Se borra el comentario de ${porEliminar?.authorName} y sus respuestas, sin dejar rastro. Si solo quieres que deje de verse, usa Ocultar.`"
+      confirm-label="Eliminar"
+      cancel-label="Cancelar"
+      danger
+      :loading="eliminando"
+      @confirm="eliminar"
+      @cancel="porEliminar = null"
+    />
   </div>
 </template>
 
