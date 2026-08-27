@@ -23,6 +23,7 @@ const abierto = ref(false)
 
 const ENLACES = [
   { to: '/academia', label: 'Mi reto', hint: 'Tus cursos y tu avance' },
+  { to: '/bienvenida', label: 'Empieza aquí', hint: 'El video de bienvenida' },
   { to: '/mis-pagos', label: 'Mis pagos', hint: 'Lo que pagaste y tu acceso' },
   { to: '/mi-cuenta', label: 'Mi cuenta', hint: 'Tus datos y tu contraseña' },
 ]

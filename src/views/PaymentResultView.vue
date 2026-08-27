@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import BaseButton from '@/components/ui/BaseButton.vue'
+import VslPlayer from '@/components/ui/VslPlayer.vue'
+import settingsService, { type Vsl } from '@/services/settingsService'
 import AppFooter from '@/layout/AppFooter.vue'
 import { PAYMENT_MODE } from '@/config/payment'
 import paymentService from '@/services/paymentService'
@@ -118,6 +120,44 @@ onMounted(async () => {
 
 const state = computed<State>(() => confirmState.value ?? 'confirming')
 
+/**
+ * El video de bienvenida.
+ *
+ * Se pide solo cuando el pago se aprobó: en una pantalla de pago rechazado no
+ * pinta nada, y pedirlo igual sería gastar la conexión de alguien que ya se
+ * está yendo.
+ *
+ * Si no hay video cargado, `vsl` queda en null y la pantalla funciona como
+ * antes. Un VSL sin subir no puede frenar una compra.
+ */
+const vsl = ref<Vsl | null>(null)
+const vslVisto = ref(false)
+
+const esperandoVideo = computed(() => Boolean(vsl.value) && !vslVisto.value)
+
+watch(
+  () => confirmState.value,
+  async (estado) => {
+    if (estado !== 'approved' && estado !== 'simulated') return
+    try {
+      vsl.value = await settingsService.vsl()
+    } catch {
+      // Sin video se sigue igual: el acceso ya está confirmado.
+    }
+  },
+  { immediate: true },
+)
+
+function terminoElVideo() {
+  vslVisto.value = true
+  // Ya lo vio: en la academia le aparece como opcional, no vuelve a bloquear.
+  try {
+    localStorage.setItem('sk_vsl_visto', '1')
+  } catch {
+    // Sin almacenamiento no pasa nada: solo lo verá de nuevo si vuelve acá.
+  }
+}
+
 const COPY: Record<State, { title: string; text: string }> = {
   simulated: {
     title: '¡Listo! (simulación)',
@@ -153,6 +193,18 @@ const COPY: Record<State, { title: string; text: string }> = {
         <p class="result__eyebrow">Método SK · Reto de 3 meses</p>
         <h1 class="result__title">{{ COPY[state].title }}</h1>
         <p class="result__text">{{ COPY[state].text }}</p>
+
+        <Transition name="aviso">
+          <div v-if="vsl" class="bienvenida">
+            <p class="bienvenida__label">Empieza por aquí</p>
+            <VslPlayer
+              :embed-url="vsl.embedUrl"
+              :duration-seconds="vsl.durationSeconds"
+              obligatorio
+              @terminado="terminoElVideo"
+            />
+          </div>
+        </Transition>
 
         <dl v-if="clientTransactionId || transactionId" class="result__meta">
           <div v-if="plan">
@@ -242,7 +294,14 @@ const COPY: Record<State, { title: string; text: string }> = {
         </p>
 
         <div class="result__actions">
-          <BaseButton v-if="access" href="/login" size="lg">Entrar a mi cuenta</BaseButton>
+          <template v-if="access">
+            <BaseButton v-if="!esperandoVideo" href="/login" size="lg">
+              Entrar a mi cuenta
+            </BaseButton>
+            <p v-else class="result__espera">
+              El acceso ya está en tu correo. Termina el video y entras.
+            </p>
+          </template>
           <BaseButton :variant="access ? 'ghost' : 'primary'" href="/">Volver al inicio</BaseButton>
         </div>
       </section>
@@ -253,6 +312,23 @@ const COPY: Record<State, { title: string; text: string }> = {
 </template>
 
 <style lang="scss" scoped>
+.bienvenida {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: $space-md 0;
+}
+
+.bienvenida__label {
+  @include eyebrow;
+  color: $rose-deep;
+}
+
+.result__espera {
+  font-size: $text-sm;
+  color: $ink-soft;
+}
+
 .vista-resultado {
   display: flex;
   flex-direction: column;

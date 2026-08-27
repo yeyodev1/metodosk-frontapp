@@ -10,7 +10,8 @@
  */
 import { computed, onMounted, ref } from 'vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
-import courseService, { type CursoAdmin, type Audiencia, type EstadoCurso } from '@/services/courseService'
+import courseService, { type CursoAdmin, type Audiencia, type EstadoCurso, type VideoBunny } from '@/services/courseService'
+import settingsService from '@/services/settingsService'
 import { useBunnyUpload } from '@/composables/useBunnyUpload'
 
 const cursos = ref<CursoAdmin[]>([])
@@ -159,7 +160,7 @@ async function elegirVideo(evento: Event, courseId: string, destino: string) {
   if (!archivo) return
 
   subiendoEn.value = `${courseId}:${destino}`
-  const ok = await subir(courseId, destino, archivo)
+  const ok = await subir((nombre) => courseService.prepararVideo(courseId, destino, nombre), archivo)
   subiendoEn.value = null
   input.value = ''
 
@@ -170,6 +171,44 @@ async function elegirVideo(evento: Event, courseId: string, destino: string) {
   }
 }
 
+/* ── Video de bienvenida (VSL) ──────────────────────────────────────────────
+   Es uno solo para todo el sitio, no pertenece a ningún curso: se reproduce al
+   terminar de pagar, antes de que exista una cuenta. */
+const vsl = ref<VideoBunny | null>(null)
+const subiendoVsl = ref(false)
+
+async function cargarVsl() {
+  try {
+    const data = await settingsService.vslAdmin()
+    vsl.value = data.vsl
+  } catch {
+    // El bloque muestra "sin subir"; no hay nada que reintentar solo.
+  }
+}
+
+async function elegirVsl(evento: Event) {
+  const input = evento.target as HTMLInputElement
+  const archivo = input.files?.[0]
+  if (!archivo) return
+
+  subiendoVsl.value = true
+  const ok = await subir((nombre) => settingsService.prepararVsl(nombre), archivo)
+  subiendoVsl.value = false
+  input.value = ''
+
+  if (ok) {
+    await cargarVsl()
+    // Bunny transcodifica en background: se vuelve a preguntar en un momento.
+    setTimeout(() => settingsService.estadoVsl().then(cargarVsl).catch(() => undefined), 6000)
+  }
+}
+
+async function quitarVsl() {
+  if (!confirm('¿Quitar el video de bienvenida? Se borra también de Bunny.')) return
+  await settingsService.borrarVsl()
+  await cargarVsl()
+}
+
 const ESTADO_VIDEO: Record<string, string> = {
   subiendo: 'Subiendo…',
   procesando: 'Bunny lo está procesando',
@@ -177,7 +216,10 @@ const ESTADO_VIDEO: Record<string, string> = {
   error: 'Falló el procesado',
 }
 
-onMounted(cargar)
+onMounted(() => {
+  cargar()
+  cargarVsl()
+})
 </script>
 
 <template>
@@ -201,6 +243,41 @@ onMounted(cargar)
     <p v-if="error" class="aviso aviso--error">{{ error }}</p>
     <p v-if="errorSubida" class="aviso aviso--error">{{ errorSubida }}</p>
     <p v-if="cargando" class="aviso">Cargando…</p>
+
+    <!-- El VSL va aparte: no es un curso, se ve al terminar de pagar -->
+    <section class="vsl">
+      <div class="vsl__texto">
+        <h2 class="vsl__title">Video de bienvenida</h2>
+        <p class="vsl__sub">
+          Se reproduce apenas se confirma el pago, antes de entrar a la cuenta. Después queda en
+          «Empieza aquí» dentro de la app.
+        </p>
+        <p class="vsl__estado">
+          <template v-if="vsl">{{ ESTADO_VIDEO[vsl.status] }}</template>
+          <template v-else>Sin subir</template>
+        </p>
+      </div>
+
+      <div class="vsl__acciones">
+        <label class="btn btn--solid btn--file" :class="{ 'btn--disabled': !bunnyListo }">
+          {{ vsl ? 'Reemplazar' : 'Subir el VSL' }}
+          <input
+            type="file"
+            accept="video/*"
+            :disabled="!bunnyListo || subiendo"
+            @change="elegirVsl($event)"
+          />
+        </label>
+        <button v-if="vsl" type="button" class="link link--danger" @click="quitarVsl">
+          Quitar
+        </button>
+      </div>
+
+      <div v-if="subiendoVsl" class="barra vsl__barra">
+        <span class="barra__relleno" :style="{ width: `${progreso}%` }" />
+        <span class="barra__pct">{{ progreso }}%</span>
+      </div>
+    </section>
 
     <!-- Alta y edición -->
     <Transition name="aviso">
@@ -413,6 +490,73 @@ onMounted(cargar)
 .aviso--warn {
   background-color: $alert-warning-bg;
   color: $ink;
+}
+
+/* ── Video de bienvenida ── */
+.vsl {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-sm;
+  padding: clamp(1rem, 3vw, 1.4rem);
+  border-radius: $radius-lg;
+  background-color: $ink;
+  color: $cream;
+}
+
+.vsl__texto {
+  min-width: 0;
+  flex: 1 1 280px;
+}
+
+.vsl__title {
+  font-family: $font-display;
+  font-size: $text-lg;
+  color: $cream;
+}
+
+.vsl__sub {
+  max-width: 52ch;
+  margin-top: 0.2rem;
+  font-size: $text-sm;
+  color: rgba($cream, 0.65);
+}
+
+.vsl__estado {
+  margin-top: 0.4rem;
+  font-size: $text-xs;
+  color: $rose-soft;
+}
+
+.vsl__acciones {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+
+  .btn--solid {
+    border-color: $rose-soft;
+    background-color: $rose-soft;
+    color: $ink;
+
+    &:hover:not(:disabled) {
+      background-color: $cream;
+      border-color: $cream;
+    }
+  }
+
+  .link--danger {
+    color: rgba($cream, 0.6);
+  }
+}
+
+.vsl__barra {
+  flex: 1 1 100%;
+  background-color: rgba($cream, 0.15);
+
+  .barra__pct {
+    color: $cream;
+  }
 }
 
 /* ── Botones ── */

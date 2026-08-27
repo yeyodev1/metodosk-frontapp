@@ -49,6 +49,12 @@ const routes: Array<RouteRecordRaw> = [
         meta: { title: 'La academia — Método SK', requiresAuth: true },
       },
       {
+        path: 'bienvenida',
+        name: 'Welcome',
+        component: () => import('../views/member/WelcomeView.vue'),
+        meta: { title: 'Empieza aquí — Método SK', requiresAuth: true },
+      },
+      {
         path: 'mis-pagos',
         name: 'MyPayments',
         component: () => import('../views/member/MyPaymentsView.vue'),
