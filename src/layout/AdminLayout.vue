@@ -16,7 +16,10 @@ const router = useRouter()
 const session = useSessionStore()
 const abierto = ref(false)
 
-const ENLACES = [{ to: '/admin', label: 'Compras', hint: 'Quién compró y cuánto' }]
+const ENLACES = [
+  { to: '/admin', label: 'Compras', hint: 'Quién compró y cuánto' },
+  { to: '/admin/cursos', label: 'Cursos', hint: 'La ruta del método y sus videos' },
+]
 
 function salir() {
   session.clear()
@@ -38,7 +41,7 @@ function salir() {
           :key="e.to"
           :to="e.to"
           class="side__link"
-          active-class="side__link--active"
+          :class="{ 'side__link--active': $route.path === e.to }"
           @click="abierto = false"
         >
           <span class="side__link-label">{{ e.label }}</span>

@@ -2,25 +2,29 @@
 /**
  * Marco de la app de la alumna.
  *
- * Barra arriba y no lateral: la alumna solo tiene dos destinos, y una columna
- * fija de 260px para dos enlaces le roba a lo único que importa acá, que es el
- * contenido del reto.
+ * Barra lateral con sus destinos: el reto, sus pagos y su cuenta. En móvil se
+ * guarda tras el botón de menú y entra deslizando; el contenido nunca se parte
+ * en dos columnas antes de que haya ancho de sobra para las dos.
  *
  * La administración entra a esta misma app —no a una copia— con una franja
  * arriba que deja claro que está mirando, no cursando. Si el panel tuviera su
  * propia versión de esta pantalla, nadie se enteraría cuando la de verdad se
  * rompa.
  */
-import { computed } from 'vue'
-import { RouterLink, RouterView, useRouter } from 'vue-router'
+import { computed, ref, watch } from 'vue'
+import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useSessionStore } from '@/stores/session'
+import { BRAND } from '@/config/site'
 
+const route = useRoute()
 const router = useRouter()
 const session = useSessionStore()
+const abierto = ref(false)
 
-const TABS = [
-  { to: '/academia', label: 'La academia' },
-  { to: '/mi-cuenta', label: 'Mi cuenta' },
+const ENLACES = [
+  { to: '/academia', label: 'Mi reto', hint: 'Tus cursos y tu avance' },
+  { to: '/mis-pagos', label: 'Mis pagos', hint: 'Lo que pagaste y tu acceso' },
+  { to: '/mi-cuenta', label: 'Mi cuenta', hint: 'Tus datos y tu contraseña' },
 ]
 
 const inicial = computed(() =>
@@ -29,6 +33,9 @@ const inicial = computed(() =>
 
 const nombre = computed(() => session.user?.name?.split(' ')[0] || 'Mi cuenta')
 
+// Navegar en móvil cierra el menú: dejarlo abierto tapa lo que se acaba de abrir.
+watch(() => route.fullPath, () => (abierto.value = false))
+
 function salir() {
   session.clear()
   router.replace('/login')
@@ -36,61 +43,101 @@ function salir() {
 </script>
 
 <template>
-  <div class="app">
-    <!-- Vista previa: la administración sabe dónde está y cómo volver -->
-    <Transition name="franja">
-      <div v-if="session.isAdmin" class="franja">
-        <span class="franja__dot" aria-hidden="true" />
-        <p class="franja__text">
-          Estás viendo la app <strong>como la ve una alumna</strong>
-        </p>
-        <RouterLink to="/admin" class="franja__back">
-          <span aria-hidden="true">←</span>
-          Volver al panel
-        </RouterLink>
-      </div>
-    </Transition>
-
-    <header class="top">
-      <RouterLink to="/academia" class="top__brand">
-        <span class="top__mark">SK</span>
-        <span class="top__name">Método SK</span>
+  <div class="app" :class="{ 'app--open': abierto }">
+    <aside class="side">
+      <RouterLink to="/academia" class="side__brand">
+        <span class="side__mark">SK</span>
+        <span>Método SK</span>
       </RouterLink>
 
-      <nav class="top__tabs">
+      <nav class="side__nav">
         <RouterLink
-          v-for="t in TABS"
-          :key="t.to"
-          :to="t.to"
-          class="tab"
-          active-class="tab--active"
+          v-for="e in ENLACES"
+          :key="e.to"
+          :to="e.to"
+          class="side__link"
+          active-class="side__link--active"
         >
-          {{ t.label }}
+          <span class="side__link-label">{{ e.label }}</span>
+          <span class="side__link-hint">{{ e.hint }}</span>
         </RouterLink>
       </nav>
 
-      <div class="top__user">
-        <span class="top__avatar">{{ inicial }}</span>
-        <span class="top__hola">{{ nombre }}</span>
-        <button type="button" class="top__exit" @click="salir">Salir</button>
-      </div>
-    </header>
+      <div class="side__foot">
+        <a class="side__wa" :href="BRAND.whatsapp" target="_blank" rel="noopener">
+          Escríbenos por WhatsApp
+        </a>
 
-    <main class="app__content">
-      <RouterView />
-    </main>
+        <div class="side__user">
+          <span class="side__avatar">{{ inicial }}</span>
+          <span class="side__user-info">
+            <span class="side__user-name">{{ nombre }}</span>
+            <span class="side__user-role">
+              {{ session.isAdmin ? 'Administración' : 'Alumna' }}
+            </span>
+          </span>
+        </div>
+
+        <button type="button" class="side__exit" @click="salir">Cerrar sesión</button>
+      </div>
+    </aside>
+
+    <div class="app__main">
+      <!-- Vista previa: la administración sabe dónde está y cómo volver -->
+      <Transition name="franja">
+        <div v-if="session.isAdmin" class="franja">
+          <span class="franja__dot" aria-hidden="true" />
+          <p class="franja__text">
+            Estás viendo la app <strong>como la ve una alumna</strong>
+          </p>
+          <RouterLink to="/admin" class="franja__back">
+            <span aria-hidden="true">←</span>
+            Volver al panel
+          </RouterLink>
+        </div>
+      </Transition>
+
+      <button
+        class="burger"
+        type="button"
+        :aria-expanded="abierto"
+        :aria-label="abierto ? 'Cerrar menú' : 'Abrir menú'"
+        @click="abierto = !abierto"
+      >
+        <span /><span />
+      </button>
+
+      <main class="app__content">
+        <RouterView />
+      </main>
+    </div>
+
+    <Transition name="veil">
+      <div v-if="abierto" class="scrim" @click="abierto = false" />
+    </Transition>
   </div>
 </template>
 
 <style lang="scss" scoped>
+$side-w: 250px;
+
 .app {
   display: flex;
-  flex-direction: column;
   min-height: 100vh;
   background-color: $bone;
 }
 
-/* Ancho completo: es una app, no una página centrada */
+.app__main {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+
+  @include from('lg') {
+    margin-left: $side-w;
+  }
+}
+
 .app__content {
   flex: 1 1 auto;
   width: 100%;
@@ -99,12 +146,17 @@ function salir() {
 /* ── Franja de vista previa ── */
 .franja {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.6rem;
-  padding: 0.55rem clamp(1rem, 3vw, 2.5rem);
+  gap: 0.5rem;
+  padding: 0.55rem 1rem 0.55rem 4rem;
   background-color: $wine;
   color: $cream;
   font-size: $text-xs;
+
+  @include from('lg') {
+    padding: 0.55rem clamp(1rem, 3vw, 2.5rem);
+  }
 }
 
 .franja__dot {
@@ -128,7 +180,7 @@ function salir() {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.3rem 0.85rem;
+  padding: 0.28rem 0.8rem;
   border: 1px solid rgba($cream, 0.35);
   border-radius: $radius-pill;
   color: $cream;
@@ -150,86 +202,41 @@ function salir() {
   }
 }
 
-/* ── Barra superior ── */
-.top {
-  position: sticky;
-  top: 0;
-  z-index: 60;
+/* ── Barra lateral ── */
+.side {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 70;
   display: flex;
-  align-items: center;
-  gap: clamp(1rem, 4vw, 2.5rem);
-  padding: 0.9rem clamp(1rem, 3vw, 2.5rem);
-  border-bottom: 1px solid rgba($ink, 0.08);
-  background-color: rgba($bone, 0.9);
-  backdrop-filter: blur(12px);
-}
-
-.top__brand {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-family: $font-display;
-  font-size: 1rem;
-  color: $ink;
-}
-
-.top__mark {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
+  flex-direction: column;
+  gap: $space-md;
+  width: $side-w;
+  padding: 1.4rem 1.1rem;
+  padding-bottom: max(1.4rem, env(safe-area-inset-bottom));
   background-color: $ink;
   color: $cream;
-  font-size: 0.78rem;
-  font-style: italic;
-}
+  transform: translateX(-100%);
+  transition: transform 0.42s $ease;
 
-.top__name {
-  @include until('md') {
-    display: none;
+  @include from('lg') {
+    transform: none;
   }
 }
 
-.top__tabs {
-  display: flex;
-  gap: 0.25rem;
-  flex: 1 1 auto;
+.app--open .side {
+  transform: none;
 }
 
-.tab {
-  position: relative;
-  padding: 0.5rem 0.9rem;
-  border-radius: $radius-pill;
-  font-size: $text-sm;
-  color: $ink-muted;
-  white-space: nowrap;
-  transition: color 0.28s $ease, background-color 0.28s $ease;
-
-  &:hover {
-    color: $ink;
-    background-color: rgba($ink, 0.05);
-  }
-}
-
-.tab--active {
-  background-color: $ink;
-  color: $cream;
-
-  &:hover {
-    background-color: $ink;
-    color: $cream;
-  }
-}
-
-.top__user {
+.side__brand {
   display: flex;
   align-items: center;
   gap: 0.55rem;
+  font-family: $font-display;
+  font-size: 1.05rem;
+  color: $cream;
 }
 
-.top__avatar {
+.side__mark {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -237,38 +244,182 @@ function salir() {
   height: 32px;
   border-radius: 50%;
   background-color: $rose-soft;
-  font-family: $font-display;
-  font-size: 0.9rem;
   color: $ink;
+  font-size: 0.85rem;
+  font-style: italic;
 }
 
-.top__hola {
-  font-size: $text-sm;
-  color: $ink-soft;
+.side__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1 1 auto;
+}
 
-  @include until('md') {
+.side__link {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: $radius-sm;
+  color: rgba($cream, 0.7);
+  transition: background-color 0.28s $ease, color 0.28s $ease;
+
+  &:hover {
+    background-color: rgba($cream, 0.07);
+    color: $cream;
+  }
+}
+
+.side__link--active {
+  background-color: rgba($rose-soft, 0.16);
+  color: $cream;
+}
+
+.side__link-label {
+  font-size: $text-base;
+  font-weight: 600;
+}
+
+.side__link-hint {
+  font-size: $text-xs;
+  opacity: 0.6;
+}
+
+.side__foot {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  padding-top: $space-sm;
+  border-top: 1px solid rgba($cream, 0.12);
+}
+
+.side__wa {
+  font-size: $text-xs;
+  color: rgba($cream, 0.6);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.side__user {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.side__avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background-color: rgba($cream, 0.12);
+  font-family: $font-display;
+  font-size: 0.95rem;
+}
+
+.side__user-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.side__user-name {
+  font-size: $text-sm;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.side__user-role {
+  font-size: $text-xs;
+  opacity: 0.55;
+}
+
+.side__exit {
+  padding: 0.6rem;
+  border: 1px solid rgba($cream, 0.2);
+  border-radius: $radius-pill;
+  background: none;
+  color: $cream;
+  font-family: inherit;
+  font-size: $text-xs;
+  cursor: pointer;
+  transition: background-color 0.28s $ease;
+
+  &:hover {
+    background-color: rgba($cream, 0.1);
+  }
+}
+
+/* ── Móvil ── */
+.burger {
+  position: fixed;
+  top: 0.7rem;
+  left: 0.9rem;
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 40px;
+  height: 40px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 50%;
+  background-color: $ink;
+  cursor: pointer;
+
+  @include from('lg') {
+    display: none;
+  }
+
+  span {
+    display: block;
+    width: 100%;
+    height: 1.5px;
+    border-radius: 2px;
+    background-color: $cream;
+    transition: transform 0.36s $ease;
+  }
+}
+
+.app--open .burger span:first-child {
+  transform: translateY(3.25px) rotate(45deg);
+}
+
+.app--open .burger span:last-child {
+  transform: translateY(-3.25px) rotate(-45deg);
+}
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 65;
+  background-color: rgba($ink, 0.5);
+  backdrop-filter: blur(2px);
+
+  @include from('lg') {
     display: none;
   }
 }
 
-.top__exit {
-  padding: 0.4rem 0.9rem;
-  border: 1px solid rgba($ink, 0.18);
-  border-radius: $radius-pill;
-  background: none;
-  font-family: inherit;
-  font-size: $text-xs;
-  color: $ink-soft;
-  cursor: pointer;
-  transition: border-color 0.28s $ease, color 0.28s $ease;
+.veil-enter-active,
+.veil-leave-active {
+  animation: veil 0.3s ease-out;
+}
 
-  &:hover {
-    border-color: $ink;
-    color: $ink;
+.veil-leave-active {
+  animation-direction: reverse;
+}
+
+@keyframes veil {
+  from {
+    opacity: 0;
   }
 }
 
-/* ── Transición de la franja ── */
 .franja-enter-active,
 .franja-leave-active {
   animation: bajar 0.4s $ease;
@@ -288,7 +439,9 @@ function salir() {
 @include reduced-motion {
   .franja__dot,
   .franja-enter-active,
-  .franja-leave-active {
+  .franja-leave-active,
+  .veil-enter-active,
+  .veil-leave-active {
     animation: none;
   }
 }

@@ -1,28 +1,41 @@
 <script setup lang="ts">
 /**
- * La academia — lo que ve la alumna cuando entra.
+ * El reto de la alumna: en qué semana va y qué le toca.
  *
- * La administración ve exactamente esta misma pantalla, en modo vista previa:
- * si el panel mostrara una versión distinta, nadie se enteraría de que a la
- * alumna se le rompió algo. Por eso el único cambio es un aviso arriba y un
- * selector de reto, porque la cuenta de administración no compró ninguno.
+ * Los cursos llegan del backend ya filtrados por su reto y por el mes en que
+ * está. Lo que todavía no se sube se muestra igual, marcado como próximamente:
+ * la estructura ya se vendió, así que ocultarla la dejaría creyendo que compró
+ * menos de lo que compró.
  */
-import { computed, ref, onMounted } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import CldImage from '@/components/ui/CldImage.vue'
+import BaseSelect from '@/components/ui/BaseSelect.vue'
+import courseService, { type CursoAlumna } from '@/services/courseService'
 import { useSessionStore } from '@/stores/session'
 import { CHALLENGES } from '@/config/site'
-import { MODULOS, MES_DE_ENTREGA, ETAPAS, SEMANAS, type Modulo } from '@/config/academy'
+import { ETAPAS, SEMANAS } from '@/config/academy'
 
 const session = useSessionStore()
 const user = computed(() => session.user)
 const esAdmin = computed(() => session.isAdmin)
 
-/** La administración no compró reto: elige cuál quiere ver. */
+const cursos = ref<CursoAlumna[]>([])
+const cargando = ref(true)
+const error = ref('')
+const abierto = ref<CursoAlumna | null>(null)
+
+/** La cuenta de administración no compró reto: elige cuál revisar. */
 const retoPreview = ref(CHALLENGES[0]!.name)
 
 const reto = computed(() =>
   esAdmin.value ? retoPreview.value : user.value?.challenge || 'Tu reto',
 )
+
+const OPCIONES_RETO = CHALLENGES.map((c) => ({
+  value: c.name,
+  label: c.name,
+  hint: c.claim,
+}))
 
 const fin = computed(() => (user.value?.accessUntil ? new Date(user.value.accessUntil) : null))
 
@@ -34,7 +47,6 @@ const inicio = computed(() => {
   return d
 })
 
-/** Semana en curso, de 1 a 12. En vista previa se muestra la primera. */
 const semana = computed(() => {
   if (esAdmin.value || !inicio.value) return 1
   const transcurridas = Math.floor((Date.now() - inicio.value.getTime()) / (7 * 86_400_000))
@@ -44,7 +56,6 @@ const semana = computed(() => {
 const mes = computed(() => Math.min(Math.ceil(semana.value / 4), 3))
 const etapa = computed(() => ETAPAS.find((e) => e.mes === mes.value)!)
 const avance = computed(() => Math.round((semana.value / SEMANAS) * 100))
-
 const activo = computed(() => esAdmin.value || Boolean(user.value?.accessActive))
 
 const fechaFin = computed(() =>
@@ -55,20 +66,26 @@ const fechaFin = computed(() =>
 
 const nombre = computed(() => user.value?.name?.split(' ')[0] || '')
 
-/** Un recurso está abierto si ya llegó su mes y tiene enlace cargado. */
-function disponible(entrega: keyof typeof MES_DE_ENTREGA, url: string | null) {
-  return Boolean(url) && MES_DE_ENTREGA[entrega] <= mes.value
+const ETIQUETA: Record<CursoAlumna['estado'], string> = {
+  abierto: 'Disponible',
+  proximamente: 'Próximamente',
+  cerrado: 'Se abre más adelante',
 }
 
-function estadoRecurso(entrega: keyof typeof MES_DE_ENTREGA, url: string | null) {
-  if (MES_DE_ENTREGA[entrega] > mes.value) return `Se abre en el mes ${MES_DE_ENTREGA[entrega]}`
-  return url ? 'Disponible' : 'Aún no cargado'
+function etiqueta(curso: CursoAlumna) {
+  if (curso.estado === 'cerrado') return `Se abre en el mes ${curso.unlockMonth}`
+  return ETIQUETA[curso.estado]
 }
 
-const abierto = ref<Modulo | null>(null)
+function duracion(segundos: number | null) {
+  if (!segundos) return null
+  const min = Math.round(segundos / 60)
+  return `${min} min`
+}
 
-function abrir(modulo: Modulo) {
-  abierto.value = modulo
+function abrir(curso: CursoAlumna) {
+  if (curso.estado !== 'abierto') return
+  abierto.value = curso
   document.body.style.overflow = 'hidden'
 }
 
@@ -77,13 +94,28 @@ function cerrar() {
   document.body.style.overflow = ''
 }
 
+async function cargar() {
+  cargando.value = true
+  error.value = ''
+  try {
+    cursos.value = await courseService.mios(mes.value)
+  } catch (e: unknown) {
+    error.value = (e as { message?: string }).message ?? 'No pudimos cargar tu reto'
+  } finally {
+    cargando.value = false
+  }
+}
+
+watch(mes, cargar)
+
 onMounted(async () => {
   if (!session.user) await session.restore()
+  await cargar()
 })
 </script>
 
 <template>
-  <main class="academia">
+  <div class="academia">
     <header class="hola">
       <p class="hola__eyebrow">Método SK · Reto de 3 meses</p>
       <h1 class="hola__title">
@@ -91,13 +123,12 @@ onMounted(async () => {
       </h1>
       <div class="hola__reto">
         <span class="hola__chip">{{ reto }}</span>
-        <!-- La cuenta de administración no compró reto: elige cuál revisar -->
-        <label v-if="esAdmin" class="hola__pick">
-          <span>Ver el reto</span>
-          <select v-model="retoPreview">
-            <option v-for="c in CHALLENGES" :key="c.id" :value="c.name">{{ c.name }}</option>
-          </select>
-        </label>
+        <BaseSelect
+          v-if="esAdmin"
+          v-model="retoPreview"
+          :options="OPCIONES_RETO"
+          label="Ver el reto"
+        />
       </div>
     </header>
 
@@ -137,74 +168,103 @@ onMounted(async () => {
     <section class="modulos">
       <h2 class="modulos__title">Tu método, por dentro</h2>
 
+      <p v-if="error" class="aviso aviso--error">{{ error }}</p>
+      <p v-else-if="cargando" class="aviso">Cargando tu reto…</p>
+      <p v-else-if="!cursos.length" class="aviso">
+        Todavía no hay cursos publicados. Te avisamos por correo apenas se abra el primero.
+      </p>
+
       <article
-        v-for="m in MODULOS"
-        :key="m.id"
+        v-for="c in cursos"
+        :key="c.id"
         class="modulo"
-        :class="{ 'modulo--locked': !activo }"
+        :class="{ 'modulo--locked': c.estado !== 'abierto' }"
       >
-        <div class="modulo__foto">
+        <div v-if="c.coverPhoto" class="modulo__foto">
           <CldImage
-            :public-id="m.photo.id"
-            :alt="m.photo.alt"
+            :public-id="c.coverPhoto"
+            :alt="c.title"
             ratio="4:3"
-            sizes="(min-width: 900px) 300px, 100vw"
+            sizes="(min-width: 900px) 260px, 100vw"
           />
         </div>
 
         <div class="modulo__body">
-          <p class="modulo__eyebrow"><span class="modulo__num">{{ m.orden }}</span>{{ m.eyebrow }}</p>
-          <h3 class="modulo__title">{{ m.title }}</h3>
-          <p class="modulo__claim">{{ m.claim }}</p>
-          <button type="button" class="modulo__cta" :disabled="!activo" @click="abrir(m)">
-            Ver el módulo
+          <p class="modulo__eyebrow">
+            <span class="modulo__num">{{ String(c.order).padStart(2, '0') }}</span>
+            <span
+              class="modulo__estado"
+              :class="{ 'modulo__estado--pronto': c.estado !== 'abierto' }"
+            >{{ etiqueta(c) }}</span>
+          </p>
+          <h3 class="modulo__title">{{ c.title }}</h3>
+          <p class="modulo__claim">{{ c.summary }}</p>
+          <p v-if="c.lessons.length" class="modulo__clases">
+            {{ c.lessons.length }} {{ c.lessons.length === 1 ? 'clase' : 'clases' }}
+          </p>
+          <button
+            type="button"
+            class="modulo__cta"
+            :disabled="c.estado !== 'abierto'"
+            @click="abrir(c)"
+          >
+            {{ c.estado === 'abierto' ? 'Entrar al curso' : 'Aún no disponible' }}
           </button>
         </div>
       </article>
     </section>
 
-    <!-- Detalle del módulo -->
+    <!-- Detalle del curso -->
     <Transition name="modal">
       <div v-if="abierto" class="modal" @click.self="cerrar">
         <div class="modal__card" role="dialog" aria-modal="true">
           <button type="button" class="modal__close" aria-label="Cerrar" @click="cerrar">×</button>
 
-          <p class="modal__eyebrow">{{ abierto.orden }} · {{ abierto.eyebrow }}</p>
+          <p class="modal__eyebrow">Curso {{ String(abierto.order).padStart(2, '0') }}</p>
           <h3 class="modal__title">{{ abierto.title }}</h3>
-          <p class="modal__text">{{ abierto.text }}</p>
+          <p class="modal__text">{{ abierto.summary }}</p>
 
-          <ul class="modal__items">
-            <li v-for="i in abierto.items" :key="i">{{ i }}</li>
-          </ul>
+          <div v-if="abierto.welcomeVideo" class="video">
+            <iframe
+              :src="abierto.welcomeVideo.embedUrl"
+              loading="lazy"
+              allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen"
+              allowfullscreen
+              title="Video de bienvenida"
+            />
+          </div>
 
-          <h4 class="modal__sub">Material</h4>
-          <ul class="recursos">
-            <li v-for="r in abierto.recursos" :key="r.titulo" class="recurso">
-              <span class="recurso__tipo">{{ r.tipo }}</span>
-              <span class="recurso__titulo">{{ r.titulo }}</span>
-              <a
-                v-if="disponible(r.entrega, r.url)"
-                class="recurso__link"
-                :href="r.url!"
-                target="_blank"
-                rel="noopener"
-              >Abrir</a>
-              <span v-else class="recurso__estado">{{ estadoRecurso(r.entrega, r.url) }}</span>
+          <h4 class="modal__sub">Clases</h4>
+          <ul v-if="abierto.lessons.length" class="clases">
+            <li v-for="l in abierto.lessons" :key="l.id" class="clase">
+              <span class="clase__num">{{ String(l.order).padStart(2, '0') }}</span>
+              <span class="clase__texto">
+                <span class="clase__title">{{ l.title }}</span>
+                <span v-if="l.summary" class="clase__sum">{{ l.summary }}</span>
+              </span>
+              <span v-if="duracion(l.durationSeconds)" class="clase__dur">
+                {{ duracion(l.durationSeconds) }}
+              </span>
+              <span v-else-if="!l.embedUrl" class="clase__dur">Próximamente</span>
             </li>
           </ul>
+          <p v-else class="aviso">Las clases de este curso se publican pronto.</p>
         </div>
       </div>
     </Transition>
-  </main>
+  </div>
 </template>
 
 <style lang="scss" scoped>
+/* Móvil primero: el botón de menú flota arriba a la izquierda */
 .academia {
-  /* Pantalla completa: la app no es una página centrada */
-  padding: clamp(1.4rem, 3vw, 2.5rem) clamp(1rem, 3vw, 2.5rem) 4rem;
+  padding: 4.2rem clamp(1rem, 3vw, 2.5rem) 4rem;
+
+  @include from('lg') {
+    padding-top: clamp(1.5rem, 3vw, 2.5rem);
+  }
 }
 
-/* ── Saludo ── */
 .hola {
   margin-bottom: $space-md;
 }
@@ -236,27 +296,9 @@ onMounted(async () => {
   color: $wine;
 }
 
-.hola__pick {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  font-size: $text-xs;
-  color: $ink-muted;
-
-  select {
-    padding: 0.35rem 0.7rem;
-    border: 1px solid rgba($ink, 0.18);
-    border-radius: $radius-pill;
-    background-color: $cream;
-    font-family: inherit;
-    font-size: $text-xs;
-    color: $ink;
-  }
-}
-
 /* ── Avance del reto ── */
 .avance {
-  padding: clamp(1.2rem, 3vw, 1.8rem);
+  padding: clamp(1.1rem, 3vw, 1.8rem);
   border-radius: $radius-lg;
   background-color: $ink;
   color: $cream;
@@ -323,7 +365,7 @@ onMounted(async () => {
 
 /* ── Acceso terminado ── */
 .cerrado {
-  padding: clamp(1.2rem, 3vw, 1.8rem);
+  padding: clamp(1.1rem, 3vw, 1.8rem);
   border-radius: $radius-lg;
   background-color: $cream;
 }
@@ -351,7 +393,7 @@ onMounted(async () => {
   text-transform: uppercase;
 }
 
-/* ── Módulos ── */
+/* ── Cursos ── */
 .modulos {
   margin-top: $space-lg;
   display: grid;
@@ -363,17 +405,30 @@ onMounted(async () => {
   }
 }
 
-.modulos__title {
+.modulos__title,
+.aviso {
   @include from('lg') {
     grid-column: 1 / -1;
   }
 }
 
 .modulos__title {
-  margin-bottom: 0.4rem;
   font-family: $font-display;
   font-size: $text-xl;
   color: $ink;
+}
+
+.aviso {
+  padding: $space-md;
+  border-radius: $radius-md;
+  background-color: $cream;
+  font-size: $text-sm;
+  color: $ink-soft;
+}
+
+.aviso--error {
+  background-color: $alert-error-bg;
+  color: $alert-error;
 }
 
 .modulo {
@@ -385,7 +440,7 @@ onMounted(async () => {
   transition: transform 0.4s $ease, box-shadow 0.4s $ease;
 
   @include from('md') {
-    grid-template-columns: 200px 1fr;
+    grid-template-columns: 190px 1fr;
   }
 
   &:hover {
@@ -395,7 +450,7 @@ onMounted(async () => {
 }
 
 .modulo--locked {
-  opacity: 0.55;
+  opacity: 0.62;
 
   &:hover {
     transform: none;
@@ -417,25 +472,36 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.35rem;
-  padding: clamp(1.1rem, 3vw, 1.6rem);
+  gap: 0.3rem;
+  padding: clamp(1.1rem, 3vw, 1.5rem);
 }
 
 .modulo__eyebrow {
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  @include eyebrow;
-  color: $ink-muted;
 }
 
 .modulo__num {
   font-family: $font-display;
   font-size: $text-base;
   font-style: italic;
-  letter-spacing: 0;
-  text-transform: none;
   color: $rose-deep;
+}
+
+.modulo__estado {
+  padding: 0.14rem 0.6rem;
+  border-radius: $radius-pill;
+  background-color: $alert-success-bg;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #4a7a45;
+}
+
+.modulo__estado--pronto {
+  background-color: rgba($ink, 0.07);
+  color: $ink-muted;
 }
 
 .modulo__title {
@@ -450,9 +516,14 @@ onMounted(async () => {
   color: $ink-soft;
 }
 
+.modulo__clases {
+  font-size: $text-xs;
+  color: $ink-muted;
+}
+
 .modulo__cta {
-  margin-top: 0.5rem;
-  padding: 0.55rem 1.1rem;
+  margin-top: 0.6rem;
+  padding: 0.6rem 1.1rem;
   border: 1px solid rgba($ink, 0.2);
   border-radius: $radius-pill;
   background: none;
@@ -474,6 +545,8 @@ onMounted(async () => {
     cursor: not-allowed;
     opacity: 0.5;
   }
+
+  @include focus-ring;
 }
 
 /* ── Detalle ── */
@@ -482,29 +555,39 @@ onMounted(async () => {
   inset: 0;
   z-index: 120;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
-  padding: 1rem;
   background-color: rgba($ink, 0.55);
   backdrop-filter: blur(3px);
+
+  @include from('md') {
+    align-items: center;
+    padding: 1rem;
+  }
 }
 
 .modal__card {
   position: relative;
-  width: min(560px, 100%);
-  max-height: 86vh;
+  width: min(620px, 100%);
+  max-height: 90vh;
   overflow-y: auto;
-  padding: clamp(1.4rem, 4vw, 2.2rem);
-  border-radius: $radius-lg;
+  padding: clamp(1.3rem, 4vw, 2.2rem);
+  padding-bottom: max(1.3rem, env(safe-area-inset-bottom));
+  border-radius: $radius-lg $radius-lg 0 0;
   background-color: $bone;
+
+  @include from('md') {
+    max-height: 86vh;
+    border-radius: $radius-lg;
+  }
 }
 
 .modal__close {
   position: absolute;
   top: 0.8rem;
   right: 0.9rem;
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border: none;
   border-radius: 50%;
   background-color: rgba($ink, 0.06);
@@ -531,35 +614,26 @@ onMounted(async () => {
 }
 
 .modal__text {
-  margin: 0.5rem 0 $space-sm;
+  margin: 0.4rem 0 $space-sm;
   font-size: $text-sm;
   line-height: 1.6;
   color: $ink-soft;
 }
 
-.modal__items {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
+.video {
+  position: relative;
   margin-bottom: $space-md;
-  list-style: none;
+  padding-top: 56.25%;
+  overflow: hidden;
+  border-radius: $radius-md;
+  background-color: $ink;
 
-  li {
-    position: relative;
-    padding-left: 1.1rem;
-    font-size: $text-sm;
-    color: $ink;
-
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0.55em;
-      left: 0;
-      width: 5px;
-      height: 5px;
-      border-radius: 50%;
-      background-color: $rose;
-    }
+  iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
   }
 }
 
@@ -569,52 +643,52 @@ onMounted(async () => {
   color: $ink-muted;
 }
 
-.recursos {
+.clases {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
   list-style: none;
 }
 
-.recurso {
+.clase {
   display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.65rem 0.8rem;
+  align-items: flex-start;
+  gap: 0.7rem;
+  padding: 0.7rem 0.85rem;
   border-radius: $radius-sm;
   background-color: $cream;
-  font-size: $text-sm;
 }
 
-.recurso__tipo {
+.clase__num {
   flex: none;
-  padding: 0.12rem 0.45rem;
-  border-radius: $radius-pill;
-  background-color: rgba($ink, 0.07);
-  font-size: 0.66rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: $ink-muted;
+  font-family: $font-display;
+  font-size: $text-sm;
+  font-style: italic;
+  color: $rose-deep;
 }
 
-.recurso__titulo {
+.clase__texto {
   flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
   min-width: 0;
+}
+
+.clase__title {
+  font-size: $text-sm;
   color: $ink;
 }
 
-.recurso__estado {
-  flex: none;
+.clase__sum {
   font-size: $text-xs;
   color: $ink-muted;
 }
 
-.recurso__link {
+.clase__dur {
   flex: none;
   font-size: $text-xs;
-  color: $rose-deep;
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  color: $ink-muted;
 }
 
 /* ── Transiciones ── */
@@ -644,7 +718,7 @@ onMounted(async () => {
 @keyframes card-in {
   from {
     opacity: 0;
-    transform: translateY(14px) scale(0.98);
+    transform: translateY(24px);
   }
 }
 

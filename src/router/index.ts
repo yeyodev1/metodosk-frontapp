@@ -49,6 +49,12 @@ const routes: Array<RouteRecordRaw> = [
         meta: { title: 'La academia — Método SK', requiresAuth: true },
       },
       {
+        path: 'mis-pagos',
+        name: 'MyPayments',
+        component: () => import('../views/member/MyPaymentsView.vue'),
+        meta: { title: 'Mis pagos — Método SK', requiresAuth: true },
+      },
+      {
         path: 'mi-cuenta',
         name: 'MyAccount',
         component: () => import('../views/member/MyAccountView.vue'),
@@ -67,6 +73,12 @@ const routes: Array<RouteRecordRaw> = [
         name: 'AdminOrders',
         component: () => import('../views/admin/AdminOrdersView.vue'),
         meta: { title: 'Compras — Método SK', requiresAuth: true, requiresAdmin: true },
+      },
+      {
+        path: 'admin/cursos',
+        name: 'AdminCourses',
+        component: () => import('../views/admin/AdminCoursesView.vue'),
+        meta: { title: 'Cursos — Método SK', requiresAuth: true, requiresAdmin: true },
       },
     ],
   },
