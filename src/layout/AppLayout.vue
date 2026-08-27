@@ -15,6 +15,7 @@ import { computed, ref, watch } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useSessionStore } from '@/stores/session'
 import ConfirmModal from '@/components/ui/ConfirmModal.vue'
+import OnboardingFlow from '@/components/member/OnboardingFlow.vue'
 import '@/plugins/icons'
 import { BRAND } from '@/config/site'
 
@@ -123,6 +124,8 @@ function salir() {
         <RouterView />
       </main>
     </div>
+
+    <OnboardingFlow v-if="!session.isAdmin" />
 
     <ConfirmModal
       :open="confirmandoSalida"
