@@ -178,8 +178,7 @@ onMounted(async () => {
                 <li><FaIcon icon="check" /> Con <strong>traje de baño</strong>, o short y top</li>
                 <li>
                   <FaIcon icon="check" />
-                  Se repiten <strong>cada dos semanas</strong>, con la misma ropa y en el mismo
-                  lugar
+                  Se repiten <strong>cada mes</strong>, con la misma ropa y en el mismo lugar
                 </li>
               </ul>
             </div>
@@ -211,6 +210,12 @@ onMounted(async () => {
               <FaIcon icon="lock" />
               Solo las ven Scarlet y Karen. Se guardan privadas — ni siquiera con el enlace se
               abren desde fuera.
+            </p>
+
+            <p class="privacidad">
+              <FaIcon icon="chart-line" />
+              Después las vuelves a subir desde <strong>Mi progreso</strong>, junto con tus
+              medidas.
             </p>
 
             <p v-if="error" class="onb__error"><FaIcon icon="triangle-exclamation" /> {{ error }}</p>

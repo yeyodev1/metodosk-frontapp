@@ -14,26 +14,29 @@ import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import VslPlayer from '@/components/ui/VslPlayer.vue'
 import CommentThread from '@/components/ui/CommentThread.vue'
-import CldImage from '@/components/ui/CldImage.vue'
+import CreatorsCard from '@/components/member/CreatorsCard.vue'
+import PresaleExplainer from '@/components/member/PresaleExplainer.vue'
+import PerksCard from '@/components/member/PerksCard.vue'
+import perksService, { type Beneficios } from '@/services/perksService'
 import settingsService, { type Vsl } from '@/services/settingsService'
 import { useSessionStore } from '@/stores/session'
-import { CREATORS, BRAND } from '@/config/site'
+import { BRAND } from '@/config/site'
 
 const session = useSessionStore()
 const vsl = ref<Vsl | null>(null)
 const cargando = ref(true)
+const beneficios = ref<Beneficios | null>(null)
 
 const nombre = computed(() => session.user?.name?.split(' ')[0] || '')
 
 /** Los tres pasos de la primera semana: qué hago hoy, en concreto. */
 onMounted(async () => {
-  try {
-    vsl.value = await settingsService.vsl()
-  } catch {
-    // Sin video la pantalla lo dice; no hay nada que reintentar.
-  } finally {
-    cargando.value = false
-  }
+  // En paralelo: son dos bloques distintos de la pantalla y encadenarlos haría
+  // esperar al segundo por el primero sin ninguna razón.
+  const [v, b] = await Promise.allSettled([settingsService.vsl(), perksService.beneficios()])
+  if (v.status === 'fulfilled') vsl.value = v.value
+  if (b.status === 'fulfilled') beneficios.value = b.value
+  cargando.value = false
 })
 
 const PRIMEROS_PASOS = [
@@ -48,6 +51,13 @@ const PRIMEROS_PASOS = [
     text: 'Ahí está tu ruta: entrenamiento, nutrición y la guía, en el orden en que se hacen.',
     to: '/academia',
     cta: 'Ir a mi reto',
+  },
+  {
+    icono: 'camera',
+    title: 'Sube tus fotos de partida',
+    text: 'Una de frente y una de espalda, más tus medidas. Es el punto cero contra el que vas a comparar.',
+    to: '/mi-progreso',
+    cta: 'Ir a mi progreso',
   },
   {
     icono: 'calendar-check',
@@ -73,6 +83,8 @@ const PRIMEROS_PASOS = [
 
     <div class="cuerpo">
       <div class="principal">
+        <PresaleExplainer />
+
         <div v-if="vsl" class="video">
           <VslPlayer
             :embed-url="vsl.embedUrl"
@@ -114,25 +126,9 @@ const PRIMEROS_PASOS = [
           </ol>
         </section>
 
-        <section class="tarjeta">
-          <h2 class="tarjeta__title"><FaIcon icon="users" /> Quiénes te acompañan</h2>
-          <div v-for="c in CREATORS" :key="c.name" class="creadora">
-            <div class="creadora__foto">
-              <CldImage
-                :public-id="`metodosk/${c.photo}`"
-                :alt="c.name"
-                ratio="1:1"
-                gravity="face"
-                sizes="72px"
-              />
-            </div>
-            <div>
-              <p class="creadora__nombre">{{ c.name }}</p>
-              <p class="creadora__rol">{{ c.role }}</p>
-              <p class="creadora__texto">{{ c.text }}</p>
-            </div>
-          </div>
-        </section>
+        <CreatorsCard />
+
+        <PerksCard v-if="beneficios" :beneficios="beneficios" />
 
         <section class="tarjeta tarjeta--oscura">
           <h2 class="tarjeta__title"><FaIcon :icon="['fab', 'whatsapp']" /> ¿Algo no cuadra?</h2>
@@ -335,53 +331,6 @@ const PRIMEROS_PASOS = [
     text-decoration: underline;
     text-underline-offset: 3px;
   }
-}
-
-/* ── Creadoras ── */
-.creadora {
-  display: flex;
-  gap: 0.7rem;
-  padding-top: 0.8rem;
-
-  & + .creadora {
-    margin-top: 0.8rem;
-    border-top: 1px solid rgba($ink, 0.07);
-  }
-
-  &:first-of-type {
-    padding-top: 0;
-  }
-}
-
-.creadora__foto {
-  flex: none;
-  width: 56px;
-  overflow: hidden;
-  border-radius: 50%;
-
-  :deep(img) {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-}
-
-.creadora__nombre {
-  font-family: $font-display;
-  font-size: $text-base;
-  color: $ink;
-}
-
-.creadora__rol {
-  @include eyebrow;
-  font-size: 0.66rem;
-}
-
-.creadora__texto {
-  margin-top: 0.25rem;
-  font-size: $text-xs;
-  line-height: 1.5;
-  color: $ink-soft;
 }
 
 .aviso {

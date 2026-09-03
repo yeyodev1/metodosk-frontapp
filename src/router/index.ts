@@ -55,6 +55,18 @@ const routes: Array<RouteRecordRaw> = [
         meta: { title: 'Empieza aquí — Método SK', requiresAuth: true },
       },
       {
+        path: 'mi-progreso',
+        name: 'MyProgress',
+        component: () => import('../views/member/MyProgressView.vue'),
+        meta: { title: 'Mi progreso — Método SK', requiresAuth: true },
+      },
+      {
+        path: 'comunidad',
+        name: 'Community',
+        component: () => import('../views/member/CommunityView.vue'),
+        meta: { title: 'La comunidad — Método SK', requiresAuth: true },
+      },
+      {
         path: 'mis-pagos',
         name: 'MyPayments',
         component: () => import('../views/member/MyPaymentsView.vue'),

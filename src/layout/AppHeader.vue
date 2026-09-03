@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { useBodyScrollLock } from '@/composables/useBodyScroll'
 import { RouterLink } from 'vue-router'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import { useCheckout } from '@/composables/useCheckout'
@@ -36,8 +37,9 @@ function openCheckout() {
 }
 
 // Con el menú abierto la página de atrás no debe moverse.
+useBodyScrollLock(menuOpen)
+
 watch(menuOpen, (isOpen) => {
-  document.body.style.overflow = isOpen ? 'hidden' : ''
   if (isOpen) window.addEventListener('keydown', onKeydown)
   else window.removeEventListener('keydown', onKeydown)
 })
@@ -50,7 +52,6 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('scroll', onScroll)
   window.removeEventListener('keydown', onKeydown)
-  document.body.style.overflow = ''
 })
 </script>
 

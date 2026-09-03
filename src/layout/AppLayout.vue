@@ -16,6 +16,7 @@ import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useSessionStore } from '@/stores/session'
 import ConfirmModal from '@/components/ui/ConfirmModal.vue'
 import OnboardingFlow from '@/components/member/OnboardingFlow.vue'
+import PresaleBand from '@/components/member/PresaleBand.vue'
 import '@/plugins/icons'
 import { BRAND } from '@/config/site'
 
@@ -27,6 +28,8 @@ const abierto = ref(false)
 const ENLACES = [
   { to: '/academia', label: 'Mi reto', hint: 'Tus cursos y tu avance', icono: 'dumbbell' },
   { to: '/bienvenida', label: 'Empieza aquí', hint: 'El video de bienvenida', icono: 'circle-play' },
+  { to: '/mi-progreso', label: 'Mi progreso', hint: 'Tus fotos y tus medidas', icono: 'chart-line' },
+  { to: '/comunidad', label: 'Comunidad', hint: 'El muro de todas', icono: 'comments' },
   { to: '/mis-pagos', label: 'Mis pagos', hint: 'Lo que pagaste y tu acceso', icono: 'credit-card' },
   { to: '/mi-cuenta', label: 'Mi cuenta', hint: 'Tus datos y tu contraseña', icono: 'user' },
 ]
@@ -96,6 +99,9 @@ function salir() {
     </aside>
 
     <div class="app__main">
+      <!-- Es una pre-venta: se dice antes de que vea el primer candado -->
+      <PresaleBand v-if="!session.isAdmin" />
+
       <!-- Vista previa: la administración sabe dónde está y cómo volver -->
       <Transition name="franja">
         <div v-if="session.isAdmin" class="franja">
@@ -237,6 +243,10 @@ $side-w: 250px;
   flex-direction: column;
   gap: $space-md;
   width: $side-w;
+  // Con la barra fija a toda la altura, en una ventana baja el pie quedaba
+  // fuera de la pantalla y no había forma de llegar a "Cerrar sesión".
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 1.4rem 1.1rem;
   padding-bottom: max(1.4rem, env(safe-area-inset-bottom));
   background-color: $ink;

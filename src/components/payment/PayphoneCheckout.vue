@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { nextTick, ref, watch } from 'vue'
+import { useBodyScrollLock } from '@/composables/useBodyScroll'
 import { useRouter } from 'vue-router'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import CheckoutForm from './CheckoutForm.vue'
@@ -63,8 +64,10 @@ function onKeydown(event: KeyboardEvent) {
   if (event.key === 'Escape') close()
 }
 
+// El candado se cuenta y se suelta al desmontar — ver useBodyScroll.
+useBodyScrollLock(isOpen)
+
 watch(isOpen, async (open) => {
-  document.body.style.overflow = open ? 'hidden' : ''
   if (open) {
     status.value = 'form'
     errorMessage.value = ''

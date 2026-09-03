@@ -11,7 +11,8 @@
  * Cancelar: si alguien abrió esto sin querer, la tecla Enter no debería borrar
  * nada.
  */
-import { nextTick, ref, watch } from 'vue'
+import { nextTick, ref, watch, computed } from 'vue'
+import { useBodyScrollLock } from '@/composables/useBodyScroll'
 // El catálogo se importa acá y no en quien lo use: este modal aparece también
 // en la pantalla de pago, que vive fuera de los marcos privados.
 import '@/plugins/icons'
@@ -53,11 +54,13 @@ function teclas(evento: KeyboardEvent) {
 }
 
 // El scroll del fondo se congela: si no, la página de atrás sigue moviéndose
-// bajo el diálogo y da la sensación de que el clic no hizo nada.
+// bajo el diálogo y da la sensación de que el clic no hizo nada. El candado se
+// cuenta y se suelta al desmontar — ver useBodyScroll.
+useBodyScrollLock(computed(() => props.open))
+
 watch(
   () => props.open,
   async (abierto) => {
-    document.body.style.overflow = abierto ? 'hidden' : ''
     if (abierto) {
       await nextTick()
       cancelar.value?.focus()

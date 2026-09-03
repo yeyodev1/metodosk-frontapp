@@ -11,6 +11,38 @@ export const ETIQUETA_ANGULO: Record<Angulo, string> = {
   lado: 'De perfil',
 }
 
+/** Una toma de medidas. Todos los campos son opcionales: se apunta lo que se midió. */
+export interface Medida {
+  pesoKg: number | null
+  cinturaCm: number | null
+  caderaCm: number | null
+  pechoCm: number | null
+  brazoCm: number | null
+  piernaCm: number | null
+  nota: string
+  createdAt: string
+}
+
+/** La primera foto de un ángulo contra la más reciente. */
+export interface Comparativa {
+  angulo: Angulo
+  antes: { url: string; createdAt: string }
+  despues: { url: string; createdAt: string }
+  diasEntre: number
+}
+
+/** Los campos de medidas que se piden, en el orden en que se piden. */
+export const CAMPOS_MEDIDA = [
+  { clave: 'pesoKg', label: 'Peso', unidad: 'kg', paso: '0.1' },
+  { clave: 'cinturaCm', label: 'Cintura', unidad: 'cm', paso: '0.5' },
+  { clave: 'caderaCm', label: 'Cadera', unidad: 'cm', paso: '0.5' },
+  { clave: 'pechoCm', label: 'Pecho', unidad: 'cm', paso: '0.5' },
+  { clave: 'brazoCm', label: 'Brazo', unidad: 'cm', paso: '0.5' },
+  { clave: 'piernaCm', label: 'Pierna', unidad: 'cm', paso: '0.5' },
+] as const
+
+export type ClaveMedida = (typeof CAMPOS_MEDIDA)[number]['clave']
+
 export interface EstadoOnboarding {
   videoSeen: boolean
   photosUploaded: boolean
@@ -21,7 +53,15 @@ export interface EstadoOnboarding {
   /** La última de cada ángulo: referencia para repetir la misma pose. */
   ultimas: Partial<Record<Angulo, { url: string; createdAt: string }>>
   proximaToma: string | null
+  /** Días que faltan para la siguiente toma. 0 = hoy le toca. */
+  diasParaProxima: number | null
   tomaPendiente: boolean
+  /** Cada cuántos días se repite la toma. */
+  diasEntreTomas: number
+  /** Antes y después por ángulo. Vacío mientras solo haya una toma. */
+  comparativa: Comparativa[]
+  /** Sus medidas, de la más reciente a la más antigua. */
+  medidas: Medida[]
   fotosDisponibles: boolean
 }
 
@@ -59,6 +99,18 @@ class OnboardingService extends APIBase {
 
   async quitarFoto(angulo: Angulo) {
     const { data } = await this.delete<EstadoOnboarding>(`onboarding/foto/${angulo}`)
+    return data
+  }
+
+  async guardarMedidas(medidas: Partial<Record<ClaveMedida, number | null>> & { nota?: string }) {
+    const { data } = await this.post<EstadoOnboarding>('onboarding/medidas', medidas)
+    return data
+  }
+
+  async quitarMedidas(fechaIso: string) {
+    const { data } = await this.delete<EstadoOnboarding>(
+      `onboarding/medidas/${encodeURIComponent(fechaIso)}`,
+    )
     return data
   }
 

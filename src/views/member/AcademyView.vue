@@ -8,6 +8,7 @@
  * menos de lo que compró.
  */
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { useBodyScrollLock } from '@/composables/useBodyScroll'
 import CldImage from '@/components/ui/CldImage.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import MisRetos from '@/components/member/MisRetos.vue'
@@ -26,6 +27,10 @@ const cursos = ref<CursoAlumna[]>([])
 const cargando = ref(true)
 const error = ref('')
 const abierto = ref<CursoAlumna | null>(null)
+
+// El scroll del fondo se congela mientras hay un curso abierto — y se suelta
+// solo al desmontar, aunque se navegue desde la barra lateral sin cerrar.
+useBodyScrollLock(computed(() => Boolean(abierto.value)))
 
 /* ── Avance ─────────────────────────────────────────────────────────────────
    Lo calcula el backend y no cada pantalla: si la barra del curso y la del
@@ -155,7 +160,6 @@ function abrir(curso: CursoAlumna) {
   if (curso.estado !== 'abierto') return
   abierto.value = curso
   viendo.value = null
-  document.body.style.overflow = 'hidden'
 }
 
 function cerrar() {
@@ -163,7 +167,6 @@ function cerrar() {
   soltar()
   viendo.value = null
   abierto.value = null
-  document.body.style.overflow = ''
   cargarAvance()
 }
 

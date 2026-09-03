@@ -38,6 +38,7 @@ import {
   faBars,
   faCamera,
   faImages,
+  faRulerCombined,
 } from '@fortawesome/free-solid-svg-icons'
 import { faWhatsapp } from '@fortawesome/free-brands-svg-icons'
 
@@ -74,5 +75,6 @@ library.add(
   faBars,
   faCamera,
   faImages,
+  faRulerCombined,
   faWhatsapp,
 )
