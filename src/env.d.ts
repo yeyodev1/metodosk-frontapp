@@ -2,7 +2,6 @@
 
 interface ImportMetaEnv {
   readonly VITE_API_BASE_URL: string
-  readonly VITE_CLOUDINARY_CLOUD_NAME: string
   readonly VITE_PAYPHONE_MODE: 'simulation' | 'live'
   readonly VITE_PAYPHONE_TOKEN: string
   readonly VITE_PAYPHONE_STORE_ID: string

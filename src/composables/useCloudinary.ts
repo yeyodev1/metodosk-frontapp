@@ -4,8 +4,22 @@
  */
 import { CLOUD_NAME } from '@/config/media'
 
-const CLOUD = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || CLOUD_NAME
-const BASE = `https://res.cloudinary.com/${CLOUD}`
+/**
+ * El cloud sale de `media.ts` y no de una variable de entorno.
+ *
+ * Antes mandaba `VITE_CLOUDINARY_CLOUD_NAME`, y eso rompió la portada: hay dos
+ * cuentas de Cloudinary —una con las fotos del shoot, otra donde las alumnas
+ * suben las suyas— y apuntar esta variable a la segunda dejó la landing entera
+ * pidiendo fotos que ahí no existen, con 404 silenciosos.
+ *
+ * `media.ts` lo genera el mismo script que sube las fotos, así que su
+ * CLOUD_NAME siempre es la cuenta donde las fotos de verdad están. No hay
+ * ninguna configuración que pueda contradecirlo sin equivocarse.
+ *
+ * Las fotos de las alumnas no pasan por acá: sus URLs llegan ya armadas y
+ * firmadas desde el backend, que es el único que tiene ese secreto.
+ */
+const BASE = `https://res.cloudinary.com/${CLOUD_NAME}`
 
 export interface ImageOptions {
   /** Ancho en px. */
