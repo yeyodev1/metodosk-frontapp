@@ -1,30 +1,59 @@
 import APIBase from './httpBase'
 
+/**
+ * En qué grupo cae la compra. Son excluyentes entre sí, así que los cuatro
+ * sumados dan el total registrado.
+ *
+ * - `entro`      dinero real, aprobado y por uno de nuestros precios
+ * - `porRevisar` aprobado y real, pero por un monto que no reconocemos
+ * - `pruebas`    aprobado en el entorno de prueba: no es dinero
+ * - `noEntro`    cancelada o fallida: nunca se cobró
+ */
+export type OrderGrupo = 'entro' | 'porRevisar' | 'pruebas' | 'noEntro'
+
 export interface AdminOrder {
   id: string
   clientTransactionId: string
+  payphoneTransactionId: string | null
   status: 'approved' | 'canceled' | 'failed'
+  grupo: OrderGrupo
   /** Monto en centavos. */
   amountCents: number
   /** false si el monto no coincide con ninguno de nuestros precios. */
   amountVerified: boolean
+  currency: string
   environment: 'test' | 'prod'
   buyerName: string | null
+  cardHolder: string | null
   email: string | null
   phoneNumber: string | null
   challenge: string | null
+  accessMonths: number | null
   accessUntil: string | null
   authorizationCode: string | null
   createdAt: string
 }
 
+export interface OrdersBucket {
+  compras: number
+  centavos: number
+}
+
 export interface OrdersResponse {
   orders: AdminOrder[]
   resumen: {
-    total: number
-    aprobadas: number
-    /** Solo cuenta las compras de producción. */
-    recaudadoCentavos: number
+    /** Cuántas compras trae la tabla ahora mismo. */
+    mostradas: number
+    /** Cuántas hay en total (el filtro de estado no lo altera). */
+    registradas: number
+    entro: OrdersBucket
+    porRevisar: OrdersBucket
+    pruebas: OrdersBucket
+    noEntro: OrdersBucket
+  }
+  precios: {
+    preventaCentavos: number
+    regularCentavos: number
   }
 }
 
