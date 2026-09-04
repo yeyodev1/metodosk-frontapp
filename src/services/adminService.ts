@@ -57,6 +57,23 @@ export interface OrdersResponse {
   }
 }
 
+export interface ConciliacionResponse {
+  /** Cuántas se pudieron consultar contra PayPhone. */
+  revisadas: number
+  /** Cuántas no contestaron: esas se dejaron intactas. */
+  sinRespuesta: number
+  cambios: {
+    id: string
+    clientTransactionId: string
+    buyerName: string | null
+    email: string | null
+    antes: AdminOrder['status']
+    ahora: AdminOrder['status']
+    centavos: number
+  }[]
+  mensaje: string
+}
+
 class AdminService extends APIBase {
   /**
    * Saca una compra del recaudado, o la devuelve.
@@ -68,6 +85,15 @@ class AdminService extends APIBase {
     const response = await this.patch<{ mensaje: string }>(`admin/orders/${id}/prueba`, {
       esPrueba,
     })
+    return response.data
+  }
+
+  /**
+   * Le pregunta a PayPhone en qué quedó cada compra y corrige las que
+   * cambiaron. Tarda: son decenas de consultas a un servicio ajeno.
+   */
+  async conciliar() {
+    const response = await this.post<ConciliacionResponse>('admin/orders/conciliar', {})
     return response.data
   }
 
