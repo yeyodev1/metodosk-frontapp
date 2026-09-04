@@ -4,11 +4,8 @@ import { useRouter } from 'vue-router'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import OrdersSummary from '@/components/admin/OrdersSummary.vue'
 import OrderDetail from '@/components/admin/OrderDetail.vue'
-import adminService, {
-  type AdminOrder,
-  type OrderGrupo,
-  type OrdersResponse,
-} from '@/services/adminService'
+import { ESTADOS, ESTADOS_FILTRO, GRUPOS } from '@/components/admin/etiquetas'
+import adminService, { type OrdersResponse } from '@/services/adminService'
 import { useSessionStore } from '@/stores/session'
 
 const router = useRouter()
@@ -23,33 +20,6 @@ const status = ref('')
 const abiertas = ref<Set<string>>(new Set())
 
 const usd = (cents: number) => `$${(cents / 100).toFixed(2)}`
-
-const ESTADOS_FILTRO = [
-  { value: '', label: 'Todos los estados' },
-  { value: 'approved', label: 'Aprobadas' },
-  { value: 'canceled', label: 'Canceladas' },
-  { value: 'failed', label: 'Fallidas' },
-]
-
-const ESTADOS: Record<AdminOrder['status'], string> = {
-  approved: 'Aprobada',
-  canceled: 'Cancelada',
-  failed: 'Fallida',
-}
-
-/** Cómo se nombra cada grupo en la tabla, y qué significa en dinero. */
-const GRUPOS: Record<OrderGrupo, { etiqueta: string; explica: string }> = {
-  entro: { etiqueta: 'Cobrada', explica: 'PayPhone cobró este dinero: sí entró a la cuenta.' },
-  porRevisar: {
-    etiqueta: 'Cobrada · revisar',
-    explica: 'El cobro sí entró, pero por un valor que no es ninguno de nuestros precios.',
-  },
-  pruebas: {
-    etiqueta: 'Prueba',
-    explica: 'Pago hecho con las credenciales de prueba: no movió dinero real.',
-  },
-  noEntro: { etiqueta: 'No se cobró', explica: 'El intento se canceló o falló. No entró nada.' },
-}
 
 function fecha(iso: string | null) {
   if (!iso) return '—'
@@ -111,7 +81,12 @@ onMounted(load)
       </p>
     </header>
 
-    <OrdersSummary v-if="data" :resumen="data.resumen" :precios="data.precios" />
+    <OrdersSummary
+      v-if="data"
+      :resumen="data.resumen"
+      :precios="data.precios"
+      @conciliado="load"
+    />
 
     <div class="filtros">
       <input v-model="search" type="search" placeholder="Buscar por nombre, correo o referencia" />
