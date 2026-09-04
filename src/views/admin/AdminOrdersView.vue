@@ -173,6 +173,7 @@ onMounted(load)
                   :order="o"
                   :estado="ESTADOS[o.status]"
                   :explica="GRUPOS[o.grupo].explica"
+                  @cambiada="load"
                 />
               </td>
             </tr>
