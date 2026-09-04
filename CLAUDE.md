@@ -51,6 +51,30 @@ Doc: https://docs.payphone.app/cajita-de-pagos
 
 Las `CLOUDINARY_*` (sin prefijo `VITE_`) solo las leen los scripts de Node y nunca entran al bundle. Las `VITE_*` sí quedan expuestas en el navegador — el token de PayPhone lo está por diseño de la Cajita, el `api_secret` de Cloudinary jamás debe llevar prefijo `VITE_`.
 
+## Meta — Pixel + Conversions API
+
+Dataset (pixel) `838529302614239`. La medición sale por **dos caminos a la vez**: `fbq` en el navegador y la Conversions API desde el backend, siempre con el **mismo `event_id`**. Meta deduplica y se queda con uno solo — sin eso cada venta se contaría dos veces.
+
+- `src/config/meta.ts` — id del pixel (público) y `purchaseEventId()`. El **token de la CAPI no va acá ni con prefijo `VITE_`**: vive solo en `metodosk-backapp` (`META_CAPI_TOKEN`), porque con él se pueden inyectar conversiones falsas en la cuenta publicitaria.
+- `src/composables/useMetaPixel.ts` — carga el snippet y `trackMeta(nombre, opciones)`. Cada llamada dispara `fbq` y copia el evento a `POST /api/meta/event`, que lo reenvía firmado. `keepalive: true`, no `sendBeacon`: la petición es cross-origin con `Content-Type: application/json` y exige preflight, que `sendBeacon` no sabe hacer.
+- `src/services/apiUrl.ts` — `resolveApiBaseUrl()` salió de `httpBase.ts` para que la landing resuelva la URL del API sin arrastrar axios al bundle.
+
+Dónde se dispara cada evento:
+
+| Evento | Dónde | Cuándo |
+|---|---|---|
+| `PageView` | `router.afterEach` | cada navegación (en una SPA el pixel solo vería la primera) |
+| `ViewContent` | `HomeView.vue` | al montar la landing — es la página del producto |
+| `InitiateCheckout` | `useCheckout.open()` | ahí pasan **todos** los CTA de compra |
+| `Lead` | `PayphoneCheckout.submit()` | único punto con nombre, correo y WhatsApp reales |
+| `AddPaymentInfo` | `PayphoneCheckout.submit()` | justo antes de abrir la Cajita |
+| `Purchase` | `PaymentResultView` + `payphone.service.ts` | id derivado de `clientTransactionId` en los dos lados |
+| `CompleteRegistration` | `RegisterView.vue` | la compradora activó su acceso |
+
+**Purchase es la excepción:** lo manda el servidor desde `confirmTransaction`, con el monto que PayPhone confirmó. El navegador lo reporta con `mirror: false` para no duplicar el espejo. `POST /api/meta/event` **rechaza `Purchase`** a propósito — si lo aceptara, cualquiera podría inyectar compras falsas de $10.000 y desviar la optimización de la campaña.
+
+**Nada entra al dataset desde previews ni túneles.** El front se apaga con `VITE_META_PIXEL_ENABLED=false` y el backend descarta todo lo que no venga de un origen de producción (`resolveEnvironment`). Un embudo de pruebas desviaría una campaña real, y eso no se deshace.
+
 ---
 
 # context-mode — MANDATORY routing rules
