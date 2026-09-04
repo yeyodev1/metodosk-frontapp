@@ -4,6 +4,8 @@
  */
 import { computed, ref } from 'vue'
 import { CHALLENGES, type Challenge } from '@/config/site'
+import { PRICES } from '@/config/payment'
+import { trackMeta } from '@/composables/useMetaPixel'
 
 const isOpen = ref(false)
 const selectedId = ref<Challenge['id'] | null>(null)
@@ -38,6 +40,18 @@ export function useCheckout() {
     selectedId.value = id ?? (CHALLENGES.length === 1 ? CHALLENGES[0]!.id : null)
     prefill.value = datos ?? null
     isOpen.value = true
+
+    /**
+     * InitiateCheckout se dispara acá y no en el modal porque acá pasan TODOS
+     * los botones de compra de la página. Puesto en el componente, cada CTA
+     * nuevo tendría que acordarse de reportarlo.
+     */
+    trackMeta('InitiateCheckout', {
+      value: PRICES.presale / 100,
+      contentIds: id ? [id] : CHALLENGES.map((c) => c.id),
+      contentName: id ? (CHALLENGES.find((c) => c.id === id)?.name ?? null) : 'Reto Método SK',
+      contact: datos ? { name: datos.name, email: datos.email } : undefined,
+    })
   }
 
   function close() {

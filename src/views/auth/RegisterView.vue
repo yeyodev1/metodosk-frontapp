@@ -5,6 +5,7 @@ import BaseButton from '@/components/ui/BaseButton.vue'
 import AuthShell from './AuthShell.vue'
 import authService, { type EmailStatus } from '@/services/authService'
 import { homeForRole, useSessionStore } from '@/stores/session'
+import { trackMeta } from '@/composables/useMetaPixel'
 
 const router = useRouter()
 const session = useSessionStore()
@@ -48,6 +49,20 @@ async function crearCuenta() {
   try {
     const { token, user } = await authService.register(form.email.trim(), form.password)
     session.setSession(token, user)
+
+    /**
+     * CompleteRegistration: la compradora activó su acceso.
+     *
+     * No es una conversión de venta —esa ya ocurrió— pero sí es la señal de
+     * que la compra terminó bien de punta a punta. Sirve para medir cuántas
+     * compras se quedan sin activar, que es el agujero silencioso de este
+     * embudo: pagaron y nunca entraron.
+     */
+    trackMeta('CompleteRegistration', {
+      contentName: user.challenge ?? 'Reto Método SK',
+      contact: { email: user.email, name: user.name || null },
+    })
+
     router.replace(homeForRole(user.role))
   } catch (e: unknown) {
     error.value = (e as { message?: string }).message ?? 'No pudimos crear tu cuenta'

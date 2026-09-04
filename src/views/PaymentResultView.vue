@@ -9,6 +9,8 @@ import AppFooter from '@/layout/AppFooter.vue'
 import { PAYMENT_MODE } from '@/config/payment'
 import paymentService from '@/services/paymentService'
 import { forgetCheckout, recallCheckout } from '@/components/payment/pendingCheckout'
+import { purchaseEventId } from '@/config/meta'
+import { metaFbc, metaFbp, trackMeta } from '@/composables/useMetaPixel'
 
 const route = useRoute()
 
@@ -119,6 +121,10 @@ onMounted(async () => {
       transactionId.value,
       clientTransactionId.value,
       contacto,
+      // Las cookies del pixel viven en este dominio: el backend no puede
+      // leerlas, así que se las pasamos para que la compra se atribuya al
+      // anuncio que la originó.
+      { fbp: metaFbp(), fbc: metaFbc(), eventSourceUrl: window.location.href },
     )
     forgetCheckout()
     authorizationCode.value = result.authorizationCode ?? ''
@@ -134,6 +140,30 @@ onMounted(async () => {
     }
     if (confirmState.value === 'rejected') {
       errorMessage.value = result.message ?? ''
+    }
+
+    /**
+     * Purchase del navegador. El servidor ya mandó el suyo al confirmar con
+     * PayPhone; los dos llevan el mismo id derivado de la transacción, así
+     * que Meta se queda con una sola compra. Sin esa deduplicación cada venta
+     * se contaría dos veces y el ROAS de la campaña saldría a la mitad.
+     *
+     * `mirror: false` a propósito: el importe de esta conversión lo pone el
+     * servidor con el monto que PayPhone confirmó, no el navegador.
+     */
+    if (confirmState.value === 'approved') {
+      trackMeta('Purchase', {
+        eventId: purchaseEventId(clientTransactionId.value),
+        mirror: false,
+        value: result.amount / 100,
+        contentIds: result.challenge ? [result.challenge] : undefined,
+        contentName: result.challenge ?? plan.value ?? null,
+        contact: {
+          email: result.email ?? contacto?.email ?? null,
+          phone: contacto?.phone ?? null,
+          name: contacto?.name ?? null,
+        },
+      })
     }
   } catch (error: unknown) {
     const e = error as { message?: string }

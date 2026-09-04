@@ -3,7 +3,15 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 import { vReveal } from '@/composables/useScrollReveal'
+import { initMetaPixel } from '@/composables/useMetaPixel'
 import '@/styles/global.scss'
+
+/**
+ * El pixel se carga antes que el router: el primer PageView lo dispara la
+ * primera navegación, y si fbq todavía no existe ese evento —el de la visita
+ * que llega del anuncio— se pierde.
+ */
+initMetaPixel()
 
 const app = createApp(App)
 

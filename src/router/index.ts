@@ -155,9 +155,19 @@ router.beforeEach(async (to) => {
   return true
 })
 
-router.afterEach((to) => {
+router.afterEach(async (to) => {
   const title = to.meta?.title
   if (typeof title === 'string') document.title = title
+
+  /**
+   * PageView en cada navegación, incluida la primera.
+   *
+   * En una SPA el pixel solo vería la carga inicial: sin esto, alguien que
+   * entra a la landing y pasa a /registro cuenta como una sola visita, y las
+   * rutas internas no existirían para Meta.
+   */
+  const { trackMeta } = await import('@/composables/useMetaPixel')
+  trackMeta('PageView')
 })
 
 export default router

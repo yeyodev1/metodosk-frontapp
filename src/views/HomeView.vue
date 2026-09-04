@@ -12,6 +12,26 @@ import NutritionSection from '@/components/home/NutritionSection.vue'
 import PricingSection from '@/components/home/PricingSection.vue'
 import PromiseSection from '@/components/home/PromiseSection.vue'
 import TimelineSection from '@/components/home/TimelineSection.vue'
+import { onMounted } from 'vue'
+import { CHALLENGES } from '@/config/site'
+import { PRICES } from '@/config/payment'
+import { trackMeta } from '@/composables/useMetaPixel'
+
+/**
+ * ViewContent: la landing ES la página del producto.
+ *
+ * Va aparte del PageView del router porque es el evento con el que se
+ * construyen los públicos de remarketing —"vio el reto y no compró"— y con el
+ * que Meta optimiza el tramo alto del embudo. Un PageView de /login no sirve
+ * para eso.
+ */
+onMounted(() => {
+  trackMeta('ViewContent', {
+    value: PRICES.presale / 100,
+    contentIds: CHALLENGES.map((challenge) => challenge.id),
+    contentName: 'Reto Método SK — 3 meses',
+  })
+})
 </script>
 
 <template>

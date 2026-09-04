@@ -8,6 +8,7 @@ import { useCheckout } from '@/composables/useCheckout'
 import { CHALLENGES } from '@/config/site'
 import { buildTransaction, renderPayphoneBox } from '@/composables/usePayphone'
 import { PAYMENT_MODE, PRICES, formatUsd } from '@/config/payment'
+import { trackMeta } from '@/composables/useMetaPixel'
 import type { CheckoutContact } from './checkout'
 import { rememberCheckout } from './pendingCheckout'
 import type { Challenge } from '@/config/site'
@@ -89,6 +90,19 @@ async function submit(contact: CheckoutContact) {
     email: contact.email,
   })
 
+  /**
+   * Lead: es el único punto del embudo donde tenemos nombre, correo y
+   * WhatsApp reales. Ese contacto viaja hasheado a la Conversions API y es lo
+   * que le permite a Meta cruzar a esta persona con su cuenta —de ahí sale la
+   * calidad del emparejamiento— aunque después no complete el pago.
+   */
+  trackMeta('Lead', {
+    value: PRICES.presale / 100,
+    contentIds: [selected.value.id],
+    contentName: selected.value.name,
+    contact: { name: contact.name, email: contact.email, phone: contact.phone },
+  })
+
   // Modo simulación: no se contacta a PayPhone ni se cobra nada.
   if (PAYMENT_MODE === 'simulation') {
     close()
@@ -107,6 +121,18 @@ async function submit(contact: CheckoutContact) {
   rememberCheckout(transaction.clientTransactionId, {
     ...contact,
     challenge: selected.value.name,
+  })
+
+  /**
+   * AddPaymentInfo justo antes de abrir la Cajita. El espejo al servidor va
+   * con `keepalive` (ver useMetaPixel) porque PayPhone se lleva la página
+   * enseguida y una petición normal se cancelaría al descargar el documento.
+   */
+  trackMeta('AddPaymentInfo', {
+    value: PRICES.presale / 100,
+    contentIds: [selected.value.id],
+    contentName: selected.value.name,
+    contact: { name: contact.name, email: contact.email, phone: contact.phone },
   })
 
   status.value = 'paying'

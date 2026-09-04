@@ -1,28 +1,6 @@
 import axios from 'axios'
 import type { AxiosResponse, AxiosRequestConfig } from 'axios'
-
-/**
- * A qué backend hablar, según desde dónde se esté sirviendo la web.
- *
- * Servida por el túnel o en producción, el backend está en su propio dominio:
- * apuntar a localhost ahí llamaría al localhost de quien visita, no al nuestro.
- * En local manda VITE_API_BASE_URL.
- */
-function resolveApiBaseUrl(): string {
-  if (typeof window !== 'undefined') {
-    const { hostname } = window.location
-    if (hostname === 'metodosk.ec' || hostname === 'www.metodosk.ec') {
-      return 'https://api.metodosk.ec/api'
-    }
-    if (hostname === 'dev-project-front.bakano.ec' || hostname.endsWith('.trycloudflare.com')) {
-      return 'https://dev-project-back.bakano.ec/api'
-    }
-  }
-
-  const raw = (import.meta.env.VITE_API_BASE_URL as string) || 'http://localhost:8101/api'
-  const trimmed = raw.replace(/\/+$/, '')
-  return trimmed.endsWith('/api') || /\/api\//.test(trimmed) ? trimmed : `${trimmed}/api`
-}
+import { resolveApiBaseUrl } from './apiUrl'
 
 class APIBase {
   private baseUrl: string

@@ -39,6 +39,17 @@ export interface ConfirmContact {
   challenge?: string
 }
 
+/**
+ * Cookies del pixel que el servidor no puede leer por su cuenta (viven en el
+ * dominio del front). Sin ellas la venta no se atribuye al anuncio que la
+ * originó, y la campaña no aprende de esa conversión.
+ */
+export interface ConfirmMetaSignals {
+  fbp?: string | null
+  fbc?: string | null
+  eventSourceUrl?: string
+}
+
 export interface MiPago {
   id: string
   referencia: string
@@ -62,11 +73,17 @@ class PaymentService extends APIBase {
    * El contacto es opcional: si no llega, el backend usa el correo que
    * devuelve PayPhone. Sirve para el correo de acceso y para el registro.
    */
-  async confirm(id: string, clientTxId: string, contact?: ConfirmContact) {
+  async confirm(
+    id: string,
+    clientTxId: string,
+    contact?: ConfirmContact,
+    meta?: ConfirmMetaSignals,
+  ) {
     const response = await this.post<PayphoneConfirmation>('payments/confirm', {
       id,
       clientTxId,
       contact,
+      meta,
     })
     return response.data
   }
