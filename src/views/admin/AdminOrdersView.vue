@@ -1,8 +1,14 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
-import adminService, { type AdminOrder, type OrdersResponse } from '@/services/adminService'
+import OrdersSummary from '@/components/admin/OrdersSummary.vue'
+import OrderDetail from '@/components/admin/OrderDetail.vue'
+import adminService, {
+  type AdminOrder,
+  type OrderGrupo,
+  type OrdersResponse,
+} from '@/services/adminService'
 import { useSessionStore } from '@/stores/session'
 
 const router = useRouter()
@@ -13,10 +19,10 @@ const loading = ref(false)
 const error = ref('')
 const search = ref('')
 const status = ref('')
+/** Qué compras tienen el detalle desplegado. */
+const abiertas = ref<Set<string>>(new Set())
 
 const usd = (cents: number) => `$${(cents / 100).toFixed(2)}`
-
-const recaudado = computed(() => usd(data.value?.resumen.recaudadoCentavos ?? 0))
 
 const ESTADOS_FILTRO = [
   { value: '', label: 'Todos los estados' },
@@ -31,6 +37,20 @@ const ESTADOS: Record<AdminOrder['status'], string> = {
   failed: 'Fallida',
 }
 
+/** Cómo se nombra cada grupo en la tabla, y qué significa en dinero. */
+const GRUPOS: Record<OrderGrupo, { etiqueta: string; explica: string }> = {
+  entro: { etiqueta: 'Cobrada', explica: 'PayPhone cobró este dinero: sí entró a la cuenta.' },
+  porRevisar: {
+    etiqueta: 'Cobrada · revisar',
+    explica: 'El cobro sí entró, pero por un valor que no es ninguno de nuestros precios.',
+  },
+  pruebas: {
+    etiqueta: 'Prueba',
+    explica: 'Pago hecho con las credenciales de prueba: no movió dinero real.',
+  },
+  noEntro: { etiqueta: 'No se cobró', explica: 'El intento se canceló o falló. No entró nada.' },
+}
+
 function fecha(iso: string | null) {
   if (!iso) return '—'
   return new Date(iso).toLocaleDateString('es-EC', {
@@ -38,6 +58,13 @@ function fecha(iso: string | null) {
     month: 'short',
     year: 'numeric',
   })
+}
+
+function alternar(id: string) {
+  const siguiente = new Set(abiertas.value)
+  if (siguiente.has(id)) siguiente.delete(id)
+  else siguiente.add(id)
+  abiertas.value = siguiente
 }
 
 let debounce: ReturnType<typeof setTimeout> | null = null
@@ -54,6 +81,8 @@ async function load() {
       search: search.value.trim() || undefined,
       status: status.value || undefined,
     })
+    // Lo desplegado pertenecía a filas que quizá ya no están listadas.
+    abiertas.value = new Set()
   } catch (e: unknown) {
     const err = e as { status?: number; message?: string }
     if (err.status === 401) {
@@ -75,28 +104,14 @@ onMounted(load)
       <div>
         <p class="compras__eyebrow">Administración</p>
         <h1 class="compras__title">Compras</h1>
-        <p class="compras__sub">Cada pago confirmado por PayPhone, con el acceso que abrió.</p>
+        <p class="compras__sub">Cada intento de pago por PayPhone, y cuál se cobró de verdad.</p>
       </div>
       <p v-if="data" class="compras__meta">
-        {{ data.orders.length }}
-        {{ data.orders.length === 1 ? 'compra listada' : 'compras listadas' }}
+        Mostrando {{ data.resumen.mostradas }} de {{ data.resumen.registradas }}
       </p>
     </header>
 
-    <section v-if="data" class="cards">
-      <div class="card">
-        <span class="card__value">{{ data.resumen.total }}</span>
-        <span class="card__label">Registradas</span>
-      </div>
-      <div class="card">
-        <span class="card__value">{{ data.resumen.aprobadas }}</span>
-        <span class="card__label">Aprobadas</span>
-      </div>
-      <div class="card card--fuerte">
-        <span class="card__value">{{ recaudado }}</span>
-        <span class="card__label">Recaudado · solo pagos reales</span>
-      </div>
-    </section>
+    <OrdersSummary v-if="data" :resumen="data.resumen" :precios="data.precios" />
 
     <div class="filtros">
       <input v-model="search" type="search" placeholder="Buscar por nombre, correo o referencia" />
@@ -105,9 +120,7 @@ onMounted(load)
 
     <p v-if="error" class="compras__error">{{ error }}</p>
     <p v-else-if="loading" class="compras__empty">Cargando…</p>
-    <p v-else-if="!data?.orders.length" class="compras__empty">
-      Todavía no hay compras registradas.
-    </p>
+    <p v-else-if="!data?.orders.length" class="compras__empty">No hay compras que coincidan.</p>
 
     <div v-else class="tabla-wrap">
       <table class="tabla">
@@ -116,34 +129,54 @@ onMounted(load)
             <th>Compradora</th>
             <th>Reto</th>
             <th>Monto</th>
-            <th>Estado</th>
+            <th>¿Entró el dinero?</th>
             <th>Acceso hasta</th>
             <th>Fecha</th>
+            <th><span class="oculto">Detalle</span></th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="o in data.orders" :key="o.id">
-            <td>
-              <strong>{{ o.buyerName || '—' }}</strong>
-              <span class="sub">{{ o.email || 'sin correo' }}</span>
-              <span v-if="o.phoneNumber" class="sub">{{ o.phoneNumber }}</span>
-            </td>
-            <td>
-              {{ o.challenge || '—' }}
-              <span v-if="o.environment === 'test'" class="tag tag--test">prueba</span>
-            </td>
-            <td>
-              {{ usd(o.amountCents) }}
-              <span v-if="!o.amountVerified" class="tag tag--warn" title="No coincide con ningún precio nuestro">
-                revisar
-              </span>
-            </td>
-            <td>
-              <span :class="['estado', `estado--${o.status}`]">{{ ESTADOS[o.status] }}</span>
-            </td>
-            <td>{{ fecha(o.accessUntil) }}</td>
-            <td>{{ fecha(o.createdAt) }}</td>
-          </tr>
+          <template v-for="o in data.orders" :key="o.id">
+            <tr :class="{ 'fila--abierta': abiertas.has(o.id) }">
+              <td>
+                <strong>{{ o.buyerName || '—' }}</strong>
+                <span class="sub">{{ o.email || 'sin correo' }}</span>
+                <span v-if="o.phoneNumber" class="sub">{{ o.phoneNumber }}</span>
+              </td>
+              <td>{{ o.challenge || '—' }}</td>
+              <td>
+                <span :class="{ 'monto--nulo': o.grupo === 'noEntro' || o.grupo === 'pruebas' }">
+                  {{ usd(o.amountCents) }}
+                </span>
+              </td>
+              <td>
+                <span :class="['estado', `estado--${o.grupo}`]" :title="GRUPOS[o.grupo].explica">
+                  {{ GRUPOS[o.grupo].etiqueta }}
+                </span>
+              </td>
+              <td>{{ fecha(o.accessUntil) }}</td>
+              <td>{{ fecha(o.createdAt) }}</td>
+              <td class="celda-accion">
+                <button
+                  type="button"
+                  class="ver"
+                  :aria-expanded="abiertas.has(o.id)"
+                  @click="alternar(o.id)"
+                >
+                  {{ abiertas.has(o.id) ? 'Ocultar' : 'Detalle' }}
+                </button>
+              </td>
+            </tr>
+            <tr v-if="abiertas.has(o.id)" class="fila-detalle">
+              <td colspan="7">
+                <OrderDetail
+                  :order="o"
+                  :estado="ESTADOS[o.status]"
+                  :explica="GRUPOS[o.grupo].explica"
+                />
+              </td>
+            </tr>
+          </template>
         </tbody>
       </table>
     </div>
@@ -187,49 +220,6 @@ onMounted(load)
   color: $ink-muted;
 }
 
-/* ── Resumen ── */
-.cards {
-  display: flex;
-  flex-wrap: wrap;
-  gap: $space-sm;
-  margin-bottom: $space-md;
-}
-
-.card {
-  flex: 1 1 190px;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  padding: 1.1rem 1.3rem;
-  border-radius: $radius-md;
-  background-color: $cream;
-}
-
-.card--fuerte {
-  background-color: $ink;
-
-  .card__value {
-    color: $cream;
-  }
-
-  .card__label {
-    color: rgba($cream, 0.55);
-  }
-}
-
-.card__value {
-  font-family: $font-display;
-  font-size: 1.9rem;
-  line-height: 1.1;
-  color: $ink;
-}
-
-.card__label {
-  font-size: $text-xs;
-  color: $ink-muted;
-}
-
 /* ── Filtros ── */
 .filtros {
   display: flex;
@@ -238,6 +228,7 @@ onMounted(load)
   flex-wrap: wrap;
 
   input {
+    flex: 1 1 280px;
     padding: 0.75rem 1rem;
     border: 1px solid rgba($ink, 0.14);
     border-radius: $radius-pill;
@@ -251,10 +242,6 @@ onMounted(load)
       border-color: rgba($ink, 0.4);
       outline: none;
     }
-  }
-
-  input {
-    flex: 1 1 280px;
   }
 }
 
@@ -321,30 +308,69 @@ onMounted(load)
   }
 }
 
+.oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.fila--abierta {
+  background-color: rgba($sand, 0.5);
+
+  td {
+    border-bottom-color: transparent;
+  }
+}
+
 .sub {
   display: block;
   font-size: $text-xs;
   color: $ink-muted;
 }
 
-.tag {
-  display: inline-block;
-  margin-left: 0.35rem;
-  padding: 0.1rem 0.45rem;
-  border-radius: $radius-pill;
-  font-size: 0.66rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.tag--test {
-  background-color: rgba($ink, 0.08);
+/* Tachado: ese monto nunca llegó a la cuenta. */
+.monto--nulo {
   color: $ink-muted;
+  text-decoration: line-through;
 }
 
-.tag--warn {
-  background-color: $alert-error-bg;
-  color: $alert-error;
+.celda-accion {
+  text-align: right;
+}
+
+.ver {
+  padding: 0.3rem 0.75rem;
+  border: 1px solid rgba($ink, 0.16);
+  border-radius: $radius-pill;
+  background: none;
+  font-family: inherit;
+  font-size: $text-xs;
+  color: $ink-soft;
+  cursor: pointer;
+  transition:
+    border-color 0.25s $ease,
+    color 0.25s $ease;
+
+  &:hover {
+    border-color: rgba($ink, 0.4);
+    color: $ink;
+  }
+}
+
+.fila-detalle {
+  background-color: rgba($sand, 0.5);
+
+  &:hover {
+    background-color: rgba($sand, 0.5);
+  }
+
+  > td {
+    padding: 0 1.1rem 1.2rem;
+    white-space: normal;
+  }
 }
 
 .estado {
@@ -355,13 +381,18 @@ onMounted(load)
   white-space: nowrap;
 }
 
-.estado--approved {
+.estado--entro {
   background-color: $alert-success-bg;
   color: #4a7a45;
 }
 
-.estado--canceled,
-.estado--failed {
+.estado--porRevisar {
+  background-color: $alert-error-bg;
+  color: $alert-error;
+}
+
+.estado--pruebas,
+.estado--noEntro {
   background-color: rgba($ink, 0.08);
   color: $ink-muted;
 }
