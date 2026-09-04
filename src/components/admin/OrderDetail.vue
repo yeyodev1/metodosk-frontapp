@@ -1,8 +1,34 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import type { AdminOrder } from '@/services/adminService'
+import { computed, ref } from 'vue'
+import ConfirmModal from '@/components/ui/ConfirmModal.vue'
+import adminService, { type AdminOrder } from '@/services/adminService'
 
 const props = defineProps<{ order: AdminOrder; explica: string; estado: string }>()
+const emit = defineEmits<{ cambiada: [] }>()
+
+/** Qué confirmación está abierta, si alguna. */
+const confirmando = ref<'prueba' | 'borrar' | null>(null)
+const guardando = ref(false)
+const fallo = ref('')
+
+const esPrueba = computed(() => props.order.environment === 'test')
+
+async function aplicar() {
+  guardando.value = true
+  fallo.value = ''
+  try {
+    if (confirmando.value === 'borrar') await adminService.eliminar(props.order.id)
+    else await adminService.marcarPrueba(props.order.id, !esPrueba.value)
+    confirmando.value = null
+    // La lista y los totales los recarga la vista: acá no se puede saber
+    // cómo quedó el resumen completo.
+    emit('cambiada')
+  } catch (e: unknown) {
+    fallo.value = (e as { message?: string }).message ?? 'No pudimos guardar el cambio'
+  } finally {
+    guardando.value = false
+  }
+}
 
 const usd = (cents: number) => `$${(cents / 100).toFixed(2)}`
 
@@ -71,6 +97,45 @@ const campos = computed(() => {
         <dd :class="{ mono: c.mono }">{{ c.valor }}</dd>
       </div>
     </dl>
+
+    <div class="acciones">
+      <button type="button" class="accion" @click="confirmando = 'prueba'">
+        {{ esPrueba ? 'Devolver a producción' : 'Marcar como prueba' }}
+      </button>
+      <button type="button" class="accion accion--peligro" @click="confirmando = 'borrar'">
+        Borrar compra
+      </button>
+      <p class="acciones__pista">
+        Marcar como prueba la saca del recaudado sin perder el registro. Borrar no se deshace.
+      </p>
+    </div>
+
+    <p v-if="fallo" class="fallo">{{ fallo }}</p>
+
+    <ConfirmModal
+      :open="confirmando === 'prueba'"
+      :loading="guardando"
+      :title="esPrueba ? 'Devolver a producción' : 'Marcar como prueba'"
+      :message="
+        esPrueba
+          ? `Los ${usd(order.amountCents)} de ${order.buyerName || 'esta compra'} vuelven a contar como dinero recibido.`
+          : `Los ${usd(order.amountCents)} de ${order.buyerName || 'esta compra'} dejan de contar como dinero recibido y pasan a Pruebas. El registro no se pierde y esto se puede revertir.`
+      "
+      :confirm-label="esPrueba ? 'Devolver' : 'Marcar como prueba'"
+      @confirm="aplicar"
+      @cancel="confirmando = null"
+    />
+
+    <ConfirmModal
+      :open="confirmando === 'borrar'"
+      :loading="guardando"
+      danger
+      title="Borrar esta compra"
+      :message="`Se borra el registro de ${order.buyerName || 'esta compra'} (${order.email || 'sin correo'}, ${usd(order.amountCents)}) para siempre. Es el único rastro de quién compró y no se puede recuperar. Si solo quieres que no cuente como dinero, márcala como prueba.`"
+      confirm-label="Borrar para siempre"
+      @confirm="aplicar"
+      @cancel="confirmando = null"
+    />
   </div>
 </template>
 
@@ -104,5 +169,55 @@ const campos = computed(() => {
 .mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: $text-xs;
+}
+
+/* ── Acciones ── */
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 1.3rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba($ink, 0.08);
+}
+
+.accion {
+  padding: 0.45rem 0.95rem;
+  border: 1px solid rgba($ink, 0.16);
+  border-radius: $radius-pill;
+  background: none;
+  font-family: inherit;
+  font-size: $text-xs;
+  color: $ink-soft;
+  cursor: pointer;
+  transition:
+    border-color 0.25s $ease,
+    color 0.25s $ease;
+
+  &:hover {
+    border-color: rgba($ink, 0.4);
+    color: $ink;
+  }
+}
+
+.accion--peligro:hover {
+  border-color: $alert-error;
+  color: $alert-error;
+}
+
+.acciones__pista {
+  flex: 1 1 240px;
+  font-size: $text-xs;
+  color: $ink-muted;
+}
+
+.fallo {
+  margin-top: 0.7rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: $radius-md;
+  background-color: $alert-error-bg;
+  font-size: $text-xs;
+  color: $alert-error;
 }
 </style>
