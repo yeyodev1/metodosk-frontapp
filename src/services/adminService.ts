@@ -58,6 +58,25 @@ export interface OrdersResponse {
 }
 
 class AdminService extends APIBase {
+  /**
+   * Saca una compra del recaudado, o la devuelve.
+   *
+   * Es lo que hay que usar para los cobros que se hicieron probando: el
+   * registro sobrevive, solo deja de contar como dinero recibido.
+   */
+  async marcarPrueba(id: string, esPrueba: boolean) {
+    const response = await this.patch<{ mensaje: string }>(`admin/orders/${id}/prueba`, {
+      esPrueba,
+    })
+    return response.data
+  }
+
+  /** Borra la compra para siempre. No hay vuelta atrás. */
+  async eliminar(id: string) {
+    const response = await this.delete<{ mensaje: string }>(`admin/orders/${id}`)
+    return response.data
+  }
+
   async orders(filters: { status?: string; search?: string } = {}) {
     const params = new URLSearchParams()
     if (filters.status) params.set('status', filters.status)
