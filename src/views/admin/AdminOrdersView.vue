@@ -85,7 +85,7 @@ onMounted(load)
       v-if="data"
       :resumen="data.resumen"
       :precios="data.precios"
-      @conciliado="load"
+      @restaurado="load"
     />
 
     <div class="filtros">

@@ -57,19 +57,14 @@ export interface OrdersResponse {
   }
 }
 
-export interface ConciliacionResponse {
-  /** Cuántas se pudieron consultar contra PayPhone. */
+export interface RestauracionResponse {
   revisadas: number
-  /** Cuántas no contestaron: esas se dejaron intactas. */
-  sinRespuesta: number
-  cambios: {
-    id: string
-    clientTransactionId: string
+  /** Cuántas no guardaban la respuesta original: se dejaron intactas. */
+  sinRespaldo: number
+  corregidas: {
     buyerName: string | null
-    email: string | null
     antes: AdminOrder['status']
     ahora: AdminOrder['status']
-    centavos: number
   }[]
   mensaje: string
 }
@@ -89,11 +84,11 @@ class AdminService extends APIBase {
   }
 
   /**
-   * Le pregunta a PayPhone en qué quedó cada compra y corrige las que
-   * cambiaron. Tarda: son decenas de consultas a un servicio ajeno.
+   * Recalcula el estado de cada compra desde la respuesta que PayPhone dio al
+   * confirmarla, guardada en la propia orden. No consulta a nadie.
    */
-  async conciliar() {
-    const response = await this.post<ConciliacionResponse>('admin/orders/conciliar', {})
+  async restaurar() {
+    const response = await this.post<RestauracionResponse>('admin/orders/restaurar', {})
     return response.data
   }
 

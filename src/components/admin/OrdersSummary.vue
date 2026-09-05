@@ -1,38 +1,38 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import adminService, {
-  type ConciliacionResponse,
   type OrdersResponse,
+  type RestauracionResponse,
 } from '@/services/adminService'
 
 const props = defineProps<{ resumen: OrdersResponse['resumen']; precios: OrdersResponse['precios'] }>()
-const emit = defineEmits<{ conciliado: [] }>()
+const emit = defineEmits<{ restaurado: [] }>()
 
 const usd = (cents: number) => `$${(cents / 100).toFixed(2)}`
 
-const conciliando = ref(false)
-const informe = ref<ConciliacionResponse | null>(null)
-const falloConciliar = ref('')
+const restaurando = ref(false)
+const informe = ref<RestauracionResponse | null>(null)
+const falloRestaurar = ref('')
 
 /**
- * Vuelve a preguntarle a PayPhone en qué quedó cada compra.
+ * Devuelve cada compra al estado que PayPhone reportó al confirmarla.
  *
- * Hace falta porque confirmar deja una foto del momento: un cobro reversado
- * o devuelto después sigue contando como dinero recibido hasta que se
- * pregunta de nuevo. Es lo que acerca este total al panel de PayPhone.
+ * Esa respuesta se guarda entera en la propia orden, así que esto reconstruye
+ * el dato original en vez de consultarlo: no depende de la red ni puede
+ * malinterpretar nada.
  */
-async function conciliar() {
-  conciliando.value = true
-  falloConciliar.value = ''
+async function restaurar() {
+  restaurando.value = true
+  falloRestaurar.value = ''
   informe.value = null
   try {
-    informe.value = await adminService.conciliar()
-    if (informe.value.cambios.length) emit('conciliado')
+    informe.value = await adminService.restaurar()
+    if (informe.value.corregidas.length) emit('restaurado')
   } catch (e: unknown) {
-    falloConciliar.value =
-      (e as { message?: string }).message ?? 'No pudimos consultar a PayPhone'
+    falloRestaurar.value =
+      (e as { message?: string }).message ?? 'No pudimos restaurar los estados'
   } finally {
-    conciliando.value = false
+    restaurando.value = false
   }
 }
 
@@ -106,25 +106,24 @@ const tarjetas = computed(() => {
         pre-venta y {{ usd(precios.regularCentavos) }} regular. Este es el <strong>bruto</strong>:
         PayPhone descuenta su comisión antes de depositar.
       </p>
-      <button type="button" class="conciliar" :disabled="conciliando" @click="conciliar">
-        {{ conciliando ? 'Consultando a PayPhone…' : 'Conciliar con PayPhone' }}
+      <button type="button" class="restaurar" :disabled="restaurando" @click="restaurar">
+        {{ restaurando ? 'Restaurando…' : 'Restaurar estados originales' }}
       </button>
     </div>
 
-    <p v-if="falloConciliar" class="informe informe--error">{{ falloConciliar }}</p>
+    <p v-if="falloRestaurar" class="informe informe--error">{{ falloRestaurar }}</p>
 
     <div v-else-if="informe" class="informe">
       <p>
         <strong>{{ informe.mensaje }}</strong>
-        Se consultaron {{ informe.revisadas }}.
-        <template v-if="informe.sinRespuesta">
-          {{ informe.sinRespuesta }} no contestaron y se dejaron intactas.
+        Se revisaron {{ informe.revisadas }}.
+        <template v-if="informe.sinRespaldo">
+          {{ informe.sinRespaldo }} no guardaban la respuesta de PayPhone y se dejaron intactas.
         </template>
       </p>
-      <ul v-if="informe.cambios.length">
-        <li v-for="c in informe.cambios" :key="c.id">
-          {{ c.buyerName || c.email || c.clientTransactionId }} · {{ usd(c.centavos) }} ·
-          <strong>{{ c.antes }} → {{ c.ahora }}</strong>
+      <ul v-if="informe.corregidas.length">
+        <li v-for="(c, i) in informe.corregidas" :key="i">
+          {{ c.buyerName || 'sin nombre' }} · <strong>{{ c.antes }} → {{ c.ahora }}</strong>
         </li>
       </ul>
     </div>
@@ -202,7 +201,7 @@ const tarjetas = computed(() => {
   color: $ink-muted;
 }
 
-.conciliar {
+.restaurar {
   padding: 0.5rem 1rem;
   border: 1px solid rgba($ink, 0.16);
   border-radius: $radius-pill;
