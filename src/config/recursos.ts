@@ -12,12 +12,15 @@ export interface Recurso {
   nombre: string
   detalle: string
   /**
-   * Slug de la foto en media.ts, cuando exista.
+   * Foto del implemento, servida desde `public/recursos/`.
    *
-   * Van sin foto hasta que las de Scarlett estén subidas a Cloudinary: una
-   * imagen rota se ve peor que ninguna, y la lista se entiende sin ellas.
+   * No pasa por CldImage —la regla del proyecto— porque estas tres también
+   * viajan dentro del correo de compra, y un correo necesita una URL absoluta
+   * y estable que no dependa de las transformaciones de Cloudinary. Servirlas
+   * desde nuestro propio dominio es lo que hace que la misma foto funcione en
+   * los dos sitios.
    */
-  foto?: string
+  foto: string
 }
 
 export interface GrupoRecursos {
@@ -37,16 +40,19 @@ export const GRUPOS_RECURSOS: GrupoRecursos[] = [
     recursos: [
       {
         nombre: 'Mancuernas',
+        foto: '/recursos/mancuernas.jpg',
         detalle:
           'Un par. Si es tu primera vez, entre 3 y 5 kg cada una te va a servir para casi todo. Puedes empezar con menos e ir subiendo.',
       },
       {
         nombre: 'Banda de resistencia',
+        foto: '/recursos/banda.jpg',
         detalle:
           'De tela, de las que se ponen sobre el pantalón y no se enrollan. Suelen venir en tres intensidades y las vas a usar todas.',
       },
       {
         nombre: 'Mat o colchoneta',
+        foto: '/recursos/mat.jpg',
         detalle:
           'Para el trabajo de piso. Mientras más gruesa, más cómodas las rodillas y la espalda.',
       },
@@ -60,6 +66,7 @@ export const GRUPOS_RECURSOS: GrupoRecursos[] = [
     recursos: [
       {
         nombre: 'Banda de resistencia',
+        foto: '/recursos/banda.jpg',
         detalle:
           'De tela. Es la única que no vas a encontrar en la mayoría de gimnasios, y la vas a necesitar en casi todos los bloques de piernas y glúteo.',
       },

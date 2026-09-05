@@ -4,11 +4,12 @@
  *
  * Es la misma lista que le llegó por correo el día de la compra. Está acá
  * porque ese correo se pierde entre todo lo demás, y esto es justo lo que se
- * va a querer releer parada en la tienda.
+ * va a querer releer parada en la tienda — de ahí que cada implemento tenga
+ * su foto: reconocerlo en un estante es más fácil que leer su descripción.
  *
  * Los dos casos —casa y gimnasio— se muestran juntos, sin preguntar cuál es:
- * son listas de tres líneas y una sola de ellas aplica, así que elegir cuesta
- * menos que responder una pregunta.
+ * son listas cortas y una sola aplica, así que elegir cuesta menos que
+ * responder una pregunta.
  */
 import { GRUPOS_RECURSOS } from '@/config/recursos'
 </script>
@@ -19,15 +20,15 @@ import { GRUPOS_RECURSOS } from '@/config/recursos'
       <p class="recursos__eyebrow">Recursos</p>
       <h1 class="recursos__title">Lo que vas a necesitar</h1>
       <p class="recursos__sub">
-        Nada más que esto. El reto está armado para que funcione con lo mínimo, así que no
-        te compres media tienda antes de empezar.
+        Nada más que esto. El reto está armado para que funcione con lo mínimo, así que no te
+        compres media tienda antes de empezar.
       </p>
     </header>
 
     <section v-for="grupo in GRUPOS_RECURSOS" :key="grupo.id" class="grupo">
       <div class="grupo__head">
         <span class="grupo__icono"><FaIcon :icon="grupo.icono" /></span>
-        <div>
+        <div class="grupo__texto">
           <h2 class="grupo__title">{{ grupo.titulo }}</h2>
           <p class="grupo__intro">{{ grupo.intro }}</p>
         </div>
@@ -35,8 +36,8 @@ import { GRUPOS_RECURSOS } from '@/config/recursos'
 
       <ul class="items">
         <li v-for="r in grupo.recursos" :key="r.nombre" class="item">
-          <span class="item__marca"><FaIcon icon="basket-shopping" /></span>
-          <div>
+          <img class="item__foto" :src="r.foto" :alt="r.nombre" loading="lazy" />
+          <div class="item__texto">
             <h3 class="item__nombre">{{ r.nombre }}</h3>
             <p class="item__detalle">{{ r.detalle }}</p>
           </div>
@@ -45,15 +46,20 @@ import { GRUPOS_RECURSOS } from '@/config/recursos'
     </section>
 
     <p class="recursos__nota">
-      ¿Dudas con alguna medida o no consigues algo? Escríbenos por WhatsApp y lo resolvemos:
-      casi siempre hay una forma de empezar con lo que ya tienes en casa.
+      ¿Dudas con alguna medida o no consigues algo? Escríbenos por WhatsApp y lo resolvemos: casi
+      siempre hay una forma de empezar con lo que ya tienes en casa.
     </p>
   </main>
 </template>
 
 <style lang="scss" scoped>
+/**
+ * El ancho tope es lo que hace legible esta pantalla: sin él, en un monitor
+ * grande cada descripción se estira de lado a lado y se vuelve una tira de
+ * texto imposible de leer.
+ */
 .recursos {
-  padding: 0;
+  max-width: 62rem;
 }
 
 .recursos__head {
@@ -83,16 +89,17 @@ import { GRUPOS_RECURSOS } from '@/config/recursos'
 /* ── Cada forma de entrenar ── */
 .grupo {
   margin-bottom: $space-md;
-  padding: 1.4rem 1.5rem;
+  padding: 1.5rem;
   border-radius: $radius-lg;
   background-color: $cream;
 }
 
 .grupo__head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.9rem;
-  margin-bottom: 1.1rem;
+  padding-bottom: 1.2rem;
+  border-bottom: 1px solid rgba($ink, 0.08);
 }
 
 .grupo__icono {
@@ -105,6 +112,10 @@ import { GRUPOS_RECURSOS } from '@/config/recursos'
   background-color: $sand;
   color: $ink;
   font-size: 0.95rem;
+}
+
+.grupo__texto {
+  min-width: 0;
 }
 
 .grupo__title {
@@ -122,22 +133,31 @@ import { GRUPOS_RECURSOS } from '@/config/recursos'
 
 /* ── Los implementos ── */
 .items {
+  @include flex-cards(240px, 1.2rem);
+  margin-top: 1.3rem;
   list-style: none;
 }
 
 .item {
   display: flex;
-  align-items: flex-start;
-  gap: 0.9rem;
-  padding: 0.9rem 0;
-  border-top: 1px solid rgba($ink, 0.08);
+  flex-direction: column;
 }
 
-.item__marca {
-  flex: none;
-  margin-top: 0.15rem;
-  color: $ink-muted;
-  font-size: 0.8rem;
+/**
+ * Las fotos vienen de una tienda y traen fondos claros distintos entre sí.
+ * El fondo blanco y el `contain` las emparejan: se ven como un catálogo y no
+ * como tres capturas pegadas.
+ */
+.item__foto {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: contain;
+  border-radius: $radius-md;
+  background-color: #fff;
+}
+
+.item__texto {
+  padding: 0.85rem 0.2rem 0;
 }
 
 .item__nombre {
@@ -147,10 +167,9 @@ import { GRUPOS_RECURSOS } from '@/config/recursos'
 }
 
 .item__detalle {
-  margin-top: 0.2rem;
-  max-width: 54ch;
+  margin-top: 0.25rem;
   font-size: $text-sm;
-  line-height: 1.6;
+  line-height: 1.55;
   color: $ink-soft;
 }
 
