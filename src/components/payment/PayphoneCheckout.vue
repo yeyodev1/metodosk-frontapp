@@ -10,6 +10,7 @@ import { buildTransaction, renderPayphoneBox } from '@/composables/usePayphone'
 import { PAYMENT_MODE, PRICES, formatUsd } from '@/config/payment'
 import { trackMeta } from '@/composables/useMetaPixel'
 import type { CheckoutContact } from './checkout'
+import paymentService from '@/services/paymentService'
 import { rememberCheckout } from './pendingCheckout'
 import type { Challenge } from '@/config/site'
 
@@ -117,7 +118,23 @@ async function submit(contact: CheckoutContact) {
     return
   }
 
-  // PayPhone nos saca del sitio: el contacto se guarda para recuperarlo al volver.
+  /**
+   * PayPhone nos saca del sitio, así que el contacto se guarda dos veces.
+   *
+   * En el servidor, que es el que aguanta: el `sessionStorage` de abajo se
+   * pierde cuando el navegador de Instagram devuelve a la compradora en otra
+   * pestaña, y entonces las credenciales se iban al correo de su tarjeta en
+   * vez de al que escribió. Se espera esta llamada antes de abrir la cajita.
+   */
+  await paymentService.saveIntent({
+    clientTransactionId: transaction.clientTransactionId,
+    name: contact.name,
+    email: contact.email,
+    phone: contact.phone,
+    challenge: selected.value.name,
+  })
+
+  // Y en el navegador, que responde al instante cuando sí sobrevive.
   rememberCheckout(transaction.clientTransactionId, {
     ...contact,
     challenge: selected.value.name,

@@ -73,6 +73,30 @@ class PaymentService extends APIBase {
    * El contacto es opcional: si no llega, el backend usa el correo que
    * devuelve PayPhone. Sirve para el correo de acceso y para el registro.
    */
+  /**
+   * Deja el contacto en el servidor antes de que PayPhone se lleve la página.
+   *
+   * Sin esto, al volver en otra pestaña —lo normal entrando desde Instagram—
+   * el `sessionStorage` está vacío y las credenciales se van al correo que
+   * PayPhone tenga guardado para la tarjeta, no al que ella escribió.
+   *
+   * Nunca lanza: si falla, la compra tiene que poder seguir igual.
+   */
+  async saveIntent(data: {
+    clientTransactionId: string
+    name?: string
+    email?: string
+    phone?: string
+    challenge?: string
+  }) {
+    try {
+      await this.post('payments/intent', data)
+      return true
+    } catch {
+      return false
+    }
+  }
+
   async confirm(
     id: string,
     clientTxId: string,
