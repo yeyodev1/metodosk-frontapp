@@ -27,7 +27,7 @@ export const PAYPHONE_SDK = {
 /** Precios en centavos. El precio es final: sin IVA desglosado. */
 export const PRICES = {
   presale: 6700,
-  regular: 8700,
+  regular: 11100,
 } as const
 
 export const CURRENCY = 'USD'

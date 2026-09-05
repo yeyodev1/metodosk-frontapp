@@ -11,7 +11,7 @@
  */
 
 /** Cuándo abre el contenido. El servidor manda; esto es el respaldo. */
-export const APERTURA_TEXTO = '15 de septiembre'
+export const APERTURA_TEXTO = '14 de septiembre'
 
 /** Hasta cuándo comprar incluye la comunidad de Telegram. */
 export const TELEGRAM_TEXTO = '14 de septiembre'
