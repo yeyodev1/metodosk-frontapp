@@ -55,6 +55,14 @@ const routes: Array<RouteRecordRaw> = [
         meta: { title: 'Empieza aquí — Método SK', requiresAuth: true },
       },
       {
+        // La lista de implementos. También llega por correo al comprar, pero
+        // ese correo se pierde y esto se relee parada en la tienda.
+        path: 'recursos',
+        name: 'Recursos',
+        component: () => import('../views/member/RecursosView.vue'),
+        meta: { title: 'Recursos — Método SK', requiresAuth: true },
+      },
+      {
         path: 'mi-progreso',
         name: 'MyProgress',
         component: () => import('../views/member/MyProgressView.vue'),

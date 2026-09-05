@@ -28,6 +28,7 @@ const abierto = ref(false)
 const ENLACES = [
   { to: '/academia', label: 'Mi reto', hint: 'Tus cursos y tu avance', icono: 'dumbbell' },
   { to: '/bienvenida', label: 'Empieza aquí', hint: 'El video de bienvenida', icono: 'circle-play' },
+  { to: '/recursos', label: 'Recursos', hint: 'Lo que necesitas para entrenar', icono: 'basket-shopping' },
   { to: '/mi-progreso', label: 'Mi progreso', hint: 'Tus fotos y tus medidas', icono: 'chart-line' },
   { to: '/comunidad', label: 'Comunidad', hint: 'El muro de todas', icono: 'comments' },
   { to: '/mis-pagos', label: 'Mis pagos', hint: 'Lo que pagaste y tu acceso', icono: 'credit-card' },

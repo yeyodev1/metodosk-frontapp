@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import OrdersSummary from '@/components/admin/OrdersSummary.vue'
 import OrderDetail from '@/components/admin/OrderDetail.vue'
+import RecursosPanel from '@/components/admin/RecursosPanel.vue'
 import { ESTADOS, ESTADOS_FILTRO, GRUPOS } from '@/components/admin/etiquetas'
 import adminService, { type OrdersResponse } from '@/services/adminService'
 import { useSessionStore } from '@/stores/session'
@@ -87,6 +88,8 @@ onMounted(load)
       :precios="data.precios"
       @restaurado="load"
     />
+
+    <RecursosPanel />
 
     <div class="filtros">
       <input v-model="search" type="search" placeholder="Buscar por nombre, correo o referencia" />
