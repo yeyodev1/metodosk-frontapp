@@ -33,8 +33,8 @@ onMounted(cargar)
         <template v-if="estado.pendientes">
           Enviada a {{ estado.enviados }} de {{ estado.total }}. Faltan
           <strong>{{ estado.pendientes }}</strong
-          >, y salen solas: cada día a las 9:00 se manda la siguiente tanda hasta
-          terminar. No hay que hacer nada.
+          >, y salen solas: cada hora se manda la siguiente tanda hasta terminar.
+          No hay que hacer nada.
         </template>
         <template v-else>
           Enviada a las {{ estado.total }} alumnas. Las nuevas la reciben dentro del correo
