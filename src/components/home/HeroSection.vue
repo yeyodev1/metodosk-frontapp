@@ -6,8 +6,10 @@ import { useCheckout } from '@/composables/useCheckout'
 import { CREATORS, HERO, PRICING } from '@/config/site'
 import { HERO_VIDEO } from '@/config/media'
 import { formatUsd } from '@/config/payment'
+import { useCuentaRegresiva } from '@/composables/useCuentaRegresiva'
 
 const { open } = useCheckout()
+const { texto: urgencia, cerrada } = useCuentaRegresiva()
 
 const poster = cldPoster(HERO_VIDEO)
 const video = ref<HTMLVideoElement | null>(null)
@@ -63,6 +65,17 @@ onMounted(async () => {
       <div class="hero__scrim" />
     </div>
 
+    <!--
+      La urgencia va fuera del flujo, anclada arriba a la derecha. El contenido
+      del hero se alinea abajo, así que esa zona está vacía y un `absolute` no
+      corre ni un pixel de lo demás. Debajo del header, que mide 68px.
+    -->
+    <p v-if="!cerrada" class="hero__urgencia">
+      <span class="hero__urgencia-punto" aria-hidden="true" />
+      {{ urgencia }}
+      <span class="hero__urgencia-fecha">cierra el 14 de sept · 23:59 Ecuador</span>
+    </p>
+
     <div class="hero__content">
       <p class="hero__eyebrow">{{ HERO.eyebrow }}</p>
       <h1 class="hero__title">{{ HERO.title }}</h1>
@@ -100,6 +113,77 @@ onMounted(async () => {
 </template>
 
 <style lang="scss" scoped>
+/* ── Urgencia ── */
+.hero__urgencia {
+  position: absolute;
+  top: 5.5rem;
+  right: $space-md;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  max-width: calc(100% - #{$space-md} * 2);
+  padding: 0.5rem 0.95rem;
+  border-radius: $radius-pill;
+  border: 1px solid rgba(#fff, 0.22);
+  background-color: rgba($ink, 0.55);
+  backdrop-filter: blur(10px);
+  font-size: $text-xs;
+  font-weight: 600;
+  color: #fff;
+}
+
+.hero__urgencia-punto {
+  flex: none;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background-color: $rose-deep;
+  animation: latido 2s $ease infinite;
+}
+
+.hero__urgencia-fecha {
+  padding-left: 0.55rem;
+  border-left: 1px solid rgba(#fff, 0.22);
+  font-weight: 400;
+  color: rgba(#fff, 0.72);
+}
+
+@keyframes latido {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.82);
+  }
+}
+
+@include reduced-motion {
+  .hero__urgencia-punto {
+    animation: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero__urgencia {
+    top: 4.75rem;
+    left: $space-sm;
+    right: $space-sm;
+    max-width: none;
+    justify-content: center;
+    padding: 0.45rem 0.7rem;
+    font-size: 0.72rem;
+  }
+
+  /* En una sola línea no cabe: la fecha se calla y queda el "quedan N días". */
+  .hero__urgencia-fecha {
+    display: none;
+  }
+}
+
 .hero {
   position: relative;
   display: flex;

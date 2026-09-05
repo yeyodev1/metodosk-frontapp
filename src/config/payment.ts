@@ -30,6 +30,15 @@ export const PRICES = {
   regular: 11100,
 } as const
 
+/**
+ * Cuándo cierra la pre-venta. Espejo de PRESALE_DEADLINE en el backend.
+ *
+ * Lleva el desfase -05:00 escrito: sin él, el navegador lo interpretaría en la
+ * zona de quien mira, y buena parte de las compradoras están fuera de Ecuador.
+ * El corte es uno solo para todas.
+ */
+export const PRESALE_DEADLINE = '2026-09-14T23:59:59-05:00'
+
 export const CURRENCY = 'USD'
 /** Ecuador (UTC-5). */
 export const TIME_ZONE = -5
