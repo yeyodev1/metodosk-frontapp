@@ -1,44 +1,57 @@
 /**
- * Cuánto falta para que cierre la pre-venta, en texto.
+ * Cuánto falta para que cierre la pre-venta.
  *
- * Se recalcula solo, cada minuto. No baja a segundos a propósito: un reloj
- * corriendo hacia atrás en el hero es un truco de infoproducto, y lo que hace
- * falta acá es que se entienda el corte, no presionar con un cronómetro.
+ * Baja cada segundo. Ver el número moverse es la mitad del trabajo: una fecha
+ * quieta se lee y se olvida, un reloj corriendo se siente.
  */
 import { computed, onUnmounted, ref } from 'vue'
 import { PRESALE_DEADLINE } from '@/config/payment'
 
-const UN_MINUTO = 60_000
+const UN_SEGUNDO = 1_000
 
 export function useCuentaRegresiva(limiteIso: string = PRESALE_DEADLINE) {
+  /**
+   * Safari parsea bien el ISO con desfase (`-05:00`), que es justo por lo que
+   * la constante lo lleva escrito: sin él cada navegador lo resolvería en su
+   * propia zona y el corte sería distinto para cada compradora.
+   */
   const limite = new Date(limiteIso)
-  const ahora = ref(new Date())
+  const ahora = ref(Date.now())
 
   const reloj = setInterval(() => {
-    ahora.value = new Date()
-  }, UN_MINUTO)
+    ahora.value = Date.now()
+  }, UN_SEGUNDO)
   onUnmounted(() => clearInterval(reloj))
 
-  /** Ya pasó el corte: quien mire después del 14 no ve una promesa vencida. */
-  const cerrada = computed(() => ahora.value >= limite)
+  const restanteMs = computed(() => Math.max(0, limite.getTime() - ahora.value))
 
-  const horasRestantes = computed(() =>
-    Math.max(0, Math.ceil((limite.getTime() - ahora.value.getTime()) / 3_600_000)),
-  )
+  /** Pasado el corte: nadie debe ver una pre-venta vencida anunciándose. */
+  const cerrada = computed(() => restanteMs.value <= 0)
 
-  const diasRestantes = computed(() => Math.ceil(horasRestantes.value / 24))
+  const dias = computed(() => Math.floor(restanteMs.value / 86_400_000))
+  const horas = computed(() => Math.floor(restanteMs.value / 3_600_000) % 24)
+  const minutos = computed(() => Math.floor(restanteMs.value / 60_000) % 60)
+  const segundos = computed(() => Math.floor(restanteMs.value / 1_000) % 60)
+
+  /** Dos dígitos siempre: sin esto el ancho baila a cada tic. */
+  const dosDigitos = (n: number) => String(n).padStart(2, '0')
 
   /**
-   * El texto cambia de forma según lo que queda, porque "quedan 216 horas" no
-   * apura a nadie y "quedan 9 días" el último día es mentira.
+   * Las piezas que se pintan.
+   *
+   * Los días desaparecen el último día en vez de mostrar un "0": llegado ese
+   * punto lo que aprieta son las horas, y un cero grande resta en vez de sumar.
    */
-  const texto = computed(() => {
-    if (cerrada.value) return ''
-    if (horasRestantes.value <= 1) return 'Última hora de pre-venta'
-    if (horasRestantes.value <= 24) return `Quedan ${horasRestantes.value} horas de pre-venta`
-    if (diasRestantes.value === 1) return 'Último día de pre-venta'
-    return `Quedan ${diasRestantes.value} días de pre-venta`
+  const piezas = computed(() => {
+    const base = [
+      { valor: dosDigitos(horas.value), etiqueta: 'h' },
+      { valor: dosDigitos(minutos.value), etiqueta: 'm' },
+      { valor: dosDigitos(segundos.value), etiqueta: 's' },
+    ]
+    return dias.value > 0
+      ? [{ valor: String(dias.value), etiqueta: dias.value === 1 ? 'día' : 'días' }, ...base]
+      : base
   })
 
-  return { cerrada, texto, diasRestantes, horasRestantes }
+  return { cerrada, piezas, dias, horas, minutos, segundos }
 }

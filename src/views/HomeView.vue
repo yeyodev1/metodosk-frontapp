@@ -7,6 +7,7 @@ import FinalCtaSection from '@/components/home/FinalCtaSection.vue'
 import ForWhoSection from '@/components/home/ForWhoSection.vue'
 import CommunitySection from '@/components/home/CommunitySection.vue'
 import HeroSection from '@/components/home/HeroSection.vue'
+import PreventaBar from '@/components/home/PreventaBar.vue'
 import IncludesSection from '@/components/home/IncludesSection.vue'
 import NutritionSection from '@/components/home/NutritionSection.vue'
 import PricingSection from '@/components/home/PricingSection.vue'
@@ -53,6 +54,8 @@ onMounted(() => {
     </main>
 
     <AppFooter />
+
+    <PreventaBar />
   </div>
 </template>
 
@@ -61,5 +64,16 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
+  /**
+   * Hueco para la barra de pre-venta, que va en `fixed` y no ocupa espacio.
+   * Sin esto tapa el final del pie y la última línea queda inalcanzable.
+   */
+  padding-bottom: 4.5rem;
+  padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+
+  @media (max-width: 767px) {
+    padding-bottom: 6.5rem;
+    padding-bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px));
+  }
 }
 </style>
