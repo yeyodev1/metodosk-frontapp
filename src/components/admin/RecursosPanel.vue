@@ -1,20 +1,17 @@
 <script setup lang="ts">
 /**
- * El envío de la lista de implementos a quienes compraron antes de que el
- * correo de acceso la incluyera.
+ * Cómo va el envío de la lista de implementos a quienes compraron antes de que
+ * el correo de acceso la incluyera.
  *
- * Sale por tandas: el plan gratuito de Resend tiene tope diario, y quemarlo
- * dejaría sin enviar el correo de una compra nueva, que lleva la contraseña.
- * Un cron manda una tanda cada día; este botón es para arrancar sin esperar
- * y para reintentar lo que falló.
+ * Solo informa: el envío lo hace un cron cada día y no depende de que nadie
+ * entre acá a apretar nada. Lo que falla vuelve a intentarse a la mañana
+ * siguiente, así que tampoco hay un botón de reintento que alguien deba
+ * acordarse de tocar.
  */
 import { onMounted, ref } from 'vue'
-import adminService, { type RecursosEnvio, type RecursosEstado } from '@/services/adminService'
+import adminService, { type RecursosEstado } from '@/services/adminService'
 
 const estado = ref<RecursosEstado | null>(null)
-const enviando = ref(false)
-const ultimo = ref<RecursosEnvio | null>(null)
-const fallo = ref('')
 
 async function cargar() {
   try {
@@ -22,19 +19,6 @@ async function cargar() {
   } catch {
     // Un panel secundario no debe romper la pantalla de compras.
     estado.value = null
-  }
-}
-
-async function enviar() {
-  enviando.value = true
-  fallo.value = ''
-  try {
-    ultimo.value = await adminService.enviarRecursos()
-    await cargar()
-  } catch (e: unknown) {
-    fallo.value = (e as { message?: string }).message ?? 'No pudimos enviar la tanda'
-  } finally {
-    enviando.value = false
   }
 }
 
@@ -49,33 +33,18 @@ onMounted(cargar)
         <template v-if="estado.pendientes">
           Enviada a {{ estado.enviados }} de {{ estado.total }}. Faltan
           <strong>{{ estado.pendientes }}</strong
-          >: sale una tanda automática cada día a las 9:00.
+          >, y salen solas: cada día a las 9:00 se manda la siguiente tanda hasta
+          terminar. No hay que hacer nada.
         </template>
         <template v-else>
-          Enviada a las {{ estado.total }} alumnas. Las nuevas la reciben en el correo de
-          compra.
+          Enviada a las {{ estado.total }} alumnas. Las nuevas la reciben dentro del correo
+          de compra.
         </template>
       </p>
     </div>
 
-    <button
-      v-if="estado.pendientes"
-      type="button"
-      class="recursos__boton"
-      :disabled="enviando"
-      @click="enviar"
-    >
-      {{ enviando ? 'Enviando…' : 'Enviar la siguiente tanda' }}
-    </button>
+    <span v-if="estado.pendientes" class="recursos__estado">En curso</span>
   </section>
-
-  <p v-if="fallo" class="aviso aviso--error">{{ fallo }}</p>
-  <p v-else-if="ultimo" class="aviso">
-    {{ ultimo.mensaje }}
-    <template v-if="ultimo.fallidos">
-      {{ ultimo.fallidos }} no salieron y entran en la próxima tanda.
-    </template>
-  </p>
 </template>
 
 <style lang="scss" scoped>
@@ -108,39 +77,12 @@ onMounted(cargar)
   color: $ink-soft;
 }
 
-.recursos__boton {
-  padding: 0.55rem 1.1rem;
-  border: none;
+.recursos__estado {
+  padding: 0.35rem 0.85rem;
   border-radius: $radius-pill;
-  background-color: $ink;
-  font-family: inherit;
-  font-size: $text-xs;
-  color: $cream;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: opacity 0.25s $ease;
-
-  &:hover:not(:disabled) {
-    opacity: 0.85;
-  }
-
-  &:disabled {
-    opacity: 0.55;
-    cursor: progress;
-  }
-}
-
-.aviso {
-  margin-bottom: $space-md;
-  padding: 0.9rem 1.1rem;
-  border-radius: $radius-md;
-  background-color: $cream;
+  background-color: rgba($ink, 0.08);
   font-size: $text-xs;
   color: $ink-soft;
-}
-
-.aviso--error {
-  background-color: $alert-error-bg;
-  color: $alert-error;
+  white-space: nowrap;
 }
 </style>

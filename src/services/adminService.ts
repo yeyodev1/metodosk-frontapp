@@ -77,14 +77,6 @@ export interface RecursosEstado {
   enviados: number
 }
 
-export interface RecursosEnvio {
-  enviados: number
-  fallidos: number
-  pendientes: number
-  detalle: { email: string; ok: boolean }[]
-  mensaje: string
-}
-
 class AdminService extends APIBase {
   /**
    * Saca una compra del recaudado, o la devuelve.
@@ -111,17 +103,6 @@ class AdminService extends APIBase {
   /** Cómo va el envío de la lista de implementos a quienes ya compraron. */
   async estadoRecursos() {
     const response = await this.get<RecursosEstado>('admin/recursos')
-    return response.data
-  }
-
-  /**
-   * Manda la siguiente tanda de correos de recursos.
-   *
-   * El cron diario ya lo hace solo; esto sirve para arrancar sin esperar y
-   * para reintentar los que fallaron.
-   */
-  async enviarRecursos() {
-    const response = await this.post<RecursosEnvio>('admin/recursos/enviar', {})
     return response.data
   }
 
