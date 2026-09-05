@@ -269,6 +269,14 @@ export const PRICING = {
   regular: PRICES.regular,
   /** Cupos a precio de pre-venta. */
   spots: { total: 100, taken: 63 },
+  /**
+   * El corte, con hora y zona.
+   *
+   * Va con "hora de Ecuador" a propósito: buena parte de las compradoras están
+   * fuera del país y "hasta el 14" sin zona horaria es una promesa que cada
+   * quien lee en su propio reloj.
+   */
+  deadline: 'Este precio se mantiene solo hasta el 14 de septiembre, 23:59 hora de Ecuador.',
   note: 'Precio final, un solo pago. Acceso a los 3 meses del reto.',
   cta: 'Reservar mi cupo',
   includes: [

@@ -49,6 +49,7 @@ const saving = computed(() => PRICING.regular - PRICING.presale)
           </p>
           <p class="pricing__amount">{{ formatUsd(PRICING.presale) }}</p>
           <p class="pricing__save">Ahorras {{ formatUsd(saving) }} en la pre-venta</p>
+          <p class="pricing__deadline">{{ PRICING.deadline }}</p>
 
           <div class="spots">
             <div class="spots__bar" role="presentation">
@@ -199,6 +200,18 @@ const saving = computed(() => PRICING.regular - PRICING.presale)
 .pricing__save {
   font-size: $text-sm;
   color: $rose;
+}
+
+.pricing__deadline {
+  margin-top: 0.6rem;
+  padding: 0.55rem 0.8rem;
+  border-radius: $radius-md;
+  background-color: rgba($rose-deep, 0.1);
+  font-size: $text-xs;
+  line-height: 1.5;
+  font-weight: 600;
+  color: $rose-deep;
+  text-align: center;
 }
 
 .spots {

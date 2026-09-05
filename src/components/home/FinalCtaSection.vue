@@ -25,11 +25,20 @@ const background = cldImage(PHOTO.finalCta.id, { width: 1600, ratio: '16:9' })
         Pre-venta {{ formatUsd(PRICES.presale) }} · precio real
         {{ formatUsd(PRICES.regular) }}
       </p>
+      <p class="final__deadline">Solo hasta el 14 de septiembre, 23:59 hora de Ecuador</p>
     </div>
   </section>
 </template>
 
 <style lang="scss" scoped>
+.final__deadline {
+  margin-top: 0.45rem;
+  font-size: $text-xs;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: rgba(#fff, 0.9);
+}
+
 .final {
   position: relative;
   display: flex;
