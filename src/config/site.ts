@@ -196,8 +196,8 @@ export const NUTRITION = {
         text: 'Consejos y estrategias para ayudarte a mantener la constancia durante todo el proceso.',
       },
       {
-        title: 'Grupo privado de Telegram',
-        text: 'Una comunidad de apoyo, motivación y acompañamiento durante las 12 semanas.',
+        title: 'Grupo exclusivo de pre-venta',
+        text: 'Una comunidad en Telegram con Scarlet, Karen y el equipo durante las 12 semanas, solo para quienes entran en pre-venta. Se dará acceso próximamente y el enlace llega por correo.',
       },
     ],
   },
@@ -287,7 +287,7 @@ export const PRICING = {
     '3 masterclasses nutricionales, una por mes',
     'Videos educativos y recomendaciones de suplementación',
     'Guía del Método SK para registrar tu avance',
-    'Grupo privado de Telegram durante las 12 semanas',
+    'Grupo exclusivo de pre-venta en Telegram · se dará acceso próximamente',
   ],
   guarantees: ['Pago seguro con PayPhone', 'Visa · Mastercard · Diners · Discover'],
 }
