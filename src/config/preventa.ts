@@ -58,14 +58,13 @@ export const PREVENTA = {
       titulo: 'Comunidad masiva en Telegram',
       incluido: `Incluida. Compraste antes del ${TELEGRAM_TEXTO}, así que entras sin costo cuando se abra el grupo.`,
       fuera: `Tiene costo aparte. La comunidad de Telegram va incluida solo para quienes compraron hasta el ${TELEGRAM_TEXTO} — escríbenos y te contamos cómo sumarte.`,
-      pie: 'El enlace de entrada llega por correo cuando abra.',
     },
 
     premium: {
       icono: 'users',
       titulo: 'Grupo premium con Scarlet y Karen',
       texto:
-        'Un grupo aparte, mucho más chico, donde están ellas dos respondiendo. Se abre pronto y te avisamos por correo — no tienes que hacer nada para reservarlo.',
+        'Un grupo aparte, mucho más chico, donde están ellas dos respondiendo. En cuanto abra, tu enlace personal aparece en Recursos — no tienes que hacer nada para reservarlo.',
       pie: 'Solo para quienes compraron en pre-venta.',
     },
   },

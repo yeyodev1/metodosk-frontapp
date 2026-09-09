@@ -10,20 +10,27 @@
  * Los dos casos —casa y gimnasio— se muestran juntos, sin preguntar cuál es:
  * son listas cortas y una sola aplica, así que elegir cuesta menos que
  * responder una pregunta.
+ *
+ * Arriba de todo va la entrada a los grupos de Telegram: es lo que más se
+ * busca en esta pantalla una vez que abre el reto, y no tiene sentido hacer
+ * bajar hasta después de las mancuernas para encontrarlo.
  */
 import { GRUPOS_RECURSOS } from '@/config/recursos'
+import TelegramCard from '@/components/member/TelegramCard.vue'
 </script>
 
 <template>
   <main class="recursos">
     <header class="recursos__head">
       <p class="recursos__eyebrow">Recursos</p>
-      <h1 class="recursos__title">Lo que vas a necesitar</h1>
+      <h1 class="recursos__title">Tu grupo y lo que vas a necesitar</h1>
       <p class="recursos__sub">
-        Nada más que esto. El reto está armado para que funcione con lo mínimo, así que no te
-        compres media tienda antes de empezar.
+        La entrada a la comunidad y la lista corta de implementos. El reto está armado para que
+        funcione con lo mínimo, así que no te compres media tienda antes de empezar.
       </p>
     </header>
+
+    <TelegramCard />
 
     <section v-for="grupo in GRUPOS_RECURSOS" :key="grupo.id" class="grupo">
       <div class="grupo__head">

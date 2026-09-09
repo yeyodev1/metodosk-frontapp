@@ -10,6 +10,7 @@
  * estuviera abierto. Un beneficio que se anuncia disponible y no lo está es
  * peor que no anunciarlo.
  */
+import { RouterLink } from 'vue-router'
 import { PREVENTA } from '@/config/preventa'
 import type { Beneficios } from '@/services/perksService'
 import { BRAND } from '@/config/site'
@@ -41,9 +42,9 @@ defineProps<{ beneficios: Beneficios }>()
                 : PREVENTA.beneficios.telegram.fuera
             }}
           </p>
-          <p v-if="beneficios.telegramIncluido" class="perk__pie">
-            <FaIcon icon="clock" /> {{ PREVENTA.beneficios.telegram.pie }}
-          </p>
+          <RouterLink v-if="beneficios.telegramIncluido" to="/recursos" class="perk__cta">
+            Ir a Recursos <FaIcon icon="arrow-right" />
+          </RouterLink>
           <a
             v-else
             class="perk__cta"
@@ -65,6 +66,9 @@ defineProps<{ beneficios: Beneficios }>()
             <span class="perk__sello">Se abre pronto</span>
           </p>
           <p class="perk__texto">{{ PREVENTA.beneficios.premium.texto }}</p>
+          <RouterLink to="/recursos" class="perk__cta">
+            Ir a Recursos <FaIcon icon="arrow-right" />
+          </RouterLink>
           <p class="perk__pie"><FaIcon icon="lock" /> {{ PREVENTA.beneficios.premium.pie }}</p>
         </div>
       </article>

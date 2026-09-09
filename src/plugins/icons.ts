@@ -42,7 +42,7 @@ import {
   faHouse,
   faBasketShopping,
 } from '@fortawesome/free-solid-svg-icons'
-import { faWhatsapp } from '@fortawesome/free-brands-svg-icons'
+import { faWhatsapp, faTelegram, faInstagram } from '@fortawesome/free-brands-svg-icons'
 
 library.add(
   faDumbbell,
@@ -81,4 +81,6 @@ library.add(
   faHouse,
   faBasketShopping,
   faWhatsapp,
+  faTelegram,
+  faInstagram,
 )
