@@ -2,16 +2,17 @@
 /**
  * La puerta a los grupos de Telegram.
  *
- * La entrada la da el bot conversando: la alumna le escribe su correo y él,
- * si le toca, le manda un enlace personal de un solo uso. Esta tarjeta solo
- * le explica eso y la lleva al bot — nada de lo que decide pasa por acá.
+ * La entrada la da el bot: el botón lo abre con la llave de la alumna, así
+ * que la reconoce al primer toque y le manda su enlace sin pedirle nada.
+ * Por si abre Telegram por su cuenta, se le muestra el correo exacto que el
+ * bot espera — el de la compra, que no siempre es el que usa a diario.
  *
  * Quién ve qué lo decide el servidor: un grupo sin abrir no llega, y uno que
  * no le toca llega marcado para pintar el costo aparte.
  */
 import { onMounted, ref } from 'vue'
 import telegramService, { type EstadoTelegram } from '@/services/telegramService'
-import { TELEGRAM, BOT_URL } from '@/config/telegram'
+import { TELEGRAM } from '@/config/telegram'
 
 const estado = ref<EstadoTelegram | null>(null)
 
@@ -19,13 +20,13 @@ onMounted(async () => {
   try {
     estado.value = await telegramService.estado()
   } catch {
-    estado.value = { vinculado: null, grupos: [] }
+    estado.value = null
   }
 })
 </script>
 
 <template>
-  <section v-if="estado" class="tg">
+  <section v-if="estado" class="tg" :class="{ 'tg--cerrado': !estado.grupos.length }">
     <header class="tg__head">
       <span class="tg__icono"><FaIcon :icon="['fab', 'telegram']" /></span>
       <div class="tg__texto">
@@ -54,12 +55,25 @@ onMounted(async () => {
 
       <!-- Le toca al menos uno: el camino es el bot -->
       <div v-if="estado.grupos.some((g) => g.incluido)" class="tg__accion">
+        <a class="cta" :href="estado.botUrl" target="_blank" rel="noopener">
+          <span class="cta__icono"><FaIcon :icon="['fab', 'telegram']" /></span>
+          <span class="cta__texto">
+            <span class="cta__label">{{ TELEGRAM.abrir }}</span>
+            <span class="cta__hint">Se abre @metodosk_bot en Telegram</span>
+          </span>
+          <FaIcon icon="arrow-right" class="cta__flecha" />
+        </a>
+
+        <div class="correo">
+          <p class="correo__titulo">{{ TELEGRAM.correoTitulo }}</p>
+          <p class="correo__valor">{{ estado.correo }}</p>
+          <p class="correo__nota">{{ TELEGRAM.correoNota }}</p>
+        </div>
+
         <ol class="pasos">
           <li v-for="paso in TELEGRAM.pasos" :key="paso">{{ paso }}</li>
         </ol>
-        <a class="btn" :href="BOT_URL" target="_blank" rel="noopener">
-          <FaIcon :icon="['fab', 'telegram']" /> {{ TELEGRAM.abrir }}
-        </a>
+
         <p v-if="estado.vinculado" class="tg__vinculado">
           <FaIcon icon="check" /> {{ TELEGRAM.vinculado(estado.vinculado) }}
         </p>
@@ -76,29 +90,44 @@ onMounted(async () => {
 </template>
 
 <style lang="scss" scoped>
+/* La tarjeta que más se busca en esta pantalla: se pinta como el premio. */
 .tg {
   margin-bottom: $space-md;
-  padding: 1.5rem;
+  padding: clamp(1.4rem, 3vw, 2rem);
   border-radius: $radius-lg;
+  background-color: $ink;
+  color: $cream;
+}
+
+.tg--cerrado {
   background-color: $cream;
+  color: $ink;
+
+  .tg__title {
+    color: $ink;
+  }
+
+  .tg__intro {
+    color: $ink-soft;
+  }
 }
 
 .tg__head {
   display: flex;
   align-items: flex-start;
-  gap: 0.9rem;
+  gap: 1rem;
 }
 
 .tg__icono {
   display: grid;
   place-items: center;
   flex: none;
-  width: 2.6rem;
-  height: 2.6rem;
+  width: 3rem;
+  height: 3rem;
   border-radius: 50%;
   background-color: $rose-soft;
-  color: $wine;
-  font-size: 1.1rem;
+  color: $ink;
+  font-size: 1.35rem;
 }
 
 .tg__texto {
@@ -107,51 +136,42 @@ onMounted(async () => {
 
 .tg__eyebrow {
   @include eyebrow;
-  color: $rose-deep;
+  color: $rose-soft;
 }
 
 .tg__title {
   font-family: $font-display;
-  font-size: 1.35rem;
-  line-height: 1.2;
-  color: $ink;
+  font-size: clamp(1.5rem, 3vw, 1.9rem);
+  line-height: 1.1;
+  color: $cream;
 }
 
 .tg__intro {
   max-width: 54ch;
-  margin-top: 0.25rem;
+  margin-top: 0.4rem;
   font-size: $text-sm;
-  line-height: 1.55;
-  color: $ink-soft;
+  line-height: 1.6;
+  color: rgba($cream, 0.75);
 }
 
 .grupos {
   @include flex-cards(240px, 0.7rem);
-  margin-top: 1.2rem;
+  margin-top: 1.3rem;
   list-style: none;
 }
 
 .grupo {
   padding: 1rem 1.2rem;
   border-radius: $radius-md;
-  background-color: $bone;
+  background-color: rgba($cream, 0.08);
 }
 
-/* El grupo con ellas dos es el premio: se pinta como tal. */
 .grupo--vip {
-  background-color: $ink;
-
-  .grupo__title {
-    color: $cream;
-  }
-
-  .grupo__texto {
-    color: rgba($cream, 0.7);
-  }
+  background-color: rgba($rose-soft, 0.16);
 }
 
 .grupo--fuera {
-  background-color: $sand;
+  background-color: rgba($cream, 0.04);
 }
 
 .grupo__title {
@@ -161,7 +181,7 @@ onMounted(async () => {
   gap: 0.45rem;
   font-family: $font-display;
   font-size: $text-base;
-  color: $ink;
+  color: $cream;
 }
 
 .grupo__sello {
@@ -173,40 +193,135 @@ onMounted(async () => {
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: $wine;
+  color: $ink;
 }
 
 .grupo__sello--gris {
-  background-color: rgba($ink, 0.08);
-  color: $ink-muted;
+  background-color: rgba($cream, 0.14);
+  color: rgba($cream, 0.7);
 }
 
 .grupo__texto {
   margin-top: 0.25rem;
   font-size: $text-sm;
   line-height: 1.55;
-  color: $ink-soft;
+  color: rgba($cream, 0.7);
 }
 
 .tg__accion {
-  margin-top: 1.2rem;
-  padding-top: 1.2rem;
-  border-top: 1px solid rgba($ink, 0.08);
+  margin-top: 1.4rem;
+}
+
+/* ── El botón grande ── */
+.cta {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  width: 100%;
+  padding: 1rem 1.2rem;
+  border-radius: $radius-lg;
+  background-color: $rose-deep;
+  color: $cream;
+  transition:
+    background-color 0.26s $ease,
+    transform 0.26s $ease,
+    box-shadow 0.26s $ease;
+
+  @include focus-ring($rose-soft);
+
+  &:hover {
+    background-color: $wine;
+    transform: translateY(-2px);
+    box-shadow: 0 14px 30px -12px rgba($rose-deep, 0.7);
+  }
+}
+
+.cta__icono {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 50%;
+  background-color: rgba($cream, 0.16);
+  font-size: 1.2rem;
+}
+
+.cta__texto {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.cta__label {
+  font-family: $font-display;
+  font-size: 1.2rem;
+  line-height: 1.15;
+}
+
+.cta__hint {
+  margin-top: 0.15rem;
+  font-size: $text-xs;
+  color: rgba($cream, 0.75);
+}
+
+.cta__flecha {
+  flex: none;
+  font-size: 1rem;
+  transition: transform 0.26s $ease;
+
+  .cta:hover & {
+    transform: translateX(4px);
+  }
+}
+
+/* ── El correo exacto ── */
+.correo {
+  margin-top: 1rem;
+  padding: 1rem 1.2rem;
+  border-radius: $radius-md;
+  background-color: rgba($cream, 0.08);
+}
+
+.correo__titulo {
+  font-size: $text-sm;
+  font-weight: 600;
+  color: $cream;
+}
+
+.correo__valor {
+  display: inline-block;
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: $radius-sm;
+  background-color: $cream;
+  font-size: $text-base;
+  font-weight: 600;
+  color: $ink;
+  word-break: break-all;
+  user-select: all;
+}
+
+.correo__nota {
+  margin-top: 0.5rem;
+  font-size: $text-xs;
+  color: rgba($cream, 0.6);
 }
 
 .pasos {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  margin: 0 0 1rem;
+  margin: 1rem 0 0;
   padding-left: 1.2rem;
   font-size: $text-sm;
   line-height: 1.5;
-  color: $ink-soft;
+  color: rgba($cream, 0.75);
 
   li::marker {
     font-weight: 600;
-    color: $rose-deep;
+    color: $rose-soft;
   }
 }
 
@@ -216,21 +331,18 @@ onMounted(async () => {
   gap: 0.5rem;
   padding: 0.8rem 1.4rem;
   border-radius: $radius-pill;
-  background-color: $rose-deep;
   font-family: $font-principal;
   font-size: $text-xs;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: $cream;
   transition:
     background-color 0.26s $ease,
     transform 0.26s $ease;
 
-  @include focus-ring;
+  @include focus-ring($rose-soft);
 
   &:hover {
-    background-color: $wine;
     transform: translateY(-1px);
   }
 }
@@ -249,14 +361,14 @@ onMounted(async () => {
   align-items: flex-start;
   gap: 0.4rem;
   max-width: 54ch;
-  margin-top: 0.8rem;
+  margin-top: 1rem;
   font-size: $text-xs;
   line-height: 1.5;
-  color: $ink-muted;
+  color: rgba($cream, 0.6);
 
   svg {
     margin-top: 0.2em;
-    color: $rose-deep;
+    color: $rose-soft;
   }
 }
 </style>

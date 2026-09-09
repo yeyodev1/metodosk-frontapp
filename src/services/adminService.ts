@@ -77,7 +77,33 @@ export interface RecursosEstado {
   enviados: number
 }
 
+export interface TelegramAvisoEstado {
+  /** Cuándo se dio la orden de avisar. null = todavía no. */
+  activadoEn: string | null
+  /** A cuántas les toca el grupo. */
+  total: number
+  enviados: number
+  pendientes: number
+  /** Alumnas a las que no les toca y por eso no se les escribe. */
+  sinGrupo: number
+}
+
 class AdminService extends APIBase {
+  /** Cómo va el aviso de "ya se abrió tu grupo de Telegram". */
+  async estadoTelegram() {
+    const response = await this.get<TelegramAvisoEstado>('admin/telegram')
+    return response.data
+  }
+
+  /** La orden de avisar a todas. Una sola vez; el cron hace el resto. */
+  async avisarTelegram() {
+    const response = await this.post<{ enviados: number; estado: TelegramAvisoEstado }>(
+      'admin/telegram/avisar',
+      {},
+    )
+    return response.data
+  }
+
   /**
    * Saca una compra del recaudado, o la devuelve.
    *

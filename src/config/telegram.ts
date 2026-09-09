@@ -6,25 +6,31 @@
  * qué hacer si algo no cuadra.
  */
 
-/** El bot que da la entrada. El `start` es para que salude apenas se abra. */
-export const BOT_URL = 'https://t.me/metodosk_bot?start=app'
-
 export const TELEGRAM = {
-  eyebrow: 'Tu grupo',
-  titulo: 'Entra a la comunidad',
-  intro:
-    'La entrada te la da nuestro bot de Telegram. Ábrelo, escríbele el correo con el que te inscribiste, y si te toca te manda tu enlace personal al instante.',
+  /** La franja de arriba, en toda la app, mientras no haya entrado. */
+  banda: {
+    titulo: '🎉 Tu grupo de Telegram ya está abierto',
+    texto: 'Scarlett y Karen te esperan adentro.',
+    cta: 'Ingresa por aquí',
+  },
 
-  abrir: 'Abrir el bot en Telegram',
+  eyebrow: 'Tu grupo',
+  titulo: 'Ingresa a tu grupo de Telegram',
+  intro:
+    'Tu entrada es personal y ya está lista. Tocas el botón, se abre nuestro bot en Telegram, tocas Iniciar y te manda tu enlace al instante. ✨',
+
+  abrir: 'Ingresa por aquí',
+  correoTitulo: 'Si el bot te pide el correo, escríbele exactamente este:',
+  correoNota: 'Es el correo con el que compraste. Con otro no te va a encontrar.',
   pasos: [
-    'Toca el botón: se abre un chat con @metodosk_bot.',
-    'Toca "Iniciar" y escríbele tu correo de la compra.',
-    'Te manda tu enlace. Es personal y sirve una sola vez.',
+    'Toca "Ingresa por aquí": se abre @metodosk_bot en Telegram.',
+    'Toca Iniciar. El bot te reconoce y te manda tu enlace.',
+    'Toca el enlace y ya estás dentro. Sirve una sola vez.',
   ],
 
   /** Ya pasó por el bot. */
   vinculado: (nombre: string) =>
-    `Ya vinculaste tu Telegram (${nombre}). Si perdiste el enlace, vuelve a escribirle tu correo al bot y te manda otro.`,
+    `Ya vinculaste tu Telegram (${nombre}). Si no encuentras el grupo, búscalo en tus chats; si perdiste el enlace antes de entrar, vuelve al bot y te manda otro.`,
 
   /** A quien no le toca. Hoy no hay WhatsApp de soporte: se manda a Instagram. */
   fuera: 'No está incluido en tu compra. Escríbenos por Instagram y te contamos cómo sumarte.',

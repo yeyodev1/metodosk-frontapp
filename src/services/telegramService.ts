@@ -20,6 +20,10 @@ export interface EstadoGrupo {
 export interface EstadoTelegram {
   /** El nombre de la cuenta de Telegram vinculada, si ya pasó por el bot. */
   vinculado: string | null
+  /** El correo que el bot espera, por si prefiere escribirlo. */
+  correo: string
+  /** El enlace al bot con su llave: la reconoce sin pedirle nada. */
+  botUrl: string
   grupos: EstadoGrupo[]
 }
 

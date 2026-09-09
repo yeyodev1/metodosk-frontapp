@@ -17,6 +17,7 @@ import { useSessionStore } from '@/stores/session'
 import ConfirmModal from '@/components/ui/ConfirmModal.vue'
 import OnboardingFlow from '@/components/member/OnboardingFlow.vue'
 import PresaleBand from '@/components/member/PresaleBand.vue'
+import TelegramBand from '@/components/member/TelegramBand.vue'
 import '@/plugins/icons'
 import { BRAND } from '@/config/site'
 
@@ -102,6 +103,9 @@ function salir() {
     <div class="app__main">
       <!-- Es una pre-venta: se dice antes de que vea el primer candado -->
       <PresaleBand v-if="!session.isAdmin" />
+
+      <!-- El grupo ya abrió: se dice en toda la app, no solo en Recursos -->
+      <TelegramBand v-if="!session.isAdmin" />
 
       <!-- Vista previa: la administración sabe dónde está y cómo volver -->
       <Transition name="franja">
