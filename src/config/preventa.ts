@@ -13,6 +13,14 @@
 /** Cuándo abre el contenido. El servidor manda; esto es el respaldo. */
 export const APERTURA_TEXTO = '14 de septiembre'
 
+/**
+ * La misma fecha, en ISO con desfase, para el contador. Lleva el `-05:00`
+ * escrito porque sin él cada navegador la resolvería en su propia zona y el
+ * reloj marcaría distinto para cada alumna. Debe coincidir con APERTURA_FECHA
+ * del backend; en la app el valor del servidor pisa a este.
+ */
+export const APERTURA_ISO = '2026-09-14T00:00:00-05:00'
+
 /** Hasta cuándo comprar incluye la comunidad de Telegram. */
 export const TELEGRAM_TEXTO = '14 de septiembre'
 
@@ -21,6 +29,20 @@ export const PREVENTA = {
   banda: {
     titulo: 'Estás en la pre-venta',
     texto: `Tu cupo ya está pagado y asegurado. El contenido del reto se abre el ${APERTURA_TEXTO} — hasta entonces vas a ver secciones bloqueadas, y es normal.`,
+  },
+
+  /**
+   * El contador grande. Es lo primero que ve quien entra: la pregunta que
+   * llega en cada comentario es "¿ya pagué y no me sale nada?", y un reloj
+   * corriendo hacia una fecha concreta la contesta antes de que la hagan.
+   */
+  contador: {
+    eyebrow: 'El reto empieza el',
+    texto:
+      'Hasta entonces vas a ver secciones bloqueadas y es normal. Tu cupo ya está pagado y asegurado: ese día se abre todo.',
+    /** La versión corta, para la cabecera de "Mi reto". */
+    textoCorto: 'Tu cupo ya está asegurado. Lo bloqueado se abre ese día.',
+    etiquetas: { dias: 'días', dia: 'día', horas: 'horas', minutos: 'min', segundos: 'seg' },
   },
 
   /** La tarjeta grande de "qué pasa ahora". */

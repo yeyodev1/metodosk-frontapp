@@ -16,6 +16,7 @@ import VslPlayer from '@/components/ui/VslPlayer.vue'
 import CommentThread from '@/components/ui/CommentThread.vue'
 import CreatorsCard from '@/components/member/CreatorsCard.vue'
 import PresaleExplainer from '@/components/member/PresaleExplainer.vue'
+import CountdownCard from '@/components/member/CountdownCard.vue'
 import PerksCard from '@/components/member/PerksCard.vue'
 import perksService, { type Beneficios } from '@/services/perksService'
 import settingsService, { type Vsl } from '@/services/settingsService'
@@ -83,6 +84,9 @@ const PRIMEROS_PASOS = [
 
     <div class="cuerpo">
       <div class="principal">
+        <!-- Lo primero: cuándo abre. Contesta "¿ya pagué y no me sale nada?" -->
+        <CountdownCard v-if="!cargando" :apertura="beneficios?.apertura" />
+
         <PresaleExplainer />
 
         <div v-if="vsl" class="video">

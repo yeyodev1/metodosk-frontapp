@@ -12,7 +12,9 @@ import { useBodyScrollLock } from '@/composables/useBodyScroll'
 import CldImage from '@/components/ui/CldImage.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import MisRetos from '@/components/member/MisRetos.vue'
+import CountdownCard from '@/components/member/CountdownCard.vue'
 import courseService, { type CursoAlumna } from '@/services/courseService'
+import perksService from '@/services/perksService'
 import progressService, { type MiAvance } from '@/services/progressService'
 import { useVideoProgress } from '@/composables/useVideoProgress'
 import { useSessionStore } from '@/stores/session'
@@ -25,6 +27,17 @@ const esAdmin = computed(() => session.isAdmin)
 
 const cursos = ref<CursoAlumna[]>([])
 const cargando = ref(true)
+
+/**
+ * Cuándo abre, del servidor. Acá se ven los cursos con candado, así que la
+ * fecha tiene que estar en la misma pantalla. Si la llamada falla, el
+ * contador usa la de configuración; por eso el error se traga.
+ */
+const apertura = ref<string | null>(null)
+perksService
+  .beneficios()
+  .then((b) => (apertura.value = b.apertura))
+  .catch(() => {})
 const error = ref('')
 const abierto = ref<CursoAlumna | null>(null)
 
@@ -210,6 +223,9 @@ onMounted(async () => {
         />
       </div>
     </header>
+
+    <!-- Cuándo abre, junto a los candados que lo hacen preguntar -->
+    <CountdownCard :apertura="apertura" compacto class="bloque-cuenta" />
 
     <!-- El avance del reto, no un contador de días sueltos -->
     <section v-if="activo" class="avance">
@@ -423,6 +439,10 @@ onMounted(async () => {
   align-items: center;
   gap: 0.7rem;
   margin-top: 0.55rem;
+}
+
+.bloque-cuenta {
+  margin-bottom: $space-sm;
 }
 
 /* ── Avance del reto ── */
