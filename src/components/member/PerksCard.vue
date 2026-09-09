@@ -10,12 +10,28 @@
  * estuviera abierto. Un beneficio que se anuncia disponible y no lo está es
  * peor que no anunciarlo.
  */
+import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { PREVENTA } from '@/config/preventa'
 import type { Beneficios } from '@/services/perksService'
+import telegramService, { type EstadoTelegram } from '@/services/telegramService'
 import { BRAND } from '@/config/site'
 
 defineProps<{ beneficios: Beneficios }>()
+
+/**
+ * Si el grupo ya está abierto, el botón lleva directo al bot con su llave:
+ * un toque y adentro. Mientras no abra, lleva a Recursos, donde se explica.
+ */
+const telegram = ref<EstadoTelegram | null>(null)
+
+onMounted(async () => {
+  try {
+    telegram.value = await telegramService.estado()
+  } catch {
+    telegram.value = null
+  }
+})
 </script>
 
 <template>
@@ -27,22 +43,43 @@ defineProps<{ beneficios: Beneficios }>()
 
     <div class="ben__lista">
       <!-- Telegram: incluido o con costo, según cuándo compró -->
-      <article class="perk" :class="{ 'perk--fuera': !beneficios.telegramIncluido }">
+      <article
+        class="perk"
+        :class="{
+          'perk--fuera': !beneficios.telegramIncluido,
+          'perk--abierto': beneficios.telegramIncluido && telegram?.grupos.length,
+        }"
+      >
         <span class="perk__icono"><FaIcon :icon="PREVENTA.beneficios.telegram.icono" /></span>
         <div class="perk__cuerpo">
           <p class="perk__title">
             {{ PREVENTA.beneficios.telegram.titulo }}
-            <span v-if="beneficios.telegramIncluido" class="perk__sello">Incluido</span>
+            <span v-if="beneficios.telegramIncluido && telegram?.grupos.length" class="perk__sello">
+              Ya está abierto
+            </span>
+            <span v-else-if="beneficios.telegramIncluido" class="perk__sello">Incluido</span>
             <span v-else class="perk__sello perk__sello--gris">Costo aparte</span>
           </p>
           <p class="perk__texto">
             {{
-              beneficios.telegramIncluido
-                ? PREVENTA.beneficios.telegram.incluido
-                : PREVENTA.beneficios.telegram.fuera
+              !beneficios.telegramIncluido
+                ? PREVENTA.beneficios.telegram.fuera
+                : telegram?.grupos.length
+                  ? PREVENTA.beneficios.telegram.abierto
+                  : PREVENTA.beneficios.telegram.incluido
             }}
           </p>
-          <RouterLink v-if="beneficios.telegramIncluido" to="/recursos" class="perk__cta">
+          <!-- Abierto: directo al bot, con su llave. Cerrado: a Recursos -->
+          <a
+            v-if="beneficios.telegramIncluido && telegram?.grupos.length"
+            class="perk__cta perk__cta--grande"
+            :href="telegram.botUrl"
+            target="_blank"
+            rel="noopener"
+          >
+            <FaIcon :icon="['fab', 'telegram']" /> Ingresa por aquí <FaIcon icon="arrow-right" />
+          </a>
+          <RouterLink v-else-if="beneficios.telegramIncluido" to="/recursos" class="perk__cta">
             Ir a Recursos <FaIcon icon="arrow-right" />
           </RouterLink>
           <a
@@ -144,6 +181,24 @@ defineProps<{ beneficios: Beneficios }>()
   }
 }
 
+/* El grupo ya abrió: esta tarjeta deja de ser una promesa y se vuelve la puerta. */
+.perk--abierto {
+  background-color: $ink;
+
+  .perk__title {
+    color: $cream;
+  }
+
+  .perk__texto {
+    color: rgba($cream, 0.75);
+  }
+
+  .perk__icono {
+    background-color: $rose-soft;
+    color: $ink;
+  }
+}
+
 .perk--fuera .perk__icono {
   background-color: $sand;
   color: $ink-muted;
@@ -235,6 +290,19 @@ defineProps<{ beneficios: Beneficios }>()
 
   svg {
     font-size: 0.9em;
+  }
+}
+
+.perk__cta--grande {
+  width: 100%;
+  justify-content: center;
+  padding: 0.85rem 1.2rem;
+  background-color: $rose-deep;
+  font-size: $text-sm;
+  color: $cream;
+
+  &:hover {
+    background-color: $wine;
   }
 }
 

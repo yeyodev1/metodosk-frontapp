@@ -57,6 +57,8 @@ export const PREVENTA = {
       icono: 'comments',
       titulo: 'Comunidad masiva en Telegram',
       incluido: `Incluida. Compraste antes del ${TELEGRAM_TEXTO}, así que entras sin costo cuando se abra el grupo.`,
+      abierto:
+        'Scarlett y Karen ya te esperan adentro. Toca el botón, se abre nuestro bot en Telegram, tocas Iniciar y te manda tu entrada. 💖',
       fuera: `Tiene costo aparte. La comunidad de Telegram va incluida solo para quienes compraron hasta el ${TELEGRAM_TEXTO} — escríbenos y te contamos cómo sumarte.`,
     },
 

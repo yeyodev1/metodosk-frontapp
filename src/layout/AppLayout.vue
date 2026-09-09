@@ -104,8 +104,9 @@ function salir() {
       <!-- Es una pre-venta: se dice antes de que vea el primer candado -->
       <PresaleBand v-if="!session.isAdmin" />
 
-      <!-- El grupo ya abrió: se dice en toda la app, no solo en Recursos -->
-      <TelegramBand v-if="!session.isAdmin" />
+      <!-- El grupo ya abrió: se dice en toda la app, no solo en Recursos.
+           La administración también la ve: es como revisa lo que ven ellas. -->
+      <TelegramBand />
 
       <!-- Vista previa: la administración sabe dónde está y cómo volver -->
       <Transition name="franja">
