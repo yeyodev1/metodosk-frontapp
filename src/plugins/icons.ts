@@ -41,6 +41,10 @@ import {
   faRulerCombined,
   faHouse,
   faBasketShopping,
+  faArrowUp,
+  faArrowDown,
+  faPlus,
+  faChevronDown,
 } from '@fortawesome/free-solid-svg-icons'
 import { faWhatsapp, faTelegram, faInstagram } from '@fortawesome/free-brands-svg-icons'
 
@@ -80,6 +84,10 @@ library.add(
   faRulerCombined,
   faHouse,
   faBasketShopping,
+  faArrowUp,
+  faArrowDown,
+  faPlus,
+  faChevronDown,
   faWhatsapp,
   faTelegram,
   faInstagram,

@@ -29,6 +29,18 @@ const routes: Array<RouteRecordRaw> = [
     meta: { title: 'Entrar — Método SK', guestOnly: true },
   },
   {
+    path: '/recuperar',
+    name: 'Recuperar',
+    component: () => import('../views/auth/RecuperarView.vue'),
+    meta: { title: 'Recuperar contraseña — Método SK', guestOnly: true },
+  },
+  {
+    path: '/restablecer',
+    name: 'Restablecer',
+    component: () => import('../views/auth/RestablecerView.vue'),
+    meta: { title: 'Nueva contraseña — Método SK', guestOnly: true },
+  },
+  {
     path: '/registro',
     name: 'Register',
     component: () => import('../views/auth/RegisterView.vue'),

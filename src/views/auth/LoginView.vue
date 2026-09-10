@@ -13,6 +13,8 @@ const session = useSessionStore()
 const form = reactive({ email: '', password: '' })
 const loading = ref(false)
 const error = ref('')
+/** Ver lo que se escribe: la mitad de los "no me deja entrar" son un dedo mal puesto. */
+const verPassword = ref(false)
 
 async function onSubmit() {
   loading.value = true
@@ -49,8 +51,27 @@ async function onSubmit() {
 
       <label class="field">
         <span>Contraseña</span>
-        <input v-model="form.password" type="password" autocomplete="current-password" required />
+        <div class="pass">
+          <input
+            v-model="form.password"
+            :type="verPassword ? 'text' : 'password'"
+            autocomplete="current-password"
+            required
+          />
+          <button
+            type="button"
+            class="pass__ojo"
+            :aria-label="verPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            @click="verPassword = !verPassword"
+          >
+            <FaIcon :icon="verPassword ? 'eye-slash' : 'eye'" />
+          </button>
+        </div>
       </label>
+
+      <p class="olvide">
+        <RouterLink to="/recuperar">¿Olvidaste tu contraseña?</RouterLink>
+      </p>
 
       <Transition name="aviso">
         <p v-if="error" class="form__error">{{ error }}</p>
@@ -67,3 +88,52 @@ async function onSubmit() {
     </p>
   </AuthShell>
 </template>
+
+<style lang="scss" scoped>
+/* El ojo va dentro del campo, a la derecha, sin romper el ancho del input. */
+.pass {
+  position: relative;
+  display: block;
+
+  input {
+    width: 100%;
+    padding-right: 3rem;
+  }
+}
+
+.pass__ojo {
+  position: absolute;
+  top: 50%;
+  right: 0.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: $ink-muted;
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition: color 0.2s $ease;
+
+  &:hover {
+    color: $ink;
+  }
+
+  @include focus-ring;
+}
+
+.olvide {
+  margin-top: -0.4rem;
+  text-align: right;
+  font-size: $text-xs;
+
+  a {
+    color: $wine;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+}
+</style>

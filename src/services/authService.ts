@@ -46,6 +46,21 @@ class AuthService extends APIBase {
     return r.data.user
   }
 
+  /** "Olvidé mi contraseña": manda el enlace al correo, exista o no la cuenta. */
+  async recuperar(email: string) {
+    const r = await this.post<{ mensaje: string }>('auth/recuperar', { email })
+    return r.data.mensaje
+  }
+
+  /** La contraseña nueva, con el enlace del correo. Deja la sesión abierta. */
+  async restablecer(token: string, password: string) {
+    const r = await this.post<{ token: string; user: SessionUser }>('auth/restablecer', {
+      token,
+      password,
+    })
+    return r.data
+  }
+
   async changePassword(current: string, next: string) {
     const r = await this.put<{ user: SessionUser }>('auth/password', { current, next })
     return r.data.user
