@@ -29,6 +29,17 @@ function actualizar(nuevo: EstadoOnboarding) {
   estado.value = nuevo
 }
 
+/**
+ * "Subir mis fotos" lleva hasta el uploader, que está más abajo. El scroll es
+ * suave salvo que la persona haya pedido menos movimiento: ahí salta directo.
+ */
+const uploader = ref<HTMLElement | null>(null)
+
+function irAlUploader() {
+  const reducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  uploader.value?.scrollIntoView({ behavior: reducido ? 'auto' : 'smooth', block: 'start' })
+}
+
 onMounted(async () => {
   try {
     estado.value = await onboardingService.estado()
@@ -59,11 +70,24 @@ onMounted(async () => {
       <FaIcon icon="triangle-exclamation" /> {{ error }}
     </p>
 
+    <!--
+      Los bloques entran escalonados: cada uno un poco después del anterior.
+      La `key` del contador es la fecha: cuando sube una foto y cambia la
+      próxima toma, el reloj se rearma hacia la fecha nueva.
+    -->
     <div v-else-if="estado" class="cuerpo">
-      <NextShot :estado="estado" />
-      <PhotoUploader :estado="estado" @actualizado="actualizar" />
-      <BeforeAfter :comparativa="estado.comparativa" />
-      <Measurements :estado="estado" @actualizado="actualizar" />
+      <div class="bloque" :style="{ '--i': 0 }">
+        <NextShot :key="estado.proximaToma ?? 'inicio'" :estado="estado" @subir="irAlUploader" />
+      </div>
+      <div ref="uploader" class="bloque bloque--ancla" :style="{ '--i': 1 }">
+        <PhotoUploader :estado="estado" @actualizado="actualizar" />
+      </div>
+      <div class="bloque" :style="{ '--i': 2 }">
+        <BeforeAfter :comparativa="estado.comparativa" />
+      </div>
+      <div class="bloque" :style="{ '--i': 3 }">
+        <Measurements :estado="estado" @actualizado="actualizar" />
+      </div>
     </div>
   </div>
 </template>
@@ -112,6 +136,34 @@ onMounted(async () => {
   flex-direction: column;
   gap: $space-sm;
   max-width: 900px;
+}
+
+/* Entrada escalonada: fade + subida, cada bloque 90 ms después del anterior. */
+.bloque {
+  animation: entrar 0.5s $ease both;
+  animation-delay: calc(var(--i, 0) * 90ms);
+}
+
+/* Al hacer scroll hasta acá, que no quede pegado al borde de arriba. */
+.bloque--ancla {
+  scroll-margin-top: 4.5rem;
+}
+
+@keyframes entrar {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@include reduced-motion {
+  .bloque {
+    animation: none;
+  }
 }
 
 .aviso {
