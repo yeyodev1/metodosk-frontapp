@@ -55,8 +55,15 @@ async function guardar() {
   guardando.value = true
   error.value = ''
   try {
+    // Un input numérico entrega números, no texto, y "62,5" con coma es lo
+    // normal acá: todo se normaliza a texto con punto antes de mandarlo.
     const cuerpo = Object.fromEntries(
-      CAMPOS_MEDIDA.map((c) => [c.clave, form.value[c.clave]?.trim() || null]),
+      CAMPOS_MEDIDA.map((c) => {
+        const crudo = String(form.value[c.clave] ?? '')
+          .trim()
+          .replace(',', '.')
+        return [c.clave, crudo || null]
+      }),
     ) as Record<ClaveMedida, string | null>
 
     emit('actualizado', await onboardingService.guardarMedidas(cuerpo as never))
@@ -90,11 +97,13 @@ async function guardar() {
         <label v-for="c in CAMPOS_MEDIDA" :key="c.clave" class="campo">
           <span class="campo__label">{{ c.label }}</span>
           <span class="campo__caja">
+            <!-- Texto y no number: number rechaza "70,3" y bloquea el envío
+                 por el "step" sin decir por qué; el servidor ya valida. -->
             <input
               v-model="form[c.clave]"
-              type="number"
+              type="text"
               inputmode="decimal"
-              :step="c.paso"
+              autocomplete="off"
               placeholder="—"
             />
             <span class="campo__unidad">{{ c.unidad }}</span>
