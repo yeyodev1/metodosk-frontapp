@@ -84,6 +84,12 @@ const cajas = computed(() => [
 </template>
 
 <style lang="scss" scoped>
+/*
+ * Siempre en columna: la fecha arriba, las cajas debajo. Ponerlas lado a lado
+ * en escritorio dejaba el titular en una columna estrecha y "septiembre" se
+ * montaba encima de los números. Solo la versión compacta va en fila, porque
+ * su fecha es chica y cabe.
+ */
 .cuenta {
   display: flex;
   flex-direction: column;
@@ -92,13 +98,6 @@ const cajas = computed(() => [
   border-radius: $radius-lg;
   background-color: $ink;
   color: $cream;
-
-  @include from('lg') {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    gap: 2rem;
-  }
 }
 
 .cuenta__texto {
@@ -121,7 +120,7 @@ const cajas = computed(() => [
 .cuenta__fecha {
   margin-top: 0.3rem;
   font-family: $font-display;
-  font-size: $display-md;
+  font-size: clamp(2rem, 4.5vw, 3.2rem);
   line-height: 1.05;
   color: $cream;
 }
@@ -141,8 +140,7 @@ const cajas = computed(() => [
   gap: 0.6rem;
   list-style: none;
 
-  @include from('lg') {
-    flex: none;
+  @include from('sm') {
     flex-wrap: nowrap;
   }
 }
@@ -164,9 +162,8 @@ const cajas = computed(() => [
   }
 
   @include from('lg') {
-    flex: none;
-    width: 5.6rem;
-    padding: 1rem 0.5rem;
+    flex: 0 1 7rem;
+    padding: 1.1rem 0.6rem;
   }
 }
 
@@ -199,6 +196,21 @@ const cajas = computed(() => [
   background-color: $sand;
   color: $ink;
 
+  @include from('lg') {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+  }
+
+  .cuenta__texto {
+    flex: 1 1 auto;
+  }
+
+  .cajas {
+    flex: none;
+  }
+
   .cuenta__eyebrow {
     color: $rose-deep;
   }
@@ -219,6 +231,7 @@ const cajas = computed(() => [
     background-color: $cream;
 
     @include from('lg') {
+      flex: none;
       width: 4.4rem;
     }
   }

@@ -181,21 +181,30 @@ onMounted(async () => {
   }
 }
 
-/* El grupo ya abrió: esta tarjeta deja de ser una promesa y se vuelve la puerta. */
+/*
+ * El grupo ya abrió: esta tarjeta deja de ser una promesa y se vuelve la
+ * puerta. Va en el color de marca y no en oscuro, porque el grupo premium de
+ * abajo ya es oscuro y dos tarjetas negras seguidas se leen como una sola.
+ */
 .perk--abierto {
-  background-color: $ink;
+  background-color: $rose-deep;
 
   .perk__title {
     color: $cream;
   }
 
+  .perk__sello {
+    background-color: $cream;
+    color: $rose-deep;
+  }
+
   .perk__texto {
-    color: rgba($cream, 0.75);
+    color: rgba($cream, 0.85);
   }
 
   .perk__icono {
-    background-color: $rose-soft;
-    color: $ink;
+    background-color: $cream;
+    color: $rose-deep;
   }
 }
 
@@ -293,19 +302,6 @@ onMounted(async () => {
   }
 }
 
-.perk__cta--grande {
-  width: 100%;
-  justify-content: center;
-  padding: 0.85rem 1.2rem;
-  background-color: $rose-deep;
-  font-size: $text-sm;
-  color: $cream;
-
-  &:hover {
-    background-color: $wine;
-  }
-}
-
 .perk__cta {
   display: inline-flex;
   align-items: center;
@@ -321,6 +317,21 @@ onMounted(async () => {
 
   &:hover {
     background-color: $clay;
+  }
+}
+
+/* La puerta al grupo: grande, clara sobre el fondo de marca, imposible de no ver. */
+.perk__cta--grande {
+  width: 100%;
+  justify-content: center;
+  padding: 0.95rem 1.2rem;
+  background-color: $cream;
+  font-size: $text-sm;
+  color: $ink;
+  box-shadow: 0 10px 24px -12px rgba($ink, 0.6);
+
+  &:hover {
+    background-color: $rose-soft;
   }
 }
 </style>

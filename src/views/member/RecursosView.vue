@@ -67,6 +67,12 @@ import TelegramCard from '@/components/member/TelegramCard.vue'
  */
 .recursos {
   max-width: 62rem;
+  /* El mismo margen que el resto de pantallas: sin él queda pegada al borde. */
+  padding: 4.2rem clamp(1rem, 3vw, 2.5rem) 4rem;
+
+  @include from('lg') {
+    padding-top: clamp(1.5rem, 3vw, 2.5rem);
+  }
 }
 
 .recursos__head {
