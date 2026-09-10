@@ -64,6 +64,11 @@ onMounted(async () => {
   if (!session.user) await session.restore()
   // Si entró con la contraseña del correo, se le sugiere cambiarla.
   if (session.user?.mustChangePassword) cambiando.value = true
+  try {
+    perfil.value = await communityService.miPerfil()
+  } catch {
+    perfil.value = null
+  }
 })
 </script>
 
