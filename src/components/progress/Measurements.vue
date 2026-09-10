@@ -16,6 +16,7 @@
  * debajo, plegado, porque se consulta rara vez y ocupa mucho.
  */
 import { computed, ref } from 'vue'
+import ConfirmModal from '@/components/ui/ConfirmModal.vue'
 import onboardingService, {
   CAMPOS_MEDIDA,
   type ClaveMedida,
@@ -135,13 +136,17 @@ async function guardar() {
 
 /** Borrar una toma anterior. Se pregunta: no hay papelera de la que sacarla. */
 const borrando = ref<string | null>(null)
+/** La toma que está a punto de borrarse: el modal pregunta antes. */
+const porBorrar = ref<Medida | null>(null)
 
-async function borrar(toma: Medida) {
-  if (!window.confirm(T.historial.confirmar)) return
+async function borrar() {
+  const toma = porBorrar.value
+  if (!toma) return
   borrando.value = toma.createdAt
   error.value = ''
   try {
     emit('actualizado', await onboardingService.quitarMedidas(toma.createdAt))
+    porBorrar.value = null
   } catch (e: unknown) {
     error.value = (e as { message?: string }).message ?? T.form.errorGenerico
   } finally {
@@ -279,7 +284,7 @@ async function borrar(toma: Medida) {
             :disabled="borrando === toma.createdAt"
             :aria-label="T.historial.borrar"
             :title="T.historial.borrar"
-            @click="borrar(toma)"
+            @click="porBorrar = toma"
           >
             <FaIcon
               :icon="borrando === toma.createdAt ? 'spinner' : 'trash'"
@@ -304,6 +309,16 @@ async function borrar(toma: Medida) {
         <FaIcon icon="triangle-exclamation" /> {{ error }}
       </p>
     </div>
+
+    <ConfirmModal
+      :open="!!porBorrar"
+      title="¿Borrar esta toma?"
+      message="Se quita del historial. No hay vuelta atrás."
+      confirm-label="Borrar la toma"
+      :loading="!!borrando"
+      @confirm="borrar"
+      @cancel="porBorrar = null"
+    />
   </section>
 </template>
 
