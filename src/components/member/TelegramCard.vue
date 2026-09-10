@@ -12,31 +12,66 @@
  */
 import { onMounted, ref } from 'vue'
 import telegramService, { type EstadoTelegram } from '@/services/telegramService'
-import { TELEGRAM } from '@/config/telegram'
+import { TELEGRAM, BOT_URL_GENERICO } from '@/config/telegram'
+import { useSessionStore } from '@/stores/session'
 
+const session = useSessionStore()
+
+/**
+ * La tarjeta se pinta desde el primer cuadro, con su esqueleto, y se rellena
+ * cuando llega el servidor. Antes esperaba la respuesta para aparecer: la
+ * alumna veía primero las mancuernas y la puerta al grupo "no cargaba".
+ */
 const estado = ref<EstadoTelegram | null>(null)
+const cargando = ref(true)
 
 onMounted(async () => {
   try {
     estado.value = await telegramService.estado()
   } catch {
-    estado.value = null
+    // Si el servidor no responde, la puerta sigue abierta: el bot sin llave
+    // hace el mismo trabajo, solo que le pide el correo.
+    estado.value = {
+      vinculado: null,
+      correo: session.user?.email ?? '',
+      botUrl: BOT_URL_GENERICO,
+      grupos: [
+        {
+          id: 'comunidad',
+          titulo: 'Comunidad en Telegram',
+          texto: 'El grupo grande del reto: todas las alumnas, el equipo y los avisos de cada semana.',
+          incluido: true,
+        },
+      ],
+    }
+  } finally {
+    cargando.value = false
   }
 })
 </script>
 
 <template>
-  <section v-if="estado" class="tg" :class="{ 'tg--cerrado': !estado.grupos.length }">
+  <section class="tg" :class="{ 'tg--cerrado': estado && !estado.grupos.length }">
     <header class="tg__head">
       <span class="tg__icono"><FaIcon :icon="['fab', 'telegram']" /></span>
       <div class="tg__texto">
         <p class="tg__eyebrow">{{ TELEGRAM.eyebrow }}</p>
         <h2 class="tg__title">{{ TELEGRAM.titulo }}</h2>
-        <p class="tg__intro">{{ estado.grupos.length ? TELEGRAM.intro : TELEGRAM.cerrado }}</p>
+        <p class="tg__intro">
+          {{ !estado || estado.grupos.length ? TELEGRAM.intro : TELEGRAM.cerrado }}
+        </p>
       </div>
     </header>
 
-    <template v-if="estado.grupos.length">
+    <!-- Esqueleto mientras llega el servidor: ocupa el sitio, nada salta -->
+    <div v-if="cargando" class="esqueleto" aria-hidden="true">
+      <span class="esqueleto__linea" />
+      <span class="esqueleto__boton" />
+      <span class="esqueleto__linea esqueleto__linea--corta" />
+    </div>
+
+    <Transition name="aparece" appear>
+    <div v-if="estado && estado.grupos.length" class="tg__cuerpo">
       <ul class="grupos">
         <li
           v-for="g in estado.grupos"
@@ -85,7 +120,8 @@ onMounted(async () => {
           <FaIcon :icon="['fab', 'instagram']" /> {{ TELEGRAM.fueraCta }}
         </a>
       </div>
-    </template>
+    </div>
+    </Transition>
   </section>
 </template>
 
@@ -369,6 +405,70 @@ onMounted(async () => {
   svg {
     margin-top: 0.2em;
     color: $rose-soft;
+  }
+}
+
+/* ── Esqueleto ── */
+.esqueleto {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  margin-top: 1.4rem;
+}
+
+.esqueleto__linea,
+.esqueleto__boton {
+  display: block;
+  border-radius: $radius-md;
+  background-color: rgba($cream, 0.1);
+  animation: respirar 1.4s ease-in-out infinite;
+}
+
+.esqueleto__linea {
+  height: 3.6rem;
+}
+
+.esqueleto__linea--corta {
+  width: 70%;
+  height: 2.6rem;
+}
+
+.esqueleto__boton {
+  height: 4.4rem;
+  border-radius: $radius-lg;
+  background-color: rgba($rose-deep, 0.45);
+}
+
+@keyframes respirar {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* ── Entrada del contenido real ── */
+.aparece-enter-active {
+  transition:
+    opacity 0.45s $ease,
+    transform 0.45s $ease;
+}
+
+.aparece-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+@include reduced-motion {
+  .esqueleto__linea,
+  .esqueleto__boton {
+    animation: none;
+  }
+
+  .aparece-enter-active {
+    transition: none;
   }
 }
 </style>

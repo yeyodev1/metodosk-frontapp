@@ -6,6 +6,9 @@
  * qué hacer si algo no cuadra.
  */
 
+/** El bot sin llave: sirve igual, solo que le pide el correo a la alumna. */
+export const BOT_URL_GENERICO = 'https://t.me/metodosk_bot?start=app'
+
 export const TELEGRAM = {
   /** La franja de arriba, en toda la app, mientras no haya entrado. */
   banda: {
