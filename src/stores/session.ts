@@ -12,6 +12,12 @@ export const useSessionStore = defineStore('session', {
   state: () => ({
     user: null as SessionUser | null,
     loading: false,
+    /**
+     * Su foto de perfil, si puso una. Vive acá y no en `user` porque la carga
+     * otro servicio (comunidad) y la cambian dos pantallas distintas: el
+     * sidebar tiene que enterarse sin recargar.
+     */
+    avatarUrl: null as string | null,
   }),
 
   getters: {
@@ -20,6 +26,10 @@ export const useSessionStore = defineStore('session', {
   },
 
   actions: {
+    setAvatar(url: string | null) {
+      this.avatarUrl = url
+    },
+
     setSession(token: string, user: SessionUser) {
       try {
         localStorage.setItem(TOKEN_KEY, token)

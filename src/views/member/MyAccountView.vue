@@ -1,11 +1,20 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
+import AvatarPicker from '@/components/community/AvatarPicker.vue'
 import authService from '@/services/authService'
+import communityService, { type MiPerfil } from '@/services/communityService'
 import { useSessionStore } from '@/stores/session'
 import { BRAND } from '@/config/site'
 
 const session = useSessionStore()
+
+/**
+ * Su foto de perfil. Es la misma que en la comunidad —una sola foto, dos
+ * lugares donde cambiarla— porque acá es donde una alumna espera encontrar
+ * "mis datos", y la foto es el primero.
+ */
+const perfil = ref<MiPerfil | null>(null)
 
 const user = computed(() => session.user)
 const cambiando = ref(false)
@@ -66,6 +75,15 @@ onMounted(async () => {
         <h1 class="cuenta__title">Hola{{ user?.name ? `, ${user.name.split(' ')[0]}` : '' }}</h1>
       </div>
     </header>
+
+    <!-- Su foto: lo primero de "mis datos" -->
+    <section class="bloque bloque--foto">
+      <h2 class="bloque__title">Tu foto de perfil</h2>
+      <Transition name="aparece" appear>
+        <AvatarPicker v-if="perfil" :perfil="perfil" @actualizado="perfil = $event" />
+        <p v-else class="bloque__text">Cargando tu foto…</p>
+      </Transition>
+    </section>
 
     <section v-if="user?.accessActive" class="acceso">
       <p class="acceso__badge">Acceso activo</p>
@@ -223,6 +241,21 @@ onMounted(async () => {
   padding: clamp(1.2rem, 4vw, 1.6rem);
   border-radius: $radius-md;
   background-color: $cream;
+}
+
+.bloque--foto {
+  gap: 0.6rem;
+}
+
+.aparece-enter-active {
+  transition:
+    opacity 0.4s $ease,
+    transform 0.4s $ease;
+}
+
+.aparece-enter-from {
+  opacity: 0;
+  transform: translateY(8px);
 }
 
 .bloque__row {

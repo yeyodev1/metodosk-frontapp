@@ -11,7 +11,7 @@
  * propia versión de esta pantalla, nadie se enteraría cuando la de verdad se
  * rompa.
  */
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useSessionStore } from '@/stores/session'
 import ConfirmModal from '@/components/ui/ConfirmModal.vue'
@@ -20,6 +20,7 @@ import PresaleBand from '@/components/member/PresaleBand.vue'
 import TelegramBand from '@/components/member/TelegramBand.vue'
 import '@/plugins/icons'
 import { BRAND } from '@/config/site'
+import communityService from '@/services/communityService'
 
 const route = useRoute()
 const router = useRouter()
@@ -41,6 +42,17 @@ const inicial = computed(() =>
 )
 
 const nombre = computed(() => session.user?.name?.split(' ')[0] || 'Mi cuenta')
+
+// La foto de perfil, para el sidebar. Si falla, queda la inicial: no es un error.
+onMounted(async () => {
+  if (session.avatarUrl) return
+  try {
+    const perfil = await communityService.miPerfil()
+    session.setAvatar(perfil.avatarUrl)
+  } catch {
+    /* sin foto */
+  }
+})
 
 // Navegar en móvil cierra el menú: dejarlo abierto tapa lo que se acaba de abrir.
 watch(() => route.fullPath, () => (abierto.value = false))
@@ -85,7 +97,10 @@ function salir() {
         </a>
 
         <div class="side__user">
-          <span class="side__avatar">{{ inicial }}</span>
+          <span class="side__avatar">
+            <img v-if="session.avatarUrl" :src="session.avatarUrl" alt="" />
+            <template v-else>{{ inicial }}</template>
+          </span>
           <span class="side__user-info">
             <span class="side__user-name">{{ nombre }}</span>
             <span class="side__user-role">
@@ -386,12 +401,20 @@ $side-w: 250px;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex: none;
   width: 34px;
   height: 34px;
   border-radius: 50%;
   background-color: rgba($cream, 0.12);
   font-family: $font-display;
   font-size: 0.95rem;
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 }
 
 .side__user-info {

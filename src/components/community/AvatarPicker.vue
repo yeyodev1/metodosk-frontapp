@@ -11,8 +11,10 @@
  */
 import { ref } from 'vue'
 import communityService, { type MiPerfil } from '@/services/communityService'
+import { useSessionStore } from '@/stores/session'
 
 const props = defineProps<{ perfil: MiPerfil }>()
+const session = useSessionStore()
 const emit = defineEmits<{ actualizado: [MiPerfil] }>()
 
 const subiendo = ref(false)
@@ -29,6 +31,7 @@ async function elegir(evento: Event) {
     const firma = await communityService.firmarAvatar()
     const publicId = await communityService.subirAvatar(firma, archivo)
     const { avatarUrl } = await communityService.guardarAvatar(publicId)
+    session.setAvatar(avatarUrl)
     emit('actualizado', { ...props.perfil, avatarUrl, publicId })
   } catch (e: unknown) {
     error.value = (e as { message?: string }).message ?? 'No pudimos subir la foto'
@@ -42,6 +45,7 @@ async function quitar() {
   error.value = ''
   try {
     await communityService.quitarAvatar()
+    session.setAvatar(null)
     emit('actualizado', { ...props.perfil, avatarUrl: null, publicId: null })
   } catch {
     error.value = 'No pudimos quitarla'
@@ -59,7 +63,7 @@ async function quitar() {
     <div class="perfil__texto">
       <p class="perfil__nombre">{{ perfil.nombre }}</p>
       <p class="perfil__hint">
-        {{ perfil.avatarUrl ? 'Así te ve la comunidad' : 'Puedes poner una foto, si quieres' }}
+        {{ perfil.avatarUrl ? 'Así te ven en la comunidad y en tu cuenta' : 'Puedes poner una foto, si quieres. Se ve en la comunidad y en tu cuenta.' }}
       </p>
 
       <div class="perfil__acciones">
