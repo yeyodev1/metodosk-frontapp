@@ -13,6 +13,8 @@ export interface SessionUser {
   accessUntil: string | null
   /** true si el acceso sigue vigente hoy. */
   accessActive: boolean
+  /** true si el acceso se lo dio la administración, no una compra. */
+  accesoExclusivo?: boolean
   mustChangePassword: boolean
 }
 

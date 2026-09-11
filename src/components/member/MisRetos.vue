@@ -35,6 +35,9 @@ const tengo = (c: Challenge) => misRetos.value.includes(c.name)
 
 const tengoLosDos = computed(() => CHALLENGES.every(tengo))
 
+/** Acceso que le dio la administración: se le dice así, no como una compra. */
+const exclusivo = computed(() => !props.preview && Boolean(session.user?.accesoExclusivo))
+
 const precio = computed(() => `$${(PRICES.presale / 100).toFixed(0)}`)
 
 const fotoDe = (c: Challenge) => (c.id === 'volumen' ? PHOTO.volumen : PHOTO.recomposicion)
@@ -50,8 +53,15 @@ function comprar(c: Challenge) {
     <header class="retos__head">
       <div>
         <h2 class="retos__title"><FaIcon icon="dumbbell" /> Tu reto</h2>
+        <p v-if="exclusivo" class="retos__exclusivo">
+          <FaIcon icon="star" /> Acceso exclusivo · VIP
+        </p>
         <p class="retos__sub">
-          <template v-if="tengoLosDos">
+          <template v-if="exclusivo">
+            Scarlet y Karen te dieron acceso exclusivo a los dos retos, con el grupo VIP incluido.
+            Abajo está el material de ambos, marcado por reto.
+          </template>
+          <template v-else-if="tengoLosDos">
             Tienes los dos retos. Abajo está el material de ambos, marcado por reto.
           </template>
           <template v-else>
@@ -77,7 +87,8 @@ function comprar(c: Challenge) {
             sizes="(min-width: 900px) 320px, 100vw"
           />
           <span class="reto__sello">
-            <template v-if="tengo(c)"><FaIcon icon="check" /> El tuyo</template>
+            <template v-if="tengo(c) && exclusivo"><FaIcon icon="star" /> Acceso exclusivo</template>
+            <template v-else-if="tengo(c)"><FaIcon icon="check" /> El tuyo</template>
             <template v-else><FaIcon icon="lock" /> No lo tienes</template>
           </span>
         </div>
@@ -139,6 +150,25 @@ function comprar(c: Challenge) {
   svg {
     font-size: 0.75em;
     color: $rose-deep;
+  }
+}
+
+.retos__exclusivo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.45rem;
+  padding: 0.3rem 0.85rem;
+  border-radius: $radius-pill;
+  background-color: $ink;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: $cream;
+
+  svg {
+    color: $rose-soft;
   }
 }
 
