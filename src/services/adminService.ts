@@ -88,7 +88,27 @@ export interface TelegramAvisoEstado {
   sinGrupo: number
 }
 
+export interface ResultadoAcceso {
+  ok: boolean
+  email: string
+  retos?: string[]
+  accessUntil?: string | null
+  /** La contraseña que se le mandó. null si ya había creado la suya. */
+  password?: string | null
+  correoEnviado?: boolean
+  error?: string
+}
+
 class AdminService extends APIBase {
+  /** Acceso exclusivo VIP sin compra, con el correo de su contraseña. */
+  async accesoExclusivo(emails: string[]) {
+    const response = await this.post<{ resultados: ResultadoAcceso[] }>(
+      'admin/acceso-exclusivo',
+      { emails },
+    )
+    return response.data.resultados
+  }
+
   /** Cómo va el aviso de "ya se abrió tu grupo de Telegram". */
   async estadoTelegram() {
     const response = await this.get<TelegramAvisoEstado>('admin/telegram')

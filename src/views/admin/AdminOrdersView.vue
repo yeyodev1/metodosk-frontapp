@@ -6,6 +6,7 @@ import OrdersSummary from '@/components/admin/OrdersSummary.vue'
 import OrderDetail from '@/components/admin/OrderDetail.vue'
 import RecursosPanel from '@/components/admin/RecursosPanel.vue'
 import TelegramPanel from '@/components/admin/TelegramPanel.vue'
+import AccesoExclusivoPanel from '@/components/admin/AccesoExclusivoPanel.vue'
 import { ESTADOS, ESTADOS_FILTRO, GRUPOS } from '@/components/admin/etiquetas'
 import adminService, { type OrdersResponse } from '@/services/adminService'
 import { useSessionStore } from '@/stores/session'
@@ -90,6 +91,7 @@ onMounted(load)
       @restaurado="load"
     />
 
+    <AccesoExclusivoPanel />
     <TelegramPanel />
     <RecursosPanel />
 
