@@ -61,11 +61,68 @@ const routes: Array<RouteRecordRaw> = [
         meta: { title: 'La academia — Método SK', requiresAuth: true },
       },
       {
-        // La guía de nutrición: el material de Karen, como pantalla.
+        /*
+         * La guía de nutrición, por secciones.
+         *
+         * Cada una es su propia ruta y no un ancla dentro de una página larga:
+         * se entra a buscar la tabla de carbohidratos o el menú del jueves, no
+         * a leerla de corrido, y así el enlace se puede compartir y el atrás
+         * del teléfono devuelve a donde estaba.
+         */
         path: 'guia',
-        name: 'Guia',
-        component: () => import('../views/member/GuiaView.vue'),
+        component: () => import('../views/member/GuiaLayout.vue'),
         meta: { title: 'Tu guía — Método SK', requiresAuth: true },
+        children: [
+          { path: '', redirect: '/guia/menu' },
+          {
+            path: 'menu',
+            name: 'GuiaMenu',
+            component: () => import('../views/member/guia/MenuGuiaView.vue'),
+            meta: { title: 'Tu menú — Método SK', requiresAuth: true },
+          },
+          {
+            path: 'snacks',
+            name: 'GuiaSnacks',
+            component: () => import('../views/member/guia/SnacksGuiaView.vue'),
+            meta: { title: 'Snacks — Método SK', requiresAuth: true },
+          },
+          {
+            path: 'arma-tu-plato',
+            name: 'GuiaPlato',
+            component: () => import('../views/member/guia/PlatoGuiaView.vue'),
+            meta: { title: 'Arma tu plato — Método SK', requiresAuth: true },
+          },
+          {
+            path: 'intercambios',
+            name: 'GuiaIntercambios',
+            component: () => import('../views/member/guia/IntercambiosGuiaView.vue'),
+            meta: { title: 'Intercambios — Método SK', requiresAuth: true },
+          },
+          {
+            path: 'condimentos',
+            name: 'GuiaCondimentos',
+            component: () => import('../views/member/guia/CondimentosGuiaView.vue'),
+            meta: { title: 'Condimentos — Método SK', requiresAuth: true },
+          },
+          {
+            path: 'compras',
+            name: 'GuiaCompras',
+            component: () => import('../views/member/guia/ComprasGuiaView.vue'),
+            meta: { title: 'Lista de compras — Método SK', requiresAuth: true },
+          },
+          {
+            path: 'meal-prep',
+            name: 'GuiaMealPrep',
+            component: () => import('../views/member/guia/MealPrepGuiaView.vue'),
+            meta: { title: 'Meal prep — Método SK', requiresAuth: true },
+          },
+          {
+            path: 'suplementos',
+            name: 'GuiaSuplementos',
+            component: () => import('../views/member/guia/SuplementosGuiaView.vue'),
+            meta: { title: 'Suplementación — Método SK', requiresAuth: true },
+          },
+        ],
       },
       {
         path: 'bienvenida',

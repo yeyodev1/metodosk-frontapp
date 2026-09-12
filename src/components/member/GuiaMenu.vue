@@ -5,16 +5,21 @@
  * Se muestra un solo día y no los siete seguidos porque lo que se busca al
  * abrir esto es qué toca hoy, no leer el mes entero. Los días de pierna van
  * marcados: el menú se repite y conviene verlo antes de cocinar.
+ *
+ * La foto es la del PDF de Karen, una por día.
  */
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import type { DiaGuia } from '@/services/guiaService'
+import { fotoDelDia } from '@/composables/useGuia'
 
 const props = defineProps<{ dias: DiaGuia[]; diasDePierna: number[] }>()
 
 const activo = ref(props.dias[0]?.numero ?? 1)
 
 const esDePierna = (n: number) => props.diasDePierna.includes(n)
-const dia = (): DiaGuia => props.dias.find((d) => d.numero === activo.value) ?? props.dias[0]!
+const dia = computed<DiaGuia>(
+  () => props.dias.find((d) => d.numero === activo.value) ?? props.dias[0]!,
+)
 </script>
 
 <template>
@@ -30,21 +35,33 @@ const dia = (): DiaGuia => props.dias.find((d) => d.numero === activo.value) ?? 
         :aria-selected="d.numero === activo"
         @click="activo = d.numero"
       >
-        <span class="dia__num">{{ d.numero }}</span>
-        <span v-if="esDePierna(d.numero)" class="dia__pierna" title="Día de pierna">·</span>
+        <span>{{ d.numero }}</span>
+        <span v-if="esDePierna(d.numero)" class="dia__pierna" aria-hidden="true">·</span>
       </button>
     </div>
 
-    <p v-if="esDePierna(activo)" class="menu__nota">
-      <FaIcon icon="dumbbell" /> Día de pierna: se repite este mismo menú.
-    </p>
+    <article class="tarjeta">
+      <img
+        :src="fotoDelDia(activo)"
+        :alt="`Uno de los platos del día ${activo}`"
+        class="tarjeta__foto"
+        loading="lazy"
+      />
 
-    <div class="comidas">
-      <article v-for="c in dia().comidas" :key="c.tipo" class="comida">
-        <p class="comida__tipo">{{ c.tipo }}</p>
-        <p class="comida__texto">{{ c.texto }}</p>
-      </article>
-    </div>
+      <div class="tarjeta__cuerpo">
+        <p class="tarjeta__dia">
+          Día {{ activo }}
+          <span v-if="esDePierna(activo)" class="tarjeta__pierna">
+            <FaIcon icon="dumbbell" /> Día de pierna
+          </span>
+        </p>
+
+        <div v-for="c in dia.comidas" :key="c.tipo" class="comida">
+          <p class="comida__tipo">{{ c.tipo }}</p>
+          <p class="comida__texto">{{ c.texto }}</p>
+        </div>
+      </div>
+    </article>
   </div>
 </template>
 
@@ -102,32 +119,67 @@ const dia = (): DiaGuia => props.dias.find((d) => d.numero === activo.value) ?? 
   color: $rose-soft;
 }
 
-.menu__nota {
+/* La foto manda arriba en el teléfono y a la izquierda cuando hay ancho. */
+.tarjeta {
   display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  font-size: $text-xs;
-  color: $ink-muted;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: $radius-lg;
+  background-color: $cream;
 
-  svg {
-    color: $rose-deep;
+  @include from('md') {
+    flex-direction: row;
+    align-items: stretch;
   }
 }
 
-.comidas {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
+.tarjeta__foto {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+
+  @include from('md') {
+    flex: 0 0 38%;
+    height: auto;
+    max-width: 38%;
+  }
 }
 
-.comida {
-  padding: 1rem 1.1rem;
-  border-radius: $radius-md;
-  background-color: $cream;
+.tarjeta__cuerpo {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: clamp(1rem, 3vw, 1.4rem);
+}
+
+.tarjeta__dia {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: $font-display;
+  font-size: $text-lg;
+  color: $ink;
+}
+
+.tarjeta__pierna {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: $radius-pill;
+  background-color: $rose-soft;
+  font-family: $font-principal;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: $wine;
 }
 
 .comida__tipo {
-  font-size: 0.68rem;
+  font-size: 0.64rem;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -135,7 +187,7 @@ const dia = (): DiaGuia => props.dias.find((d) => d.numero === activo.value) ?? 
 }
 
 .comida__texto {
-  margin-top: 0.3rem;
+  margin-top: 0.2rem;
   font-size: $text-sm;
   line-height: 1.6;
   color: $ink;
