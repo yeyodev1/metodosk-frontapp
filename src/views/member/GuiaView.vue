@@ -95,16 +95,16 @@ onMounted(async () => {
         </button>
       </nav>
 
+      <section id="menu" class="bloque">
+        <h2 class="bloque__title">Tu menú de la semana</h2>
+        <GuiaMenu :dias="guia.dias" :dias-de-pierna="guia.diasDePierna" />
+      </section>
+
       <section class="bloque">
         <h2 class="bloque__title">Cómo usar tu menú</h2>
         <ul class="reglas">
           <li v-for="r in guia.comoUsar" :key="r">{{ r }}</li>
         </ul>
-      </section>
-
-      <section id="menu" class="bloque">
-        <h2 class="bloque__title">Tu menú de la semana</h2>
-        <GuiaMenu :dias="guia.dias" :dias-de-pierna="guia.diasDePierna" />
       </section>
 
       <section id="snacks" class="bloque">
@@ -194,7 +194,17 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: $space-md;
-  padding-bottom: $space-lg;
+  /*
+   * Ancho de lectura, no ancho de pantalla. A pantalla completa las líneas de
+   * "cómo usar tu menú" pasaban de doscientos caracteres y se perdía el
+   * renglón al volver; 62rem es el ancho que ya usan Recursos y Mi progreso.
+   */
+  max-width: 62rem;
+  padding: 4.2rem clamp(1rem, 3vw, 2.5rem) 4rem;
+
+  @include from('lg') {
+    padding-top: clamp(1.5rem, 3vw, 2.5rem);
+  }
 }
 
 .aviso {
@@ -250,7 +260,7 @@ onMounted(async () => {
 
 .nav {
   position: sticky;
-  top: 0;
+  top: -1px;
   z-index: 5;
   display: flex;
   gap: 0.4rem;

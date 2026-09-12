@@ -362,6 +362,19 @@ onMounted(async () => {
             </button>
           </div>
 
+          <!--
+            El video de Karen cuenta cómo comer; la guía es el cómo. Quien
+            acaba de verlo tiene que poder ir ahí sin buscar en el menú.
+          -->
+          <RouterLink v-if="abierto.slug === 'nutricion'" to="/guia" class="modal__guia">
+            <FaIcon icon="book-open" />
+            <span class="modal__guia-texto">
+              Tu guía de nutrición
+              <small>Tu menú de 7 días, las porciones y los intercambios</small>
+            </span>
+            <FaIcon icon="arrow-right" />
+          </RouterLink>
+
           <h4 class="modal__sub">Clases</h4>
           <ul v-if="abierto.lessons.length" class="clases">
             <li v-for="l in abierto.lessons" :key="l.id">
@@ -840,6 +853,43 @@ onMounted(async () => {
     width: 100%;
     height: 100%;
     border: 0;
+  }
+}
+
+.modal__guia {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-top: 1rem;
+  padding: 0.95rem 1.1rem;
+  border-radius: $radius-md;
+  background-color: $ink;
+  font-size: $text-sm;
+  font-weight: 600;
+  color: $cream;
+  transition: background-color 0.26s $ease;
+
+  &:hover {
+    background-color: $wine;
+  }
+
+  svg:first-child {
+    color: $rose-soft;
+  }
+
+  svg:last-child {
+    margin-left: auto;
+  }
+}
+
+.modal__guia-texto {
+  display: flex;
+  flex-direction: column;
+
+  small {
+    font-size: $text-xs;
+    font-weight: 400;
+    color: rgba($cream, 0.7);
   }
 }
 
