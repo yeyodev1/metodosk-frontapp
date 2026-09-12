@@ -50,3 +50,14 @@ const CLOUD_ALUMNAS = 'kr8lmvcf'
 export function fotoDelDia(numero: number, ancho = 900): string {
   return `https://res.cloudinary.com/${CLOUD_ALUMNAS}/image/upload/c_fill,g_auto,w_${ancho},q_auto,f_auto/metodosk/guias/platos/dia-${numero}`
 }
+
+/**
+ * Una página de la lista de compras.
+ *
+ * Van completas y no recortadas: las marcas están agrupadas bajo la bandera de
+ * cada país, y ese agrupamiento es el dato. Se entregan a ancho de lectura, sin
+ * recorte, para que no se corte ningún producto.
+ */
+export function imagenDeCompras(publicId: string, ancho = 900): string {
+  return `https://res.cloudinary.com/${CLOUD_ALUMNAS}/image/upload/c_limit,w_${ancho},q_auto,f_auto/${publicId}`
+}
