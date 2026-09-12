@@ -61,6 +61,13 @@ const routes: Array<RouteRecordRaw> = [
         meta: { title: 'La academia — Método SK', requiresAuth: true },
       },
       {
+        // La guía de nutrición: el material de Karen, como pantalla.
+        path: 'guia',
+        name: 'Guia',
+        component: () => import('../views/member/GuiaView.vue'),
+        meta: { title: 'Tu guía — Método SK', requiresAuth: true },
+      },
+      {
         path: 'bienvenida',
         name: 'Welcome',
         component: () => import('../views/member/WelcomeView.vue'),
