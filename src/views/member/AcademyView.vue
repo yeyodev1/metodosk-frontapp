@@ -12,6 +12,7 @@ import { useBodyScrollLock } from '@/composables/useBodyScroll'
 import CldImage from '@/components/ui/CldImage.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import MisRetos from '@/components/member/MisRetos.vue'
+import GuiaViewer from '@/components/member/GuiaViewer.vue'
 import CountdownCard from '@/components/member/CountdownCard.vue'
 import courseService, { type CursoAlumna } from '@/services/courseService'
 import perksService from '@/services/perksService'
@@ -315,6 +316,18 @@ onMounted(async () => {
               {{ avanceDe(c.id)!.vistos }} de {{ avanceDe(c.id)!.total }}
             </span>
           </div>
+          <!-- Su guía, si este curso tiene una para su reto -->
+          <GuiaViewer
+            v-for="g in c.guias || []"
+            :key="g.audiencia"
+            :course-id="c.id"
+            :audiencia="g.audiencia"
+            :titulo="g.titulo"
+            :paginas="g.paginas"
+            :mes="mes"
+            class="modulo__guia"
+          />
+
           <button
             type="button"
             class="modulo__cta"
@@ -725,6 +738,10 @@ onMounted(async () => {
 .modulo__clases {
   font-size: $text-xs;
   color: $ink-muted;
+}
+
+.modulo__guia {
+  margin-top: 0.7rem;
 }
 
 .modulo__cta {

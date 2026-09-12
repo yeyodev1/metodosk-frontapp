@@ -99,7 +99,53 @@ export interface ResultadoAcceso {
   error?: string
 }
 
+export interface Novedad {
+  id: string
+  titulo: string
+  texto: string
+  ctaTexto: string | null
+  ctaUrl: string | null
+  creadaEn: string
+  /** Cuándo se dio la orden de enviarla. null = escrita pero sin mandar. */
+  activadaEn: string | null
+}
+
+export interface EstadoNovedad {
+  novedad: Novedad | null
+  total: number
+  enviados: number
+  pendientes: number
+  hoy: number
+  topeDiario: number
+}
+
 class AdminService extends APIBase {
+  /** El aviso escrito y cómo va su envío. */
+  async novedad() {
+    const { data } = await this.get<EstadoNovedad>('admin/novedad')
+    return data
+  }
+
+  /** Guarda el texto sin mandarlo: primero se revisa. */
+  async escribirNovedad(novedad: {
+    titulo: string
+    texto: string
+    ctaTexto?: string | null
+    ctaUrl?: string | null
+  }) {
+    const { data } = await this.post<EstadoNovedad>('admin/novedad', novedad)
+    return data
+  }
+
+  /** La orden de mandarlo a todas. La primera tanda sale ahí mismo. */
+  async avisarNovedad() {
+    const { data } = await this.post<{ enviados: number; estado: EstadoNovedad }>(
+      'admin/novedad/avisar',
+      {},
+    )
+    return data
+  }
+
   /** Acceso exclusivo VIP sin compra, con el correo de su contraseña. */
   async accesoExclusivo(emails: string[]) {
     const response = await this.post<{ resultados: ResultadoAcceso[] }>(
