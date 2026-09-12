@@ -20,6 +20,25 @@ const { guia } = useGuia()
   >
     <GuiaMenu :dias="guia.dias" :dias-de-pierna="guia.diasDePierna" />
 
+    <!--
+      Varias comidas dicen "revisar video recetario" y hasta ahora no había
+      dónde revisarlo. Va acá, junto al menú, que es donde se lee la frase.
+    -->
+    <a
+      v-if="guia.recetario"
+      class="recetario"
+      :href="guia.recetario"
+      target="_blank"
+      rel="noopener"
+    >
+      <FaIcon icon="circle-play" />
+      <span class="recetario__texto">
+        Video recetario
+        <small>Las preparaciones que el menú te manda a revisar</small>
+      </span>
+      <FaIcon icon="arrow-right" />
+    </a>
+
     <section class="comousar">
       <h2 class="comousar__title">Cómo usar tu menú</h2>
       <ul class="comousar__lista">
@@ -30,6 +49,45 @@ const { guia } = useGuia()
 </template>
 
 <style lang="scss" scoped>
+.recetario {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-top: 0.9rem;
+  padding: 0.95rem 1.1rem;
+  border-radius: $radius-md;
+  background-color: $ink;
+  font-size: $text-sm;
+  font-weight: 600;
+  color: $cream;
+  transition: background-color 0.26s $ease;
+
+  &:hover {
+    background-color: $wine;
+  }
+
+  svg:first-child {
+    color: $rose-soft;
+  }
+
+  svg:last-child {
+    margin-left: auto;
+  }
+
+  @include focus-ring;
+}
+
+.recetario__texto {
+  display: flex;
+  flex-direction: column;
+
+  small {
+    font-size: $text-xs;
+    font-weight: 400;
+    color: rgba($cream, 0.72);
+  }
+}
+
 .comousar {
   margin-top: $space-md;
   padding-top: $space-sm;

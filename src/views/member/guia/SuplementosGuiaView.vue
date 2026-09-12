@@ -1,8 +1,21 @@
 <script setup lang="ts">
+/**
+ * Los suplementos: para qué sirven, cuándo tomarlos y dónde conseguirlos.
+ *
+ * Las marcas van en foto porque en la guía de Karen solo existen así, igual
+ * que en la lista de compras. La precaución se pinta aparte y en vino: es lo
+ * único de esta pantalla que puede hacer daño si se pasa por alto.
+ */
+import { ref } from 'vue'
 import GuiaSeccion from '@/components/member/GuiaSeccion.vue'
-import { useGuia } from '@/composables/useGuia'
+import { useGuia, imagenDeCompras } from '@/composables/useGuia'
 
 const { guia } = useGuia()
+const abierto = ref<string | null>(null)
+
+const alternar = (nombre: string) => {
+  abierto.value = abierto.value === nombre ? null : nombre
+}
 </script>
 
 <template>
@@ -26,6 +39,27 @@ const { guia } = useGuia()
         <FaIcon icon="circle-exclamation" />
         {{ s.precaucion }}
       </p>
+
+      <div v-if="s.dondeComprar.length" class="tiendas">
+        <span v-for="t in s.dondeComprar" :key="t">{{ t }}</span>
+      </div>
+
+      <template v-if="s.imagenes.length">
+        <button type="button" class="marcas" @click="alternar(s.nombre)">
+          <FaIcon :icon="abierto === s.nombre ? 'xmark' : 'book-open'" />
+          {{ abierto === s.nombre ? 'Cerrar' : 'Ver las marcas' }}
+        </button>
+
+        <div v-if="abierto === s.nombre" class="hojas">
+          <img
+            v-for="(id, i) in s.imagenes"
+            :key="id"
+            :src="imagenDeCompras(id)"
+            :alt="`Marcas de ${s.nombre} (${i + 1} de ${s.imagenes.length})`"
+            loading="lazy"
+          />
+        </div>
+      </template>
     </article>
   </GuiaSeccion>
 </template>
@@ -91,6 +125,59 @@ const { guia } = useGuia()
   svg {
     flex: none;
     margin-top: 0.2em;
+  }
+}
+
+.tiendas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.7rem;
+
+  span {
+    padding: 0.25rem 0.7rem;
+    border-radius: $radius-pill;
+    background-color: $bone;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: $ink-soft;
+  }
+}
+
+.marcas {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  align-self: flex-start;
+  margin-top: 0.7rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: $radius-pill;
+  background-color: $ink;
+  font-family: inherit;
+  font-size: $text-xs;
+  font-weight: 600;
+  color: $cream;
+  cursor: pointer;
+
+  svg {
+    color: $rose-soft;
+  }
+
+  @include focus-ring;
+}
+
+.hojas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+
+  img {
+    flex: 1 1 240px;
+    max-width: 100%;
+    border-radius: $radius-sm;
+    background-color: $bone;
   }
 }
 </style>

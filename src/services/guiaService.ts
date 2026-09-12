@@ -57,7 +57,13 @@ export interface Guia {
     paraQuien: string[]
     cuando: string
     precaucion: string
+    /** Dónde se consigue: Amazon, Fybeca, Al Peso… */
+    dondeComprar: string[]
+    /** La página con las marcas: ahí el dato son las fotos. */
+    imagenes: string[]
   }>
+  /** El recetario en video, que las comidas citan todo el tiempo. */
+  recetario: string
 }
 
 class GuiaService extends APIBase {
