@@ -8,6 +8,7 @@
  */
 import { ref } from 'vue'
 import GuiaSeccion from '@/components/member/GuiaSeccion.vue'
+import GuiaImagen from '@/components/member/GuiaImagen.vue'
 import { useGuia, imagenDeCompras } from '@/composables/useGuia'
 
 const { guia } = useGuia()
@@ -51,12 +52,11 @@ const alternar = (nombre: string) => {
         </button>
 
         <div v-if="abierto === s.nombre" class="hojas">
-          <img
+          <GuiaImagen
             v-for="(id, i) in s.imagenes"
             :key="id"
             :src="imagenDeCompras(id)"
             :alt="`Marcas de ${s.nombre} (${i + 1} de ${s.imagenes.length})`"
-            loading="lazy"
           />
         </div>
       </template>
