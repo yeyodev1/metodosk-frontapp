@@ -860,7 +860,8 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 0.8rem;
-  margin-top: 1rem;
+  /* El mismo respiro que deja el bloque del video: si no, "Clases" se le pega. */
+  margin: 0.2rem 0 $space-md;
   padding: 0.95rem 1.1rem;
   border-radius: $radius-md;
   background-color: $ink;
