@@ -12,6 +12,6 @@ const { guia } = useGuia()
     titulo="Meal prep"
     sub="No se trata de cocinar perfecto, sino de que comer según tu plan sea fácil el martes a las nueve de la noche."
   >
-    <GuiaFichas :fichas="guia.mealPrep" />
+    <GuiaFichas :fichas="guia.mealPrep" numeradas />
   </GuiaSeccion>
 </template>

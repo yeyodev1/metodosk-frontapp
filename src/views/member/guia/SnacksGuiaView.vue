@@ -20,6 +20,6 @@ const fichas = computed(() =>
     titulo="Ideas de snacks"
     sub="Son opcionales: los incluyes según tu día. No hace falta comerlos todos."
   >
-    <GuiaFichas :fichas="fichas" numeradas />
+    <GuiaFichas :fichas="fichas" generico="Snack" />
   </GuiaSeccion>
 </template>
