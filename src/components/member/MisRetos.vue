@@ -31,7 +31,14 @@ const misRetos = computed<string[]>(() => {
   return user.challenges?.length ? user.challenges : user.challenge ? [user.challenge] : []
 })
 
-const tengo = (c: Challenge) => misRetos.value.includes(c.name)
+/**
+ * La administración los tiene los dos.
+ *
+ * Esta tarjeta mira lo que compró la cuenta, y Scarlet y Karen no compraron
+ * nada: son las dueñas del método. Sin esto, la app le ofrecía a Karen
+ * comprarle su propio reto por $67.
+ */
+const tengo = (c: Challenge) => session.isAdmin || misRetos.value.includes(c.name)
 
 const tengoLosDos = computed(() => CHALLENGES.every(tengo))
 
