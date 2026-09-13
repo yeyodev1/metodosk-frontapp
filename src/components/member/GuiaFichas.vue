@@ -1,15 +1,15 @@
 <script setup lang="ts">
 /**
- * Lista de fichas: snacks, condimentos, meal prep.
+ * Lista de entradas: snacks, condimentos, meal prep.
  *
- * Todas tienen la misma forma —un encabezado y una lista corta— así que
- * comparten componente, pero no se ven iguales: el número manda cuando la
- * ficha no tiene nombre propio (los snacks sin receta) y el nombre manda
- * cuando sí lo tiene. Antes todas decían "Opción 3" en grande, que no es un
- * título: es un número disfrazado.
+ * Va en una columna con filetes entre entradas, no en tarjetas. Con cajas, un
+ * snack de dos líneas junto a una receta de ocho dejaba huecos blancos enormes
+ * debajo de la corta: el problema no era el color del hueco, era meter en
+ * cajas de la misma fila textos de alturas muy distintas. En lista no hay
+ * hueco posible y se lee de corrido.
  *
- * Cada renglón es un ingrediente o un paso, con su marca al costado, para que
- * se lea como lista y no como un párrafo apretado.
+ * El nombre manda cuando la entrada tiene uno propio; cuando no —los snacks
+ * sin receta— el número queda de etiqueta y el contenido ocupa su lugar.
  */
 defineProps<{
   fichas: Array<{ titulo: string; items: string[]; pie?: string | null }>
@@ -24,73 +24,66 @@ const tieneNombre = (titulo: string) => !/^opci[óo]n\s*\d+$/i.test(titulo.trim(
 </script>
 
 <template>
-  <div class="fichas">
-    <article
-      v-for="(f, i) in fichas"
-      :key="f.titulo + i"
-      class="ficha"
-      :class="{ 'ficha--con-nombre': tieneNombre(f.titulo) }"
-    >
-      <header class="ficha__head">
-        <span v-if="numeradas" class="ficha__num">{{ String(i + 1).padStart(2, '0') }}</span>
-        <span class="ficha__titulos">
-          <span v-if="!tieneNombre(f.titulo) && generico" class="ficha__generico">
-            {{ generico }} {{ i + 1 }}
-          </span>
-          <h3 v-if="tieneNombre(f.titulo)" class="ficha__nombre">{{ f.titulo }}</h3>
-        </span>
-      </header>
+  <ul class="lista">
+    <li v-for="(f, i) in fichas" :key="f.titulo + i" class="entrada">
+      <p class="entrada__marca">
+        <span v-if="numeradas" class="entrada__num">{{ String(i + 1).padStart(2, '0') }}</span>
+        <span v-else-if="generico" class="entrada__generico">{{ generico }} {{ i + 1 }}</span>
+      </p>
 
-      <ul class="ficha__items">
-        <li v-for="item in f.items" :key="item">{{ item }}</li>
-      </ul>
+      <div class="entrada__cuerpo">
+        <h3 v-if="tieneNombre(f.titulo)" class="entrada__nombre">{{ f.titulo }}</h3>
 
-      <p v-if="f.pie" class="ficha__pie">{{ f.pie }}</p>
-    </article>
-  </div>
+        <ul class="entrada__items">
+          <li v-for="item in f.items" :key="item">{{ item }}</li>
+        </ul>
+
+        <p v-if="f.pie" class="entrada__pie">{{ f.pie }}</p>
+      </div>
+    </li>
+  </ul>
 </template>
 
 <style lang="scss" scoped>
-.fichas {
-  @include flex-cards(260px, 0.7rem);
+.lista {
+  list-style: none;
+}
 
-  > * {
-    align-self: flex-start;
+/* Marca a la izquierda, contenido a la derecha; en el teléfono se apila. */
+.entrada {
+  display: flex;
+  gap: 1rem;
+  padding: 1.1rem 0;
+
+  & + & {
+    border-top: 1px solid $sand;
+  }
+
+  @include until('md') {
+    flex-direction: column;
+    gap: 0.35rem;
   }
 }
 
-.ficha {
-  padding: 1.1rem 1.2rem;
-  border-radius: $radius-md;
-  background-color: $cream;
-}
-
-/* La que tiene receta propia se distingue del resto con un filo de color. */
-.ficha--con-nombre {
-  border-left: 3px solid $rose;
-}
-
-.ficha__head {
-  display: flex;
-  align-items: baseline;
-  gap: 0.65rem;
-}
-
-.ficha__num {
+.entrada__marca {
   flex: none;
+  width: 5.5rem;
+  padding-top: 0.1rem;
+
+  @include until('md') {
+    width: auto;
+    padding-top: 0;
+  }
+}
+
+.entrada__num {
   font-family: $font-display;
-  font-size: 1.35rem;
+  font-size: 1.5rem;
   line-height: 1;
   color: $clay;
 }
 
-.ficha__titulos {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.ficha__generico {
+.entrada__generico {
   font-size: 0.64rem;
   font-weight: 600;
   letter-spacing: 0.1em;
@@ -98,43 +91,57 @@ const tieneNombre = (titulo: string) => !/^opci[óo]n\s*\d+$/i.test(titulo.trim(
   color: $ink-muted;
 }
 
-.ficha__nombre {
+.entrada__cuerpo {
+  min-width: 0;
+  max-width: 62ch;
+}
+
+.entrada__nombre {
+  margin-bottom: 0.35rem;
   font-family: $font-display;
   font-size: $text-base;
-  line-height: 1.2;
+  line-height: 1.25;
   color: $ink;
   text-wrap: balance;
 }
 
-.ficha__items {
+.entrada__items {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
-  margin-top: 0.6rem;
   list-style: none;
 
   li {
     position: relative;
-    padding-left: 0.85rem;
-    font-size: $text-xs;
-    line-height: 1.5;
+    padding-left: 0.9rem;
+    font-size: $text-sm;
+    line-height: 1.55;
     color: $ink-soft;
 
-    /* Un guion en lugar de viñeta: la lista es de ingredientes, no de pasos. */
+    /* Un guion, no una viñeta: son ingredientes, no pasos numerados. */
     &::before {
       content: '';
       position: absolute;
-      top: 0.65em;
+      top: 0.7em;
       left: 0;
-      width: 5px;
+      width: 6px;
       height: 1px;
       background-color: $clay;
     }
   }
 }
 
-.ficha__pie {
-  margin-top: 0.7rem;
+/* Una sola línea no necesita marca de lista. */
+.entrada__items li:only-child {
+  padding-left: 0;
+
+  &::before {
+    display: none;
+  }
+}
+
+.entrada__pie {
+  margin-top: 0.5rem;
   padding-left: 0.75rem;
   border-left: 2px solid $sage;
   font-size: $text-xs;
