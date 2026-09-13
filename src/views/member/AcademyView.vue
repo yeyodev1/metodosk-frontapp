@@ -141,16 +141,29 @@ const fechaFin = computed(() =>
 const nombre = computed(() => user.value?.name?.split(' ')[0] || '')
 
 /**
+ * Los cursos que se pintan.
+ *
+ * En administración el servidor manda el material de los dos retos, y el
+ * selector de arriba solo cambiaba las tarjetas de "Tu reto": abajo seguían
+ * saliendo los dos "Qué necesitas". Ahora "ver como quien compró" filtra
+ * también la lista, que es lo que la frase promete — ver la app como la ve
+ * ella, no una mezcla que ninguna alumna tiene delante.
+ */
+const cursosVisibles = computed<CursoAlumna[]>(() => {
+  if (!esAdmin.value) return cursos.value
+  const elegido = CHALLENGES.find((c) => c.name === retoPreview.value)
+  if (!elegido) return cursos.value
+  return cursos.value.filter((c) => c.challenge === 'ambas' || c.challenge === elegido.id)
+})
+
+/**
  * Cuándo hay que decir a qué reto pertenece cada curso.
  *
- * Con los dos retos comprados, y siempre en administración: la lista de
- * cursos no se filtra por el reto de la vista previa —esa solo afecta a la
- * tarjeta de arriba— así que la administración ve el material de los dos y
- * aparecían dos cursos "01 Qué necesitas para entrenar" idénticos, sin forma
- * de saber cuál era de cuál.
+ * Solo cuando de verdad se ve material de los dos. En administración ya no
+ * pasa: la lista queda filtrada por el reto de la vista previa.
  */
 const variosRetos = computed(() => {
-  if (esAdmin.value) return true
+  if (esAdmin.value) return false
   return (user.value?.challenges?.length ?? 0) > 1
 })
 
@@ -285,12 +298,12 @@ onMounted(async () => {
 
       <p v-if="error" class="aviso aviso--error">{{ error }}</p>
       <p v-else-if="cargando" class="aviso">Cargando tu reto…</p>
-      <p v-else-if="!cursos.length" class="aviso">
+      <p v-else-if="!cursosVisibles.length" class="aviso">
         Todavía no hay cursos publicados. Te avisamos por correo apenas se abra el primero.
       </p>
 
       <article
-        v-for="c in cursos"
+        v-for="c in cursosVisibles"
         :key="c.id"
         class="modulo"
         :class="{ 'modulo--locked': c.estado !== 'abierto' }"
