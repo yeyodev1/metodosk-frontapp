@@ -306,7 +306,13 @@ onMounted(async () => {
               class="modulo__estado"
               :class="{ 'modulo__estado--pronto': c.estado !== 'abierto' }"
             >{{ etiqueta(c) }}</span>
-            <span v-if="variosRetos" class="modulo__reto">{{ NOMBRE_RETO[c.challenge] }}</span>
+            <!--
+              Solo cuando el curso es de un reto concreto: "Los dos retos"
+              repetido en cada tarjeta no informaba, solo llenaba.
+            -->
+            <span v-if="variosRetos && c.challenge !== 'ambas'" class="modulo__reto">
+              {{ NOMBRE_RETO[c.challenge] }}
+            </span>
           </p>
           <h3 class="modulo__title">{{ c.title }}</h3>
           <p class="modulo__claim">{{ c.summary }}</p>
