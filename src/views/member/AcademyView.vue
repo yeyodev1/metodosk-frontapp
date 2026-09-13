@@ -383,7 +383,13 @@ onMounted(async () => {
             <FaIcon icon="arrow-right" />
           </RouterLink>
 
-          <h4 class="modal__sub">Clases</h4>
+          <!--
+            Un curso de un solo video no tiene clases que esperar: anunciarlas
+            hacía parecer que faltaba material donde no falta nada.
+          -->
+          <template v-if="abierto.lessons.length || !abierto.welcomeVideo">
+            <h4 class="modal__sub">Clases</h4>
+          </template>
           <ul v-if="abierto.lessons.length" class="clases">
             <li v-for="l in abierto.lessons" :key="l.id">
               <button
@@ -422,7 +428,9 @@ onMounted(async () => {
               </button>
             </li>
           </ul>
-          <p v-else class="aviso">Las clases de este curso se publican pronto.</p>
+          <p v-else-if="!abierto.welcomeVideo" class="aviso">
+            Las clases de este curso se publican pronto.
+          </p>
         </div>
       </div>
     </Transition>
