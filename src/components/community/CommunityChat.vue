@@ -120,7 +120,7 @@ onUnmounted(() => {
 
 <template>
   <section class="chat">
-    <div ref="lista" class="chat__lista">
+    <div ref="lista" class="chat__lista" :class="{ 'chat__lista--vacia': !cargando && !mensajes.length }">
       <p v-if="cargando" class="chat__estado">
         <FaIcon icon="spinner" spin /> Cargando la comunidad…
       </p>
@@ -184,6 +184,14 @@ onUnmounted(() => {
   background-color: $cream;
   overflow-y: auto;
   overscroll-behavior: contain;
+}
+
+/*
+ * Sin mensajes no hace falta reservar la altura del muro: quedaba medio metro
+ * de blanco debajo del aviso, y al hacer scroll la columna se veía rota.
+ */
+.chat__lista--vacia {
+  height: auto;
 }
 
 .chat__estado,

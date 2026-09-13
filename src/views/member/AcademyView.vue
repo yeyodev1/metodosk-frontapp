@@ -8,6 +8,7 @@
  * menos de lo que compró.
  */
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { RouterLink } from 'vue-router'
 import { useBodyScrollLock } from '@/composables/useBodyScroll'
 import CldImage from '@/components/ui/CldImage.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
@@ -342,8 +343,13 @@ onMounted(async () => {
               {{ avanceDe(c.id)!.vistos }} de {{ avanceDe(c.id)!.total }}
             </span>
           </div>
+          <!-- Una puerta lleva a su pantalla; no abre una ventana con video. -->
+          <RouterLink v-if="c.enlace" :to="c.enlace" class="modulo__cta">
+            Ir a la comunidad
+          </RouterLink>
+
           <button
-            v-if="c.estado === 'abierto'"
+            v-else-if="c.estado === 'abierto'"
             type="button"
             class="modulo__cta"
             @click="abrir(c)"
@@ -356,7 +362,7 @@ onMounted(async () => {
             que ella quiere saber: cuándo. Con fecha se lo decimos; sin fecha,
             al menos no simulamos un botón.
           -->
-          <p v-else class="modulo__espera">
+          <p v-else-if="!c.enlace" class="modulo__espera">
             <FaIcon icon="lock" />
             {{ cuandoAbre(c) }}
           </p>

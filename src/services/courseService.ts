@@ -27,6 +27,8 @@ export interface CursoAlumna {
   abreEl?: string | null
   /** Texto del curso: se lee dentro, debajo del video. */
   notas?: Array<{ titulo: string; cuerpo: string[] }>
+  /** A dónde lleva, si el curso es una puerta a otra pantalla. */
+  enlace?: string | null
   welcomeVideo: { embedUrl: string; thumbnail: string | null; completed: boolean } | null
   lessons: Array<{
     id: string
