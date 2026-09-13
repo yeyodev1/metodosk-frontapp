@@ -25,6 +25,8 @@ export interface CursoAlumna {
   estado: 'abierto' | 'proximamente' | 'cerrado'
   /** Cuándo se abre, si está programado. null = no hay fecha anunciada. */
   abreEl?: string | null
+  /** Texto del curso: se lee dentro, debajo del video. */
+  notas?: Array<{ titulo: string; cuerpo: string[] }>
   welcomeVideo: { embedUrl: string; thumbnail: string | null; completed: boolean } | null
   lessons: Array<{
     id: string

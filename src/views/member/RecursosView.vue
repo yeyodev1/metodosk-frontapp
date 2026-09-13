@@ -17,7 +17,6 @@
  */
 import { GRUPOS_RECURSOS } from '@/config/recursos'
 import TelegramCard from '@/components/member/TelegramCard.vue'
-import PesoCard from '@/components/member/PesoCard.vue'
 </script>
 
 <template>
@@ -32,8 +31,6 @@ import PesoCard from '@/components/member/PesoCard.vue'
     </header>
 
     <TelegramCard />
-
-    <PesoCard />
 
     <section v-for="grupo in GRUPOS_RECURSOS" :key="grupo.id" class="grupo">
       <div class="grupo__head">

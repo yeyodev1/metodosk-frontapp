@@ -303,7 +303,7 @@ onMounted(async () => {
       </p>
 
       <article
-        v-for="c in cursosVisibles"
+        v-for="(c, i) in cursosVisibles"
         :key="c.id"
         class="modulo"
         :class="{ 'modulo--locked': c.estado !== 'abierto' }"
@@ -319,12 +319,13 @@ onMounted(async () => {
 
         <div class="modulo__body">
           <!--
-            Sin número: con dos cursos "01" —uno por reto— dejó de significar
-            nada, y el orden ya se ve en la propia lista. Y sin etiqueta de
-            reto: los cursos de uno solo lo llevan en el título.
+            El número sale de la posición en la lista, no del orden guardado:
+            así siempre va 01, 02, 03 seguidos. Con el orden guardado salían
+            dos "01" —uno por reto— y saltos donde faltaba un curso.
           -->
-          <p v-if="c.estado !== 'abierto'" class="modulo__estado">
-            {{ etiqueta(c) }}
+          <p class="modulo__eyebrow">
+            <span class="modulo__num">{{ String(i + 1).padStart(2, '0') }}</span>
+            <span v-if="c.estado !== 'abierto'" class="modulo__estado">{{ etiqueta(c) }}</span>
           </p>
           <h3 class="modulo__title">{{ c.title }}</h3>
           <p class="modulo__claim">{{ c.summary }}</p>
@@ -410,6 +411,12 @@ onMounted(async () => {
             </span>
             <FaIcon icon="arrow-right" />
           </RouterLink>
+
+          <!-- El material que se lee, no se mira: va con el video, no aparte. -->
+          <section v-for="n in abierto.notas || []" :key="n.titulo" class="nota">
+            <h4 class="nota__title">{{ n.titulo }}</h4>
+            <p v-for="linea in n.cuerpo" :key="linea">{{ linea }}</p>
+          </section>
 
           <!--
             Un curso de un solo video no tiene clases que esperar: anunciarlas
@@ -734,6 +741,35 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 0.6rem;
+}
+
+.nota {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0.2rem 0 $space-sm;
+  padding: 1.1rem 1.2rem;
+  border-radius: $radius-md;
+  background-color: $cream;
+
+  p {
+    font-size: $text-xs;
+    line-height: 1.6;
+    color: $ink-soft;
+  }
+}
+
+.nota__title {
+  font-family: $font-display;
+  font-size: $text-base;
+  color: $ink;
+}
+
+.modulo__num {
+  font-family: $font-display;
+  font-size: $text-base;
+  font-style: italic;
+  color: $rose-deep;
 }
 
 .modulo__espera {
