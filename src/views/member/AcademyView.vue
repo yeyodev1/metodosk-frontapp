@@ -154,12 +154,6 @@ const variosRetos = computed(() => {
   return (user.value?.challenges?.length ?? 0) > 1
 })
 
-const NOMBRE_RETO: Record<string, string> = {
-  recomposicion: 'SK Recomposición',
-  volumen: 'SK Volumen',
-  ambas: 'Los dos retos',
-}
-
 const ETIQUETA: Record<CursoAlumna['estado'], string> = {
   abierto: 'Disponible',
   proximamente: 'Próximamente',
@@ -307,12 +301,10 @@ onMounted(async () => {
               :class="{ 'modulo__estado--pronto': c.estado !== 'abierto' }"
             >{{ etiqueta(c) }}</span>
             <!--
-              Solo cuando el curso es de un reto concreto: "Los dos retos"
-              repetido en cada tarjeta no informaba, solo llenaba.
+              Sin etiqueta de reto: los cursos que son de uno solo lo llevan en
+              el título ("Qué necesitas · SK Recomposición"), y repetirlo al
+              costado no agregaba nada. Los de "ambas" nunca necesitaron decirlo.
             -->
-            <span v-if="variosRetos && c.challenge !== 'ambas'" class="modulo__reto">
-              {{ NOMBRE_RETO[c.challenge] }}
-            </span>
           </p>
           <h3 class="modulo__title">{{ c.title }}</h3>
           <p class="modulo__claim">{{ c.summary }}</p>
@@ -729,15 +721,6 @@ onMounted(async () => {
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: #4a7a45;
-}
-
-.modulo__reto {
-  padding: 0.14rem 0.6rem;
-  border-radius: $radius-pill;
-  background-color: $rose-soft;
-  font-size: 0.68rem;
-  letter-spacing: 0.04em;
-  color: $wine;
 }
 
 .modulo__estado--pronto {
