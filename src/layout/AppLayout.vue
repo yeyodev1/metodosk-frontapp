@@ -16,6 +16,7 @@ import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useSessionStore } from '@/stores/session'
 import ConfirmModal from '@/components/ui/ConfirmModal.vue'
 import OnboardingFlow from '@/components/member/OnboardingFlow.vue'
+import AvisoVersion from '@/components/ui/AvisoVersion.vue'
 import PresaleBand from '@/components/member/PresaleBand.vue'
 import TelegramBand from '@/components/member/TelegramBand.vue'
 import '@/plugins/icons'
@@ -154,6 +155,9 @@ function salir() {
     </div>
 
     <OnboardingFlow v-if="!session.isAdmin" />
+
+    <!-- Avisa cuando publicamos algo, para que no se quede con el código viejo. -->
+    <AvisoVersion />
 
     <ConfirmModal
       :open="confirmandoSalida"
