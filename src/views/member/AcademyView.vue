@@ -165,6 +165,17 @@ function etiqueta(curso: CursoAlumna) {
   return ETIQUETA[curso.estado]
 }
 
+/** Cuándo vuelve: con fecha si la hay, y si no, lo que sepamos. */
+function cuandoAbre(curso: CursoAlumna) {
+  if (curso.estado === 'cerrado') return `Se abre en el mes ${curso.unlockMonth}`
+  if (!curso.abreEl) return 'Se publica pronto'
+
+  const fecha = new Date(curso.abreEl)
+  const dia = fecha.toLocaleDateString('es-EC', { weekday: 'long', day: 'numeric', month: 'long' })
+  const hora = fecha.toLocaleTimeString('es-EC', { hour: 'numeric', minute: '2-digit' })
+  return `Se abre el ${dia} a las ${hora}`
+}
+
 function duracion(segundos: number | null) {
   if (!segundos) return null
   const min = Math.round(segundos / 60)
@@ -294,17 +305,13 @@ onMounted(async () => {
         </div>
 
         <div class="modulo__body">
-          <p class="modulo__eyebrow">
-            <span class="modulo__num">{{ String(c.order).padStart(2, '0') }}</span>
-            <span
-              class="modulo__estado"
-              :class="{ 'modulo__estado--pronto': c.estado !== 'abierto' }"
-            >{{ etiqueta(c) }}</span>
-            <!--
-              Sin etiqueta de reto: los cursos que son de uno solo lo llevan en
-              el título ("Qué necesitas · SK Recomposición"), y repetirlo al
-              costado no agregaba nada. Los de "ambas" nunca necesitaron decirlo.
-            -->
+          <!--
+            Sin número: con dos cursos "01" —uno por reto— dejó de significar
+            nada, y el orden ya se ve en la propia lista. Y sin etiqueta de
+            reto: los cursos de uno solo lo llevan en el título.
+          -->
+          <p v-if="c.estado !== 'abierto'" class="modulo__estado">
+            {{ etiqueta(c) }}
           </p>
           <h3 class="modulo__title">{{ c.title }}</h3>
           <p class="modulo__claim">{{ c.summary }}</p>
@@ -322,13 +329,23 @@ onMounted(async () => {
             </span>
           </div>
           <button
+            v-if="c.estado === 'abierto'"
             type="button"
             class="modulo__cta"
-            :disabled="c.estado !== 'abierto'"
             @click="abrir(c)"
           >
-            {{ c.estado === 'abierto' ? 'Entrar al curso' : 'Aún no disponible' }}
+            Entrar al curso
           </button>
+
+          <!--
+            Un botón muerto que dice "Aún no disponible" no responde lo único
+            que ella quiere saber: cuándo. Con fecha se lo decimos; sin fecha,
+            al menos no simulamos un botón.
+          -->
+          <p v-else class="modulo__espera">
+            <FaIcon icon="lock" />
+            {{ cuandoAbre(c) }}
+          </p>
         </div>
       </article>
     </section>
@@ -706,11 +723,17 @@ onMounted(async () => {
   gap: 0.6rem;
 }
 
-.modulo__num {
-  font-family: $font-display;
-  font-size: $text-base;
-  font-style: italic;
-  color: $rose-deep;
+.modulo__espera {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.9rem;
+  font-size: $text-xs;
+  color: $ink-muted;
+
+  svg {
+    font-size: 0.85em;
+  }
 }
 
 .modulo__estado {

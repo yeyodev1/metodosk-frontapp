@@ -23,6 +23,8 @@ export interface CursoAlumna {
   /** A qué reto pertenece, para agruparlos si compró los dos. */
   challenge: Audiencia
   estado: 'abierto' | 'proximamente' | 'cerrado'
+  /** Cuándo se abre, si está programado. null = no hay fecha anunciada. */
+  abreEl?: string | null
   welcomeVideo: { embedUrl: string; thumbnail: string | null; completed: boolean } | null
   lessons: Array<{
     id: string
