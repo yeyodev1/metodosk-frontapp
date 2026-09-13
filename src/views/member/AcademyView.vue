@@ -310,7 +310,19 @@ onMounted(async () => {
         :class="{ 'modulo--locked': c.estado !== 'abierto' }"
       >
         <div v-if="c.coverPhoto" class="modulo__foto">
+          <!--
+            Hay dos cuentas de Cloudinary: la del shoot, que resuelve CldImage
+            por id, y la de las alumnas, de donde salen las fotos subidas
+            después. Por eso una portada puede venir como URL completa.
+          -->
+          <img
+            v-if="c.coverPhoto.startsWith('http')"
+            :src="c.coverPhoto"
+            :alt="c.title"
+            loading="lazy"
+          />
           <CldImage
+            v-else
             :public-id="c.coverPhoto"
             :alt="c.title"
             ratio="4:3"
