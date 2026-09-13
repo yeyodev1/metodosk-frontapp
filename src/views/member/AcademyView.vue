@@ -140,9 +140,17 @@ const fechaFin = computed(() =>
 
 const nombre = computed(() => user.value?.name?.split(' ')[0] || '')
 
-/** Con los dos retos comprados, cada curso tiene que decir a cuál pertenece. */
+/**
+ * Cuándo hay que decir a qué reto pertenece cada curso.
+ *
+ * Con los dos retos comprados, y siempre en administración: la lista de
+ * cursos no se filtra por el reto de la vista previa —esa solo afecta a la
+ * tarjeta de arriba— así que la administración ve el material de los dos y
+ * aparecían dos cursos "01 Qué necesitas para entrenar" idénticos, sin forma
+ * de saber cuál era de cuál.
+ */
 const variosRetos = computed(() => {
-  if (esAdmin.value) return false
+  if (esAdmin.value) return true
   return (user.value?.challenges?.length ?? 0) > 1
 })
 

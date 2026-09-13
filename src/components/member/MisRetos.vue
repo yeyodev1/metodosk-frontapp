@@ -224,6 +224,12 @@ function comprar(c: Challenge) {
 
 .reto__foto {
   position: relative;
+  /*
+   * Tope de alto: a 4:3 sobre una columna ancha, la foto se comía la pantalla
+   * y había que bajar dos veces para llegar al nombre del reto.
+   */
+  max-height: 260px;
+  overflow: hidden;
 
   :deep(img) {
     width: 100%;
