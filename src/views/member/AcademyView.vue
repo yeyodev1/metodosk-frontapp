@@ -7,7 +7,7 @@
  * la estructura ya se vendió, así que ocultarla la dejaría creyendo que compró
  * menos de lo que compró.
  */
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useBodyScrollLock } from '@/composables/useBodyScroll'
 import CldImage from '@/components/ui/CldImage.vue'
@@ -242,10 +242,29 @@ watch(terminado, (fin) => {
   if (fin) cargarAvance()
 })
 
+/**
+ * Al volver a la pestaña, se vuelven a pedir los cursos.
+ *
+ * La lista se cargaba una sola vez al entrar, así que quien dejaba la app
+ * abierta seguía viendo el material viejo cuando publicábamos algo: pasó el
+ * día que subimos los entrenamientos y en el grupo decían que no les aparecía.
+ * El aviso de versión nueva no cubre esto — ese mira el código, y acá lo que
+ * cambia es el contenido.
+ */
+function alVolver() {
+  if (document.visibilityState === 'visible') {
+    cargar()
+    cargarAvance()
+  }
+}
+
 onMounted(async () => {
   if (!session.user) await session.restore()
   await Promise.all([cargar(), cargarAvance()])
+  document.addEventListener('visibilitychange', alVolver)
 })
+
+onBeforeUnmount(() => document.removeEventListener('visibilitychange', alVolver))
 </script>
 
 <template>
