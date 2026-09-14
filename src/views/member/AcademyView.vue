@@ -95,6 +95,19 @@ async function marcarVista(curso: CursoAlumna, lessonId: string) {
   }
 }
 
+/**
+ * ¿La que se está viendo ya está marcada?
+ *
+ * El botón decía "Marcar como vista" siempre, incluso después de marcarla: no
+ * había forma de saber si el clic había servido, y se marcaba dos y tres veces.
+ */
+const vistaActual = computed(() => {
+  const curso = abierto.value
+  if (!curso) return false
+  if (!viendo.value) return Boolean(curso.welcomeVideo?.completed)
+  return Boolean(curso.lessons.find((l) => l.id === viendo.value!.lessonId)?.completed)
+})
+
 async function cargarAvance() {
   try {
     avance.value = await progressService.mio()
@@ -410,10 +423,15 @@ onMounted(async () => {
             <button
               type="button"
               class="viendo__marcar"
-              :disabled="marcando"
+              :class="{ 'viendo__marcar--vista': vistaActual }"
+              :disabled="marcando || vistaActual"
               @click="marcarVista(abierto, viendo?.lessonId || 'welcome')"
             >
-              Marcar como vista
+              <template v-if="vistaActual">
+                <FaIcon icon="check" /> Vista
+              </template>
+              <template v-else-if="marcando">Marcando…</template>
+              <template v-else>Marcar como vista</template>
             </button>
           </div>
 
@@ -1017,7 +1035,19 @@ onMounted(async () => {
   color: $ink;
 }
 
+/* Ya vista: deja de ser un botón que invita y pasa a ser un estado. */
+.viendo__marcar--vista {
+  border-color: transparent !important;
+  background-color: $alert-success-bg;
+  color: #4a7a45 !important;
+  opacity: 1 !important;
+  cursor: default;
+}
+
 .viendo__marcar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   padding: 0.35rem 0.85rem;
   border: 1px solid rgba($ink, 0.2);
   border-radius: $radius-pill;
@@ -1086,6 +1116,16 @@ onMounted(async () => {
 .clase--vista .clase__tick {
   background-color: $alert-success-bg;
   color: #4a7a45;
+}
+
+/* Y la fila entera baja el tono: lo que ya viste deja de pedir atención. */
+.clase--vista .clase__title {
+  color: $ink-muted;
+}
+
+.clase--vista .clase__dur {
+  color: #4a7a45;
+  font-weight: 600;
 }
 
 .clase__num {
