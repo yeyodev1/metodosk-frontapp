@@ -488,6 +488,7 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', alVolver)
                 :class="{
                   'clase--activa': viendo?.lessonId === l.id,
                   'clase--vista': l.completed,
+                  'clase--pendiente': !l.embedUrl,
                 }"
                 :disabled="!l.embedUrl"
                 @click="ver(abierto, l)"
@@ -503,6 +504,7 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', alVolver)
                       stroke-linejoin="round"
                     />
                   </svg>
+                  <FaIcon v-else-if="!l.embedUrl" icon="lock" />
                   <span v-else class="clase__num">{{ String(l.order).padStart(2, '0') }}</span>
                 </span>
                 <span class="clase__texto">
@@ -1110,10 +1112,32 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', alVolver)
 
   &:disabled {
     cursor: not-allowed;
-    opacity: 0.6;
   }
 
   @include focus-ring;
+}
+
+/*
+ * Un día de la semana que todavía no tiene video: se ve en gris y en su
+ * lugar. Antes solo bajaba la opacidad y se confundía con una clase normal
+ * mal cargada; ahora es un hueco anunciado — borde punteado, candado, sin
+ * fondo — para que se lea "viene" y no "se rompió".
+ */
+.clase--pendiente {
+  border: 1px dashed $clay;
+  background-color: transparent;
+
+  .clase__tick {
+    background-color: $sand;
+    color: $ink-muted;
+    font-size: 0.7rem;
+  }
+
+  .clase__title,
+  .clase__sum,
+  .clase__dur {
+    color: $ink-muted;
+  }
 }
 
 .clase--activa {
