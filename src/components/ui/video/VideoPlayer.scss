@@ -1,0 +1,187 @@
+.player {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: $radius-md;
+  background-color: #000;
+  outline: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+
+  &:focus-visible {
+    box-shadow: 0 0 0 3px rgba($rose, 0.6);
+  }
+}
+
+.player--completa {
+  border-radius: 0;
+}
+
+.player__video,
+.player__marco {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  object-fit: contain;
+  background-color: #000;
+}
+
+.player__capa {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+}
+
+.player__controles {
+  transition: opacity 0.25s ease;
+}
+
+.player--oculto {
+  cursor: none;
+
+  .player__capa {
+    cursor: none;
+  }
+
+  .player__controles {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+.player__titulo {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  margin: 0;
+  padding: 1.2rem 1.4rem 3rem;
+  background: linear-gradient(to bottom, rgba(#000, 0.6), transparent);
+  font-size: 1.1rem;
+  color: #fff;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+
+  .player--oculto & {
+    opacity: 0;
+  }
+}
+
+.player__grande {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(56px, 12vw, 72px);
+  aspect-ratio: 1;
+  border: none;
+  border-radius: 50%;
+  background-color: rgba($rose, 0.92);
+  box-shadow: 0 8px 30px rgba(#000, 0.3);
+  color: #fff;
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+  transition: transform 0.2s ease, background-color 0.2s ease;
+
+  svg {
+    width: 55%;
+    height: 55%;
+    margin-left: 6%;
+    fill: currentColor;
+  }
+
+  &:hover {
+    background-color: $rose-deep;
+    transform: translate(-50%, -50%) scale(1.06);
+  }
+
+  @include focus-ring($cream);
+}
+
+/* Pausado a mitad de clase, en computadora basta con la barra. */
+@media (hover: hover) {
+  .player__grande--pausa {
+    display: none;
+  }
+}
+
+.player__cargando {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 48px;
+  height: 48px;
+  margin: -24px 0 0 -24px;
+  border: 4px solid rgba(#fff, 0.25);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: girar 0.8s linear infinite;
+  pointer-events: none;
+}
+
+.player__destello {
+  position: absolute;
+  top: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 64px;
+  height: 64px;
+  padding: 0 1rem;
+  border-radius: 999px;
+  background-color: rgba(#000, 0.5);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #fff;
+  pointer-events: none;
+  animation: destello 0.6s ease forwards;
+
+  svg {
+    width: 30px;
+    height: 30px;
+    fill: currentColor;
+  }
+}
+
+.player__destello--centro {
+  left: 50%;
+  margin-left: -32px;
+  padding: 0;
+}
+
+.player__destello--izq {
+  left: 12%;
+}
+
+.player__destello--der {
+  right: 12%;
+}
+
+@keyframes destello {
+  from {
+    opacity: 1;
+    transform: translateY(-50%) scale(0.8);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-50%) scale(1.15);
+  }
+}
+
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@include reduced-motion {
+  .player__destello,
+  .player__cargando {
+    animation-duration: 0.01s;
+  }
+}

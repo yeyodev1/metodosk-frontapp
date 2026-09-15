@@ -1,0 +1,228 @@
+.controles {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: 2.6rem 0.75rem 0.35rem;
+  background: linear-gradient(to top, rgba(#000, 0.72), rgba(#000, 0.28) 55%, transparent);
+  color: #fff;
+}
+
+/* ── La línea de avance ── */
+.barra {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 16px;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.barra__pista {
+  position: relative;
+  width: 100%;
+  height: 3px;
+  overflow: hidden;
+  background-color: rgba(#fff, 0.22);
+  transition: height 0.12s ease;
+
+  > div {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+  }
+}
+
+.barra__cargado {
+  background-color: rgba(#fff, 0.38);
+}
+
+.barra__encima {
+  background-color: rgba(#fff, 0.5);
+}
+
+.barra__visto {
+  background-color: $rose;
+}
+
+.barra__punto {
+  position: absolute;
+  top: 50%;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background-color: $rose;
+  transform: translate(-50%, -50%) scale(0);
+  transition: transform 0.12s ease;
+}
+
+.barra__globo {
+  position: absolute;
+  bottom: calc(100% + 0.35rem);
+  padding: 0.2rem 0.45rem;
+  border-radius: 6px;
+  background-color: rgba(#000, 0.75);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.barra:hover,
+.barra--activa {
+  .barra__pista {
+    height: 5px;
+  }
+
+  .barra__punto {
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@media (hover: none) {
+  .barra__punto {
+    transform: translate(-50%, -50%) scale(0.85);
+  }
+}
+
+/* ── Los botones ── */
+.fila {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.1rem;
+}
+
+.fila__hueco {
+  flex: 1;
+}
+
+.boton {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.92;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
+
+  svg {
+    width: 24px;
+    height: 24px;
+    fill: currentColor;
+    filter: drop-shadow(0 0 2px rgba(#000, 0.35));
+    transition: transform 0.25s ease;
+  }
+
+  &:hover {
+    opacity: 1;
+    background-color: rgba(#fff, 0.1);
+  }
+
+  @include focus-ring($cream);
+}
+
+.boton--salto span {
+  position: absolute;
+  top: 55%;
+  left: 50%;
+  font-size: 0.5rem;
+  font-weight: 700;
+  transform: translate(-50%, -50%);
+}
+
+.boton--espejo svg {
+  transform: scaleX(-1);
+}
+
+.boton--girado svg {
+  transform: rotate(30deg);
+}
+
+.boton__marca {
+  position: absolute;
+  top: 5px;
+  right: 1px;
+  padding: 0 0.2rem;
+  border-radius: 4px;
+  background-color: $rose;
+  font-size: 0.55rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.volumen {
+  display: flex;
+  align-items: center;
+}
+
+.volumen__nivel {
+  width: 0;
+  height: 4px;
+  margin: 0;
+  opacity: 0;
+  appearance: none;
+  border-radius: 2px;
+  background: linear-gradient(to right, #fff var(--nivel), rgba(#fff, 0.3) var(--nivel));
+  cursor: pointer;
+  transition: width 0.2s ease, opacity 0.2s ease, margin 0.2s ease;
+
+  &::-webkit-slider-thumb {
+    width: 12px;
+    height: 12px;
+    appearance: none;
+    border-radius: 50%;
+    background-color: #fff;
+  }
+
+  &::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border: none;
+    border-radius: 50%;
+    background-color: #fff;
+  }
+}
+
+.volumen:hover .volumen__nivel,
+.volumen:focus-within .volumen__nivel {
+  width: 64px;
+  margin-right: 0.5rem;
+  opacity: 1;
+}
+
+.tiempo {
+  margin-left: 0.4rem;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  text-shadow: 0 0 2px rgba(#000, 0.5);
+}
+
+.tiempo__total {
+  opacity: 0.75;
+}
+
+/* En el teléfono el volumen es el de los botones del aparato. */
+@media (hover: none) {
+  .volumen__nivel {
+    display: none;
+  }
+}
+
+@media (max-width: 420px) {
+  .boton--salto,
+  .boton--pip {
+    display: none;
+  }
+}

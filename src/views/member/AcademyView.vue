@@ -7,12 +7,13 @@
  * la estructura ya se vendió, así que ocultarla la dejaría creyendo que compró
  * menos de lo que compró.
  */
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useBodyScrollLock } from '@/composables/useBodyScroll'
 import CldImage from '@/components/ui/CldImage.vue'
 import BaseSelect from '@/components/ui/BaseSelect.vue'
 import MisRetos from '@/components/member/MisRetos.vue'
+import VideoPlayer from '@/components/ui/video/VideoPlayer.vue'
 import CountdownCard from '@/components/member/CountdownCard.vue'
 import courseService, { type CursoAlumna } from '@/services/courseService'
 import perksService from '@/services/perksService'
@@ -58,19 +59,31 @@ function avanceDe(courseId: string) {
 }
 
 /* ── El video que se está viendo ────────────────────────────────────────── */
-type Reproduciendo = { lessonId: string; title: string; embedUrl: string }
+type Reproduciendo = {
+  lessonId: string
+  title: string
+  embedUrl: string
+  hlsUrl: string | null
+  thumbnail: string | null
+  seconds: number
+}
 
 const viendo = ref<Reproduciendo | null>(null)
-const marco = ref<HTMLIFrameElement | null>(null)
 const marcando = ref(false)
-const { terminado, seguir, soltar } = useVideoProgress()
+const { terminado, seguir, soltar, reportar, terminar, enlazar } = useVideoProgress()
 
-async function ver(curso: CursoAlumna, leccion: { id: string; title: string; embedUrl: string | null; seconds: number }) {
+function ver(curso: CursoAlumna, leccion: CursoAlumna['lessons'][number]) {
   if (!leccion.embedUrl) return
   soltar()
-  viendo.value = { lessonId: leccion.id, title: leccion.title, embedUrl: leccion.embedUrl }
-  await nextTick()
-  seguir(marco.value, curso.id, leccion.id, leccion.seconds)
+  viendo.value = {
+    lessonId: leccion.id,
+    title: leccion.title,
+    embedUrl: leccion.embedUrl,
+    hlsUrl: leccion.hlsUrl ?? null,
+    thumbnail: leccion.thumbnail ?? null,
+    seconds: leccion.seconds,
+  }
+  seguir(null, curso.id, leccion.id, leccion.seconds)
 }
 
 /**
@@ -213,6 +226,8 @@ function abrir(curso: CursoAlumna) {
   if (curso.estado !== 'abierto') return
   abierto.value = curso
   viendo.value = null
+  // La bienvenida también guarda por dónde va, igual que las clases.
+  if (curso.welcomeVideo) seguir(null, curso.id, 'welcome', curso.welcomeVideo.seconds ?? 0)
 }
 
 function cerrar() {
@@ -426,14 +441,17 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', alVolver)
 
           <!-- El reproductor: la clase elegida, o la bienvenida por defecto -->
           <div v-if="viendo || abierto.welcomeVideo" class="video">
-            <iframe
-              ref="marco"
+            <VideoPlayer
               :key="viendo?.lessonId || 'welcome'"
-              :src="viendo?.embedUrl || abierto.welcomeVideo!.embedUrl"
-              loading="lazy"
-              allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen"
-              allowfullscreen
-              :title="viendo?.title || 'Video de bienvenida'"
+              :src="viendo ? viendo.hlsUrl : abierto.welcomeVideo!.hlsUrl"
+              :embed-url="viendo?.embedUrl || abierto.welcomeVideo!.embedUrl"
+              :poster="viendo ? viendo.thumbnail : abierto.welcomeVideo!.thumbnail"
+              :desde="viendo ? viendo.seconds : (abierto.welcomeVideo!.seconds ?? 0)"
+              :titulo="viendo?.title || 'Video de bienvenida'"
+              :autoplay="Boolean(viendo)"
+              @progreso="reportar"
+              @terminado="terminar"
+              @marco="enlazar"
             />
           </div>
 
@@ -921,7 +939,8 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', alVolver)
 
 .modal__card {
   position: relative;
-  width: min(620px, 100%);
+  /* Ancho para que la clase se vea grande: es a lo que se entra. */
+  width: min(880px, 100%);
   max-height: 90vh;
   overflow-y: auto;
   padding: clamp(1.3rem, 4vw, 2.2rem);
@@ -974,20 +993,7 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', alVolver)
 }
 
 .video {
-  position: relative;
   margin-bottom: $space-md;
-  padding-top: 56.25%;
-  overflow: hidden;
-  border-radius: $radius-md;
-  background-color: $ink;
-
-  iframe {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    border: 0;
-  }
 }
 
 .modal__guia {

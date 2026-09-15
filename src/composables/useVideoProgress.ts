@@ -81,7 +81,23 @@ export function useVideoProgress() {
     }
   }
 
-  /** Empieza a seguir un video. `iframe` es el marco ya montado. */
+  /** El reproductor propio avisa directo, sin mensajes entre marcos. */
+  function reportar(s: number, d: number | null) {
+    segundos.value = s
+    if (d) duracion.value = d
+  }
+
+  function terminar() {
+    terminado.value = true
+    guardar(true)
+  }
+
+  /** Si se cayó al reproductor de Bunny, se escucha ese marco. */
+  function enlazar(iframe: HTMLIFrameElement | null) {
+    marco = iframe
+  }
+
+  /** Empieza a seguir un video. `iframe` es el marco, si lo hay. */
   function seguir(iframe: HTMLIFrameElement | null, curso: string, leccion: string, desde = 0) {
     marco = iframe
     courseId = curso
@@ -105,5 +121,5 @@ export function useVideoProgress() {
 
   onBeforeUnmount(soltar)
 
-  return { segundos, duracion, terminado, seguir, soltar, guardar }
+  return { segundos, duracion, terminado, seguir, soltar, guardar, reportar, terminar, enlazar }
 }

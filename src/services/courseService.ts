@@ -29,13 +29,22 @@ export interface CursoAlumna {
   notas?: Array<{ titulo: string; cuerpo: string[] }>
   /** A dónde lleva, si el curso es una puerta a otra pantalla. */
   enlace?: string | null
-  welcomeVideo: { embedUrl: string; thumbnail: string | null; completed: boolean } | null
+  /** `hlsUrl` va al reproductor propio; `embedUrl` es el de Bunny, de respaldo. */
+  welcomeVideo: {
+    embedUrl: string
+    hlsUrl?: string
+    thumbnail: string | null
+    seconds?: number
+    completed: boolean
+  } | null
   lessons: Array<{
     id: string
     title: string
     summary: string | null
     order: number
     embedUrl: string | null
+    hlsUrl?: string | null
+    thumbnail?: string | null
     fileUrl: string | null
     durationSeconds: number | null
     /** Dónde se quedó y si ya la terminó. */
