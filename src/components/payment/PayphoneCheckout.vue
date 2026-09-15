@@ -86,7 +86,7 @@ watch(isOpen, async (open) => {
 async function submit(contact: CheckoutContact) {
   const transaction = buildTransaction({
     planId: selected.value.id,
-    amount: PRICES.presale,
+    amount: PRICES.regular,
     reference: `Método SK · ${selected.value.name} · ${contact.name}`,
     email: contact.email,
   })
@@ -98,7 +98,7 @@ async function submit(contact: CheckoutContact) {
    * calidad del emparejamiento— aunque después no complete el pago.
    */
   trackMeta('Lead', {
-    value: PRICES.presale / 100,
+    value: PRICES.regular / 100,
     contentIds: [selected.value.id],
     contentName: selected.value.name,
     contact: { name: contact.name, email: contact.email, phone: contact.phone },
@@ -146,7 +146,7 @@ async function submit(contact: CheckoutContact) {
    * enseguida y una petición normal se cancelaría al descargar el documento.
    */
   trackMeta('AddPaymentInfo', {
-    value: PRICES.presale / 100,
+    value: PRICES.regular / 100,
     contentIds: [selected.value.id],
     contentName: selected.value.name,
     contact: { name: contact.name, email: contact.email, phone: contact.phone },
@@ -194,10 +194,9 @@ async function submit(contact: CheckoutContact) {
             </Transition>
 
             <p class="checkout__amount">
-              {{ formatUsd(PRICES.presale) }}
-              <s>{{ formatUsd(PRICES.regular) }}</s>
+              {{ formatUsd(PRICES.regular) }}
             </p>
-            <p class="checkout__note">Un solo pago. Acceso a los 3 meses del reto.</p>
+            <p class="checkout__note">Un solo pago por los 3 meses del reto.</p>
 
             <p v-if="PAYMENT_MODE === 'simulation'" class="checkout__demo">
               Modo demostración — no se realizará ningún cobro.

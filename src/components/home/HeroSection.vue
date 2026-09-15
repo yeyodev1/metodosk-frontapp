@@ -84,9 +84,9 @@ onMounted(async () => {
       </div>
 
       <p class="hero__price">
-        Pre-venta
-        <strong>{{ formatUsd(PRICING.presale) }}</strong>
-        <s>{{ formatUsd(PRICING.regular) }}</s>
+        Un solo pago
+        <strong>{{ formatUsd(PRICING.regular) }}</strong>
+        por 3 meses
       </p>
     </div>
 

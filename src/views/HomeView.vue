@@ -28,7 +28,7 @@ import { trackMeta } from '@/composables/useMetaPixel'
  */
 onMounted(() => {
   trackMeta('ViewContent', {
-    value: PRICES.presale / 100,
+    value: PRICES.regular / 100,
     contentIds: CHALLENGES.map((challenge) => challenge.id),
     contentName: 'Reto Método SK — 3 meses',
   })

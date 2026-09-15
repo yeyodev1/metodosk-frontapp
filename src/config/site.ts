@@ -263,7 +263,7 @@ export const COMMUNITY = {
 }
 
 export const PRICING = {
-  eyebrow: 'Pre-venta abierta',
+  eyebrow: 'Inscripciones abiertas',
   title: 'Un solo pago. Los 3 meses completos.',
   presale: PRICES.presale,
   regular: PRICES.regular,
@@ -287,7 +287,6 @@ export const PRICING = {
     '3 masterclasses nutricionales, una por mes',
     'Videos educativos y recomendaciones de suplementación',
     'Guía del Método SK para registrar tu avance',
-    'Grupo exclusivo de pre-venta en Telegram · se dará acceso próximamente',
   ],
   guarantees: ['Pago seguro con PayPhone', 'Visa · Mastercard · Diners · Discover'],
 }
@@ -321,8 +320,8 @@ export const FAQ = {
       a: 'Apenas se confirma tu pago recibes el acceso en tu correo, junto con las instrucciones para arrancar el reto.',
     },
     {
-      q: '¿El precio de pre-venta se mantiene?',
-      a: `No. La pre-venta es por cupos limitados: al llenarse, el reto vuelve a su precio de $${PRICES.regular / 100}.`,
+      q: '¿Cuánto cuesta y cómo se paga?',
+      a: `$${PRICES.regular / 100} en un solo pago, y tienes los 3 meses completos del reto. Sin mensualidades ni cobros después.`,
     },
   ],
 }

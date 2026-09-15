@@ -38,7 +38,7 @@ const goHome = () => router.push({ name: 'Home' })
       <div class="notfound__actions">
         <BaseButton variant="light" size="lg" @click="goHome">Volver al inicio</BaseButton>
         <BaseButton variant="light" size="lg" @click="open()">
-          {{ PRICING.cta }} · {{ formatUsd(PRICING.presale) }}
+          {{ PRICING.cta }} · {{ formatUsd(PRICING.regular) }}
         </BaseButton>
       </div>
 

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import SectionHeading from '@/components/ui/SectionHeading.vue'
 import { useCheckout } from '@/composables/useCheckout'
@@ -7,12 +6,6 @@ import { formatUsd } from '@/config/payment'
 import { CHALLENGES, PRICING } from '@/config/site'
 
 const { selectedId, select, open } = useCheckout()
-
-const remaining = computed(() => PRICING.spots.total - PRICING.spots.taken)
-const filled = computed(() =>
-  Math.round((PRICING.spots.taken / PRICING.spots.total) * 100),
-)
-const saving = computed(() => PRICING.regular - PRICING.presale)
 </script>
 
 <template>
@@ -44,22 +37,9 @@ const saving = computed(() => PRICING.regular - PRICING.presale)
         </div>
 
         <aside class="pricing__box">
-          <p class="pricing__regular">
-            Precio real <s>{{ formatUsd(PRICING.regular) }}</s>
-          </p>
-          <p class="pricing__amount">{{ formatUsd(PRICING.presale) }}</p>
-          <p class="pricing__save">Ahorras {{ formatUsd(saving) }} en la pre-venta</p>
-          <p class="pricing__deadline">{{ PRICING.deadline }}</p>
-
-          <div class="spots">
-            <div class="spots__bar" role="presentation">
-              <span class="spots__fill" :style="{ width: `${filled}%` }" />
-            </div>
-            <p class="spots__text">
-              Quedan <strong>{{ remaining }}</strong> de {{ PRICING.spots.total }} cupos a
-              este precio
-            </p>
-          </div>
+          <p class="pricing__regular">Un solo pago</p>
+          <p class="pricing__amount">{{ formatUsd(PRICING.regular) }}</p>
+          <p class="pricing__save">por los 3 meses completos</p>
 
           <BaseButton size="lg" block @click="open()">{{ PRICING.cta }}</BaseButton>
 

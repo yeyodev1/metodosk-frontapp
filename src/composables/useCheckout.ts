@@ -47,7 +47,7 @@ export function useCheckout() {
      * nuevo tendría que acordarse de reportarlo.
      */
     trackMeta('InitiateCheckout', {
-      value: PRICES.presale / 100,
+      value: PRICES.regular / 100,
       contentIds: id ? [id] : CHALLENGES.map((c) => c.id),
       contentName: id ? (CHALLENGES.find((c) => c.id === id)?.name ?? null) : 'Reto Método SK',
       contact: datos ? { name: datos.name, email: datos.email } : undefined,

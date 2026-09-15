@@ -22,10 +22,8 @@ const background = cldImage(PHOTO.finalCta.id, { width: 1600, ratio: '16:9' })
       <BaseButton variant="light" size="lg" @click="open()">{{ FINAL_CTA.cta }}</BaseButton>
 
       <p class="final__price">
-        Pre-venta {{ formatUsd(PRICES.presale) }} · precio real
-        {{ formatUsd(PRICES.regular) }}
+        {{ formatUsd(PRICES.regular) }} · un solo pago por los 3 meses
       </p>
-      <p class="final__deadline">Solo hasta el 14 de septiembre, 23:59 hora de Ecuador</p>
     </div>
   </section>
 </template>
