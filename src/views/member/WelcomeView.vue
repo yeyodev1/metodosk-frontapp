@@ -18,6 +18,7 @@ import CreatorsCard from '@/components/member/CreatorsCard.vue'
 import PresaleExplainer from '@/components/member/PresaleExplainer.vue'
 import CountdownCard from '@/components/member/CountdownCard.vue'
 import PerksCard from '@/components/member/PerksCard.vue'
+import TiendaCard from '@/components/member/TiendaCard.vue'
 import perksService, { type Beneficios } from '@/services/perksService'
 import settingsService, { type Vsl } from '@/services/settingsService'
 import { useSessionStore } from '@/stores/session'
@@ -133,6 +134,9 @@ const PRIMEROS_PASOS = [
         <CreatorsCard />
 
         <PerksCard v-if="beneficios" :beneficios="beneficios" />
+
+        <!-- El primer día es cuando se sale a comprar: la tienda va acá, en corto. -->
+        <TiendaCard compacta />
 
         <section class="tarjeta tarjeta--oscura">
           <h2 class="tarjeta__title"><FaIcon :icon="['fab', 'whatsapp']" /> ¿Algo no cuadra?</h2>

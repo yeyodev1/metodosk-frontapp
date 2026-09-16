@@ -17,6 +17,7 @@
  */
 import { GRUPOS_RECURSOS } from '@/config/recursos'
 import TelegramCard from '@/components/member/TelegramCard.vue'
+import TiendaCard from '@/components/member/TiendaCard.vue'
 </script>
 
 <template>
@@ -31,6 +32,9 @@ import TelegramCard from '@/components/member/TelegramCard.vue'
     </header>
 
     <TelegramCard />
+
+    <!-- Antes de la lista: acá es donde se pregunta dónde comprar cada cosa. -->
+    <TiendaCard />
 
     <section v-for="grupo in GRUPOS_RECURSOS" :key="grupo.id" class="grupo">
       <div class="grupo__head">

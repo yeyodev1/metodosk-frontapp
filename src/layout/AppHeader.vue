@@ -14,6 +14,7 @@ const LINKS = [
   { href: '#retos', label: 'Los retos' },
   { href: '#incluye', label: 'Qué incluye' },
   { href: '#nutricion', label: 'Nutrición' },
+  { href: '#tienda', label: 'La tienda' },
   { href: '#precio', label: 'Precio' },
   { href: '#faq', label: 'Preguntas' },
 ] as const

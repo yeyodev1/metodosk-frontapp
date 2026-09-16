@@ -10,6 +10,7 @@ import HeroSection from '@/components/home/HeroSection.vue'
 import PreventaBar from '@/components/home/PreventaBar.vue'
 import IncludesSection from '@/components/home/IncludesSection.vue'
 import NutritionSection from '@/components/home/NutritionSection.vue'
+import TiendaSection from '@/components/home/TiendaSection.vue'
 import PricingSection from '@/components/home/PricingSection.vue'
 import PromiseSection from '@/components/home/PromiseSection.vue'
 import TimelineSection from '@/components/home/TimelineSection.vue'
@@ -45,6 +46,7 @@ onMounted(() => {
       <ChallengesSection />
       <IncludesSection />
       <NutritionSection />
+      <TiendaSection />
       <TimelineSection />
       <ForWhoSection />
       <CommunitySection />

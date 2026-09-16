@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { BRAND, CREATORS } from '@/config/site'
+import { TIENDA } from '@/config/tienda'
 
 const year = new Date().getFullYear()
 </script>
@@ -22,6 +23,7 @@ const year = new Date().getFullYear()
         >
           {{ creator.handle }}
         </a>
+        <a :href="TIENDA.url" target="_blank" rel="noopener">La tienda de Scarlett</a>
         <a :href="BRAND.whatsapp" target="_blank" rel="noopener">WhatsApp</a>
         <a :href="`mailto:${BRAND.email}`">{{ BRAND.email }}</a>
       </nav>

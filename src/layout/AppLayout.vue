@@ -19,8 +19,10 @@ import OnboardingFlow from '@/components/member/OnboardingFlow.vue'
 import AvisoVersion from '@/components/ui/AvisoVersion.vue'
 import PresaleBand from '@/components/member/PresaleBand.vue'
 import TelegramBand from '@/components/member/TelegramBand.vue'
+import TiendaBand from '@/components/member/TiendaBand.vue'
 import '@/plugins/icons'
 import { BRAND } from '@/config/site'
+import { TIENDA } from '@/config/tienda'
 import communityService from '@/services/communityService'
 
 const route = useRoute()
@@ -94,6 +96,10 @@ function salir() {
       </nav>
 
       <div class="side__foot">
+        <a class="side__tienda" :href="TIENDA.url" target="_blank" rel="noopener">
+          <FaIcon :icon="['fab', 'amazon']" /> {{ TIENDA.eyebrow }}
+        </a>
+
         <a class="side__wa" :href="BRAND.whatsapp" target="_blank" rel="noopener">
           <FaIcon :icon="['fab', 'whatsapp']" /> Escríbenos por WhatsApp
         </a>
@@ -124,6 +130,10 @@ function salir() {
       <!-- El grupo ya abrió: se dice en toda la app, no solo en Recursos.
            La administración también la ve: es como revisa lo que ven ellas. -->
       <TelegramBand />
+
+      <!-- La tienda de Scarlett: se ve en toda la app, no solo en Recursos.
+           Se puede cerrar y vuelve a las dos semanas (ver TiendaBand). -->
+      <TiendaBand />
 
       <!-- Vista previa: la administración sabe dónde está y cómo volver -->
       <Transition name="franja">
@@ -381,6 +391,27 @@ $side-w: 250px;
   gap: 0.8rem;
   padding-top: $space-sm;
   border-top: 1px solid rgba($cream, 0.12);
+}
+
+/* El enlace a la tienda queda fijo en el pie de la barra: sin depender de
+   que la franja de arriba siga abierta, siempre hay una puerta a la tienda. */
+.side__tienda {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: $radius-sm;
+  background-color: rgba($rose-soft, 0.14);
+  font-size: $text-xs;
+  font-weight: 600;
+  color: $cream;
+  transition: background-color 0.24s $ease;
+
+  &:hover {
+    background-color: rgba($rose-soft, 0.24);
+  }
+
+  @include focus-ring($rose-soft);
 }
 
 .side__wa {
