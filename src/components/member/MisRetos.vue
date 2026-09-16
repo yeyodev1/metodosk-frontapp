@@ -65,8 +65,8 @@ function comprar(c: Challenge) {
         </p>
         <p class="retos__sub">
           <template v-if="exclusivo">
-            Scarlet y Karen te dieron acceso exclusivo a los dos retos, con el grupo VIP incluido.
-            Abajo está el material de ambos, marcado por reto.
+            Scarlet y Karen te dieron acceso exclusivo al reto, con el grupo VIP incluido.
+            Abajo está todo tu material.
           </template>
           <template v-else-if="tengoLosDos">
             Tienes los dos retos. Abajo está el material de ambos, marcado por reto.

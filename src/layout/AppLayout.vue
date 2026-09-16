@@ -21,8 +21,8 @@ import PresaleBand from '@/components/member/PresaleBand.vue'
 import TelegramBand from '@/components/member/TelegramBand.vue'
 import TiendaBand from '@/components/member/TiendaBand.vue'
 import '@/plugins/icons'
-import { BRAND } from '@/config/site'
 import { TIENDA } from '@/config/tienda'
+import { BOT_URL_GENERICO } from '@/config/telegram'
 import communityService from '@/services/communityService'
 
 const route = useRoute()
@@ -100,8 +100,8 @@ function salir() {
           <FaIcon :icon="['fab', 'amazon']" /> {{ TIENDA.eyebrow }}
         </a>
 
-        <a class="side__wa" :href="BRAND.whatsapp" target="_blank" rel="noopener">
-          <FaIcon :icon="['fab', 'whatsapp']" /> Escríbenos por WhatsApp
+        <a class="side__wa" :href="BOT_URL_GENERICO" target="_blank" rel="noopener">
+          <FaIcon :icon="['fab', 'telegram']" /> Escríbenos por Telegram
         </a>
 
         <div class="side__user">
@@ -279,10 +279,7 @@ $side-w: 250px;
   flex-direction: column;
   gap: $space-md;
   width: $side-w;
-  // Con la barra fija a toda la altura, en una ventana baja el pie quedaba
-  // fuera de la pantalla y no había forma de llegar a "Cerrar sesión".
-  overflow-y: auto;
-  overscroll-behavior: contain;
+  overflow: hidden;
   padding: 1.4rem 1.1rem;
   padding-bottom: max(1.4rem, env(safe-area-inset-bottom));
   background-color: $ink;
@@ -300,6 +297,7 @@ $side-w: 250px;
 }
 
 .side__brand {
+  flex: none;
   display: flex;
   align-items: center;
   gap: 0.55rem;
@@ -321,11 +319,26 @@ $side-w: 250px;
   font-style: italic;
 }
 
+/**
+ * Lo único que se desplaza.
+ *
+ * `min-height: 0` es lo que lo hace posible: sin eso un hijo flex no baja de
+ * su altura de contenido y sería la barra entera la que se desplaza, dejando
+ * la marca y el pie fuera de la pantalla.
+ */
 .side__nav {
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* Hueco para la barra de desplazamiento: sin esto el texto salta al aparecer. */
+  scrollbar-width: thin;
+  scrollbar-color: rgba($cream, 0.2) transparent;
+  margin-inline: -0.25rem;
+  padding-inline: 0.25rem;
 }
 
 .side__link {
@@ -386,6 +399,7 @@ $side-w: 250px;
 }
 
 .side__foot {
+  flex: none;
   display: flex;
   flex-direction: column;
   gap: 0.8rem;

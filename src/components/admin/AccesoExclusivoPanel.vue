@@ -2,7 +2,7 @@
 /**
  * Dar acceso exclusivo VIP sin que haya compra.
  *
- * Quedan como quien pagó en pre-venta —los dos retos y el grupo VIP— y les
+ * Quedan como quien pagó en pre-venta —SK Recomposición y el grupo VIP— y les
  * llega el correo con su usuario y contraseña. Lo corre el servidor porque la
  * llave de Resend solo vive ahí.
  *
@@ -44,8 +44,8 @@ async function dar() {
     <div class="vip__texto">
       <h2 class="vip__title">Acceso exclusivo VIP</h2>
       <p class="vip__sub">
-        Los dos retos y el grupo VIP, como si hubiera pagado en pre-venta. Le llega un correo de
-        acceso exclusivo con su usuario y contraseña.
+        SK Recomposición y el grupo VIP, como si hubiera pagado en pre-venta. Le llega un correo
+        de acceso exclusivo con su usuario y contraseña.
       </p>
     </div>
 
