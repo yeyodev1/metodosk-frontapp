@@ -82,10 +82,16 @@ async function onSubmit() {
       </BaseButton>
     </form>
 
-    <p class="alt">
-      ¿Ya compraste y aún no creas tu contraseña?
-      <RouterLink to="/registro">Créala aquí</RouterLink>
-    </p>
+    <!-- Quien pagó y no recibió el correo no necesita esperarlo: su compra ya
+         está guardada y con su correo le basta para crear la contraseña. -->
+    <div class="aviso">
+      <p class="aviso__title">¿Pagaste y no te llegó el correo?</p>
+      <p class="aviso__text">
+        No lo necesitas. Busca tu compra con el correo que usaste en PayPhone y crea tu contraseña
+        en el momento. (Revisa también spam: a Hotmail y Outlook suele caer ahí.)
+      </p>
+      <BaseButton href="/registro" variant="ghost" block>Buscar mi compra</BaseButton>
+    </div>
   </AuthShell>
 </template>
 

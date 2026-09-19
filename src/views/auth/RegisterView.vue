@@ -80,9 +80,9 @@ function volver() {
 
 <template>
   <AuthShell
-    eyebrow="Crear contraseña"
+    eyebrow="Busca tu compra"
     title="Tu cuenta nace con tu compra"
-    lead="Escribe el correo que usaste al pagar y te decimos qué sigue."
+    lead="Escribe el correo que usaste al pagar. Si no te llegó nuestro correo, no importa: acá mismo creas tu contraseña."
     quote="El acceso no se registra. Se compra."
     quote-foot="Si ya pagaste, tu cuenta ya existe: acá solo le pones contraseña."
     photo="metodosk/sk-12"

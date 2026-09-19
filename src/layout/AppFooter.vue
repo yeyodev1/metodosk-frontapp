@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { RouterLink } from 'vue-router'
 import { BRAND, CREATORS } from '@/config/site'
 import { TIENDA } from '@/config/tienda'
 
@@ -14,6 +15,8 @@ const year = new Date().getFullYear()
       </div>
 
       <nav class="footer__links" aria-label="Enlaces">
+        <RouterLink to="/login">Ya compré · Entrar</RouterLink>
+        <RouterLink to="/registro">No me llegó mi acceso</RouterLink>
         <a
           v-for="creator in CREATORS"
           :key="creator.handle"
