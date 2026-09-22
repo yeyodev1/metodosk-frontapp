@@ -177,6 +177,19 @@ const routes: Array<RouteRecordRaw> = [
         meta: { title: 'Compras — Método SK', requiresAuth: true, requiresAdmin: true },
       },
       {
+        // Las fotos de avance de cada alumna, y los comentarios del equipo.
+        path: 'admin/avances',
+        name: 'AdminAvances',
+        component: () => import('../views/admin/AdminAvancesView.vue'),
+        meta: { title: 'Avances — Método SK', requiresAuth: true, requiresAdmin: true },
+      },
+      {
+        path: 'admin/avances/:id',
+        name: 'AdminAlumnaAvance',
+        component: () => import('../views/admin/AdminAlumnaAvanceView.vue'),
+        meta: { title: 'Avance de alumna — Método SK', requiresAuth: true, requiresAdmin: true },
+      },
+      {
         path: 'admin/comentarios',
         name: 'AdminComments',
         component: () => import('../views/admin/AdminCommentsView.vue'),
