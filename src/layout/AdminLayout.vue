@@ -18,8 +18,16 @@ const router = useRouter()
 const session = useSessionStore()
 const abierto = ref(false)
 
+// /admin es el inicio y prefijo de todo: solo cuenta como activo exacto. Las
+// demás secciones siguen activas en sus subpáginas (la ficha de una alumna).
+function activo(to: string) {
+  const ruta = router.currentRoute.value.path
+  return to === '/admin' ? ruta === to : ruta === to || ruta.startsWith(`${to}/`)
+}
+
 const ENLACES = [
   { to: '/admin', label: 'Compras', hint: 'Quién compró y cuánto', icono: 'bag-shopping' },
+  { to: '/admin/avances', label: 'Avances', hint: 'Sus fotos y tus comentarios', icono: 'camera' },
   { to: '/admin/cursos', label: 'Cursos', hint: 'La ruta del método y sus videos', icono: 'film' },
   { to: '/admin/comentarios', label: 'Comentarios', hint: 'Lo que preguntan las alumnas', icono: 'comments' },
 ]
@@ -48,7 +56,7 @@ function salir() {
           :key="e.to"
           :to="e.to"
           class="side__link"
-          :class="{ 'side__link--active': $route.path === e.to }"
+          :class="{ 'side__link--active': activo(e.to) }"
           @click="abierto = false"
         >
           <span class="side__link-icono"><FaIcon :icon="e.icono" /></span>
