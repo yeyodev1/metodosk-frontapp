@@ -16,6 +16,7 @@ import NextShot from '@/components/progress/NextShot.vue'
 import PhotoUploader from '@/components/progress/PhotoUploader.vue'
 import BeforeAfter from '@/components/progress/BeforeAfter.vue'
 import Measurements from '@/components/progress/Measurements.vue'
+import NotasEquipo from '@/components/progress/NotasEquipo.vue'
 import '@/plugins/icons'
 
 const session = useSessionStore()
@@ -76,6 +77,10 @@ onMounted(async () => {
       próxima toma, el reloj se rearma hacia la fecha nueva.
     -->
     <div v-else-if="estado" class="cuerpo">
+      <!-- Lo que le escribió el equipo va primero: es a donde la trae el correo -->
+      <div class="bloque" :style="{ '--i': 0 }">
+        <NotasEquipo />
+      </div>
       <div class="bloque" :style="{ '--i': 0 }">
         <NextShot :key="estado.proximaToma ?? 'inicio'" :estado="estado" @subir="irAlUploader" />
       </div>
@@ -142,6 +147,11 @@ onMounted(async () => {
 .bloque {
   animation: entrar 0.5s $ease both;
   animation-delay: calc(var(--i, 0) * 90ms);
+}
+
+/* Sin comentarios del equipo la sección no se pinta: que no deje un hueco */
+.bloque:empty {
+  display: none;
 }
 
 /* Al hacer scroll hasta acá, que no quede pegado al borde de arriba. */
