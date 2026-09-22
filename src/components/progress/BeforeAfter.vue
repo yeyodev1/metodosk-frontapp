@@ -13,7 +13,8 @@
 import { ref } from 'vue'
 import { ETIQUETA_ANGULO, type Comparativa } from '@/services/onboardingService'
 
-defineProps<{ comparativa: Comparativa[] }>()
+/** `deAdmin`: la mira el equipo en la ficha de una alumna, no ella misma. */
+defineProps<{ comparativa: Comparativa[]; deAdmin?: boolean }>()
 
 /** Dónde está el corte de cada tarjeta, en porcentaje. */
 const corte = ref<Record<string, number>>({})
@@ -42,15 +43,18 @@ function tiempo(dias: number) {
     <header class="ad__head">
       <h2 class="ad__title"><FaIcon icon="images" /> Antes y después</h2>
       <p class="ad__sub">
-        Tu primera foto contra la más reciente. Arrastra la barra para pasar de una a la otra.
+        {{ deAdmin ? 'Su primera foto' : 'Tu primera foto' }} contra la más reciente. Arrastra la barra para pasar de una a la otra.
       </p>
     </header>
 
     <!-- Todavía no hay con qué comparar: se dice, no se esconde -->
     <div v-if="!comparativa.length" class="ad__vacio">
       <span class="ad__vacio-icono"><FaIcon icon="camera" /></span>
-      <p class="ad__vacio-title">Falta tu segunda toma</p>
-      <p class="ad__vacio-texto">
+      <p class="ad__vacio-title">{{ deAdmin ? 'Todavía tiene una sola toma' : 'Falta tu segunda toma' }}</p>
+      <p v-if="deAdmin" class="ad__vacio-texto">
+        Cuando suba la siguiente, acá aparece su antes y después.
+      </p>
+      <p v-else class="ad__vacio-texto">
         Con una sola foto no hay comparación. Cuando subas la del próximo mes, acá vas a poder ver
         las dos juntas.
       </p>
@@ -65,12 +69,12 @@ function tiempo(dias: number) {
 
         <div class="par__marco">
           <!-- Debajo: el después. Encima, recortado: el antes. -->
-          <img class="par__foto" :src="c.despues.url" alt="Tu foto más reciente" />
+          <img class="par__foto" :src="c.despues.url" :alt="deAdmin ? 'Su foto más reciente' : 'Tu foto más reciente'" />
           <div
             class="par__capa"
             :style="{ clipPath: `inset(0 ${100 - posicion(c.angulo)}% 0 0)` }"
           >
-            <img class="par__foto" :src="c.antes.url" alt="Tu primera foto" />
+            <img class="par__foto" :src="c.antes.url" :alt="deAdmin ? 'Su primera foto' : 'Tu primera foto'" />
           </div>
 
           <span class="par__linea" :style="{ left: `${posicion(c.angulo)}%` }" aria-hidden="true">
@@ -92,7 +96,7 @@ function tiempo(dias: number) {
             min="0"
             max="100"
             :value="posicion(c.angulo)"
-            :aria-label="`Comparar tu foto ${ETIQUETA_ANGULO[c.angulo].toLowerCase()}`"
+            :aria-label="`Comparar ${deAdmin ? 'su' : 'tu'} foto ${ETIQUETA_ANGULO[c.angulo].toLowerCase()}`"
             @input="mover(c.angulo, ($event.target as HTMLInputElement).value)"
           />
         </div>
