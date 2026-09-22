@@ -46,6 +46,10 @@ import {
   faArrowDown,
   faPlus,
   faChevronDown,
+  faEnvelope,
+  faCheckDouble,
+  faExpand,
+  faMagnifyingGlass,
 } from '@fortawesome/free-solid-svg-icons'
 import { faWhatsapp, faTelegram, faInstagram, faAmazon } from '@fortawesome/free-brands-svg-icons'
 
@@ -90,6 +94,10 @@ library.add(
   faArrowDown,
   faPlus,
   faChevronDown,
+  faEnvelope,
+  faCheckDouble,
+  faExpand,
+  faMagnifyingGlass,
   faWhatsapp,
   faTelegram,
   faInstagram,
