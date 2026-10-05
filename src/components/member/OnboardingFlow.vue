@@ -7,10 +7,9 @@
  * quedarse abierto solo; que ella diga que lo vio es lo único que significa
  * algo.
  *
- * Las fotos no se retienen a cambio de nada: ya pagó, el acceso está abierto y
- * "Completar luego" funciona de verdad. Un onboarding que secuestra el acceso
- * se convierte en un peaje, y quien lo cruza a la fuerza sube cualquier foto
- * con tal de pasar.
+ * Las fotos de partida son obligatorias: con "Completar luego" la mayoría no
+ * las subía nunca, y sin el punto cero no hay antes y después que mostrarle.
+ * El video sí se puede dejar para después.
  */
 import { computed, onMounted, ref } from 'vue'
 import onboardingService, {
@@ -34,15 +33,18 @@ const abierto = computed(() => Boolean(estado.value) && !estado.value!.done)
 
 const progreso = computed(() => (paso.value === 1 ? 50 : 100))
 
-/** Foto ya subida hoy, por ángulo. */
+/** La última foto de ese ángulo, de cualquier día: si ya la tenía, no se le vuelve a pedir. */
 function fotoDe(angulo: Angulo) {
-  const hoy = new Date().toDateString()
-  return estado.value?.fotos.find(
-    (f) => f.angulo === angulo && new Date(f.createdAt).toDateString() === hoy,
-  )
+  return estado.value?.ultimas[angulo]
 }
 
-const algunaFoto = computed(() => ANGULOS_PEDIDOS.some((a) => fotoDe(a)))
+/** Solo la de hoy se puede quitar: las anteriores son su histórico. */
+function esDeHoy(angulo: Angulo) {
+  const f = fotoDe(angulo)
+  return Boolean(f) && new Date(f!.createdAt).toDateString() === new Date().toDateString()
+}
+
+const todasLasFotos = computed(() => ANGULOS_PEDIDOS.every((a) => fotoDe(a)))
 
 async function confirmarVideo() {
   guardando.value = true
@@ -84,23 +86,10 @@ async function quitar(angulo: Angulo) {
 }
 
 async function terminar() {
+  if (!todasLasFotos.value) return
   guardando.value = true
   try {
-    // Sin fotos se marca como pospuesto, no como hecho: la diferencia importa
-    // para poder recordárselo después.
-    estado.value = algunaFoto.value
-      ? await onboardingService.estado()
-      : await onboardingService.saltar()
-    emit('listo')
-  } finally {
-    guardando.value = false
-  }
-}
-
-async function completarLuego() {
-  guardando.value = true
-  try {
-    estado.value = await onboardingService.saltar()
+    estado.value = await onboardingService.estado()
     emit('listo')
   } finally {
     guardando.value = false
@@ -141,7 +130,7 @@ onMounted(async () => {
               <span class="barra__relleno" :style="{ width: `${progreso}%` }" />
             </div>
 
-            <button type="button" class="onb__saltar" @click="completarLuego">Saltar</button>
+            <span class="onb__hueco" />
           </header>
 
           <!-- Paso 1: el video -->
@@ -157,7 +146,7 @@ onMounted(async () => {
               <button type="button" class="btn btn--solid" :disabled="guardando" @click="confirmarVideo">
                 <FaIcon icon="check" /> Sí, ya lo vi
               </button>
-              <button type="button" class="btn" @click="completarLuego">Todavía no</button>
+              <button type="button" class="btn" @click="paso = 2">Lo veo después</button>
             </div>
           </div>
 
@@ -187,7 +176,13 @@ onMounted(async () => {
               <div v-for="a in ANGULOS_PEDIDOS" :key="a" class="foto">
                 <div v-if="fotoDe(a)" class="foto__vista">
                   <img :src="fotoDe(a)!.url" :alt="ETIQUETA_ANGULO[a]" />
-                  <button type="button" class="foto__quitar" aria-label="Quitar" @click="quitar(a)">
+                  <button
+                    v-if="esDeHoy(a)"
+                    type="button"
+                    class="foto__quitar"
+                    aria-label="Quitar"
+                    @click="quitar(a)"
+                  >
                     <FaIcon icon="xmark" />
                   </button>
                   <span class="foto__ok"><FaIcon icon="check" /> {{ ETIQUETA_ANGULO[a] }}</span>
@@ -218,14 +213,24 @@ onMounted(async () => {
               medidas.
             </p>
 
+            <p v-if="!todasLasFotos" class="privacidad">
+              <FaIcon icon="circle-question" />
+              Sube las dos fotos para entrar. Son tu punto de partida: sin ellas no hay antes y
+              después.
+            </p>
+
             <p v-if="error" class="onb__error"><FaIcon icon="triangle-exclamation" /> {{ error }}</p>
 
             <div class="onb__acciones">
-              <button type="button" class="btn btn--solid" :disabled="guardando" @click="terminar">
-                {{ algunaFoto ? 'Listo, entrar al reto' : 'Entrar al reto' }}
+              <button
+                type="button"
+                class="btn btn--solid"
+                :disabled="guardando || !todasLasFotos"
+                @click="terminar"
+              >
+                Listo, entrar al reto
                 <FaIcon icon="arrow-right" />
               </button>
-              <button type="button" class="btn" @click="completarLuego">Completar luego</button>
             </div>
           </div>
         </div>
