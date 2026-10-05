@@ -37,8 +37,8 @@ export const PROGRESO = {
 
   /** El bloque de medidas: la cinta métrica, junto a las fotos. */
   medidas: {
-    eyebrow: 'Con la cinta métrica',
-    titulo: 'Tus medidas',
+    eyebrow: 'Balanza y cinta métrica',
+    titulo: 'Tu peso y tus medidas',
     ultimaToma: (fecha: string) => `Última toma: ${fecha}`,
     sinTomas: 'Todavía no has apuntado ninguna.',
     ctaPrimera: 'Apuntar mis medidas',
@@ -51,7 +51,7 @@ export const PROGRESO = {
     },
     form: {
       titulo: 'Apunta lo que mediste hoy',
-      nota: 'Deja en blanco lo que no midas. No hace falta llenar todo.',
+      nota: 'Deja en blanco lo que no midas. Para el peso en libras, toca "kg" y cámbialo a "lb".',
       guardar: 'Guardar toma',
       guardando: 'Guardando…',
       cancelar: 'Cancelar',

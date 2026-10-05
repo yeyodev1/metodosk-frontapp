@@ -37,6 +37,12 @@ const guardando = ref(false)
 const error = ref('')
 const form = ref<Formulario>({})
 
+/**
+ * Acá casi todas se pesan en libras. El teclado decimal del celular no deja
+ * escribir "lb", así que la unidad se elige aparte y el servidor convierte.
+ */
+const unidadPeso = ref<'kg' | 'lb'>('kg')
+
 const ultima = computed(() => props.estado.medidas[0] ?? null)
 const anterior = computed(() => props.estado.medidas[1] ?? null)
 
@@ -121,6 +127,9 @@ async function guardar() {
         const crudo = String(form.value[c.clave] ?? '')
           .trim()
           .replace(',', '.')
+        if (crudo && c.clave === 'pesoKg' && unidadPeso.value === 'lb') {
+          return [c.clave, `${crudo} lb`]
+        }
         return [c.clave, crudo || null]
       }),
     ) as Record<ClaveMedida, string | null>
@@ -206,7 +215,16 @@ async function borrar() {
                 autocomplete="off"
                 placeholder="—"
               />
-              <span class="campo__unidad">{{ c.unidad }}</span>
+              <button
+                v-if="c.clave === 'pesoKg'"
+                type="button"
+                class="campo__unidad campo__unidad--toggle"
+                :aria-label="`Unidad del peso: ${unidadPeso}. Tocar para cambiar`"
+                @click="unidadPeso = unidadPeso === 'kg' ? 'lb' : 'kg'"
+              >
+                {{ unidadPeso }} <FaIcon icon="arrow-right-arrow-left" />
+              </button>
+              <span v-else class="campo__unidad">{{ c.unidad }}</span>
             </span>
           </label>
         </div>
@@ -562,6 +580,24 @@ async function borrar() {
   font-size: $text-xs;
   font-weight: 600;
   color: $ink-muted;
+}
+
+.campo__unidad--toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.45rem;
+  border: 1px solid rgba($ink, 0.15);
+  border-radius: $radius-pill;
+  background: none;
+  font-family: $font-principal;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  svg {
+    font-size: 0.75em;
+  }
 }
 
 .form__nota {

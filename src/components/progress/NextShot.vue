@@ -46,7 +46,8 @@ const avance = computed(() => {
   if (arrancando.value) return 0
   if (toca.value) return 100
   const total = props.estado.diasEntreTomas
-  return Math.round(((total - (dias.value ?? 0)) / total) * 100)
+  // Quien se adelantó puede tener más de un mes por delante: la barra no baja de cero.
+  return Math.max(0, Math.round(((total - (dias.value ?? 0)) / total) * 100))
 })
 
 /**
