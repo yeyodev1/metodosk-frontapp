@@ -75,7 +75,7 @@ async function quitar(angulo: Angulo) {
 <template>
   <section class="subir">
     <header class="subir__head">
-      <h2 class="subir__title"><FaIcon icon="camera" /> Tu foto del mes</h2>
+      <h2 class="subir__title"><FaIcon icon="camera" /> Tu foto de seguimiento</h2>
       <p class="subir__sub">
         Una de frente y una de espalda, con traje de baño o short y top. Solo las ven Scarlet y
         Karen.

@@ -60,7 +60,7 @@ onMounted(async () => {
         Mi progreso<span v-if="nombre">, {{ nombre }}</span>
       </h1>
       <p class="hero__sub">
-        Una foto y tus medidas cada mes. Es lo único que de verdad te va a mostrar lo que cambió —
+        Una foto y tus medidas cada 15 días. Es lo único que de verdad te va a mostrar lo que cambió —
         mucho más que la balanza sola, y mucho más que la memoria.
       </p>
     </header>

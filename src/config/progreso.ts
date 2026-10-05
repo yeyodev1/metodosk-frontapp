@@ -18,7 +18,7 @@ export const PROGRESO = {
   /** Pasó el mes: toca la siguiente. */
   toca: {
     eyebrow: 'Hoy te toca',
-    titulo: 'Hoy te toca tu foto del mes',
+    titulo: 'Hoy te toca tu foto de seguimiento',
     texto:
       'Misma ropa, mismo lugar, misma luz — eso es lo que hace que las dos fotos se puedan comparar.',
     cta: 'Subir mis fotos y medidas',
@@ -29,10 +29,10 @@ export const PROGRESO = {
     eyebrow: 'Tu próxima toma',
     titulo: 'Tu próxima foto es el',
     texto: (dias: number) =>
-      `Se repite cada ${dias} días. Mientras tanto, entrena tranquila: la comparación de verdad se hace mes a mes.`,
+      `Se repite cada ${dias} días. Mientras tanto, entrena tranquila: la comparación se hace contra tu primera foto.`,
     ctaSecundario: 'Subir una foto igual',
     etiquetas: { dias: 'días', dia: 'día', horas: 'horas', minutos: 'min', segundos: 'seg' },
-    barra: (avance: number) => `${avance}% del mes corrido`,
+    barra: (avance: number) => `${avance}% del tiempo corrido`,
   },
 
   /** El bloque de medidas: la cinta métrica, junto a las fotos. */
@@ -47,7 +47,7 @@ export const PROGRESO = {
     vacio: {
       titulo: 'Tu primera toma es tu punto cero',
       texto:
-        'Apunta lo que tengas a mano: peso, cintura, cadera. No hace falta llenar todo. Dentro de un mes, este número es el que te va a decir lo que cambió cuando la balanza no se mueva.',
+        'Apunta lo que tengas a mano: peso, cintura, cadera. No hace falta llenar todo. Dentro de quince días, este número es el que te va a decir lo que cambió cuando la balanza no se mueva.',
     },
     form: {
       titulo: 'Apunta lo que mediste hoy',

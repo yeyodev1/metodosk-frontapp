@@ -167,7 +167,7 @@ onMounted(async () => {
                 <li><FaIcon icon="check" /> Con <strong>traje de baño</strong>, o short y top</li>
                 <li>
                   <FaIcon icon="check" />
-                  Se repiten <strong>cada mes</strong>, con la misma ropa y en el mismo lugar
+                  Se repiten <strong>cada 15 días</strong>, con la misma ropa y en el mismo lugar
                 </li>
               </ul>
             </div>

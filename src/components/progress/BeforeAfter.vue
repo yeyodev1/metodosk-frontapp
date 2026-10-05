@@ -55,7 +55,7 @@ function tiempo(dias: number) {
         Cuando suba la siguiente, acá aparece su antes y después.
       </p>
       <p v-else class="ad__vacio-texto">
-        Con una sola foto no hay comparación. Cuando subas la del próximo mes, acá vas a poder ver
+        Con una sola foto no hay comparación. Cuando subas la siguiente, en quince días, acá vas a poder ver
         las dos juntas.
       </p>
     </div>
