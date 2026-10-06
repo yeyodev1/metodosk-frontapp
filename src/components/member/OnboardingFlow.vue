@@ -15,6 +15,7 @@ import { computed, onMounted, ref } from 'vue'
 import onboardingService, {
   ANGULOS_PEDIDOS,
   ETIQUETA_ANGULO,
+  cambiableHasta,
   type Angulo,
   type EstadoOnboarding,
 } from '@/services/onboardingService'
@@ -38,10 +39,10 @@ function fotoDe(angulo: Angulo) {
   return estado.value?.ultimas[angulo]
 }
 
-/** Solo la de hoy se puede quitar: las anteriores son su histórico. */
-function esDeHoy(angulo: Angulo) {
+/** Solo la reciente se puede quitar: pasado el plazo, es su histórico. */
+function esCambiable(angulo: Angulo) {
   const f = fotoDe(angulo)
-  return Boolean(f) && new Date(f!.createdAt).toDateString() === new Date().toDateString()
+  return Boolean(f && estado.value && cambiableHasta(f.createdAt, estado.value.diasParaCambiar))
 }
 
 const todasLasFotos = computed(() => ANGULOS_PEDIDOS.every((a) => fotoDe(a)))
@@ -177,7 +178,7 @@ onMounted(async () => {
                 <div v-if="fotoDe(a)" class="foto__vista">
                   <img :src="fotoDe(a)!.url" :alt="ETIQUETA_ANGULO[a]" />
                   <button
-                    v-if="esDeHoy(a)"
+                    v-if="esCambiable(a)"
                     type="button"
                     class="foto__quitar"
                     aria-label="Quitar"
@@ -209,8 +210,8 @@ onMounted(async () => {
 
             <p class="privacidad">
               <FaIcon icon="chart-line" />
-              Después las vuelves a subir desde <strong>Mi progreso</strong>, junto con tus
-              medidas.
+              ¿No puedes tomarlas ahora? Sube las que tengas y cámbialas desde
+              <strong>Mi progreso</strong> hasta {{ estado?.diasParaCambiar ?? 3 }} días después.
             </p>
 
             <p v-if="!todasLasFotos" class="privacidad">

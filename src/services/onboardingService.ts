@@ -63,6 +63,14 @@ export interface EstadoOnboarding {
   /** Sus medidas, de la más reciente a la más antigua. */
   medidas: Medida[]
   fotosDisponibles: boolean
+  /** Días que tiene para cambiar una foto ya subida. */
+  diasParaCambiar: number
+}
+
+/** Hasta cuándo se puede cambiar una foto. null si ya no se puede. */
+export function cambiableHasta(createdAt: string, dias: number): Date | null {
+  const limite = new Date(new Date(createdAt).getTime() + dias * 86_400_000)
+  return limite > new Date() ? limite : null
 }
 
 export interface FirmaCloudinary {

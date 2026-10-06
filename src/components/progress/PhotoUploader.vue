@@ -13,6 +13,7 @@ import { ref } from 'vue'
 import onboardingService, {
   ANGULOS_PEDIDOS,
   ETIQUETA_ANGULO,
+  cambiableHasta,
   type Angulo,
   type EstadoOnboarding,
 } from '@/services/onboardingService'
@@ -23,20 +24,30 @@ const emit = defineEmits<{ actualizado: [EstadoOnboarding] }>()
 const subiendo = ref<Angulo | null>(null)
 const error = ref('')
 
-/** La foto de ese ángulo subida hoy — la que todavía se puede rehacer. */
-function deHoy(angulo: Angulo) {
-  const hoy = new Date().toDateString()
-  return props.estado.fotos.find(
-    (f) => f.angulo === angulo && new Date(f.createdAt).toDateString() === hoy,
-  )
+/**
+ * La última foto de ese ángulo mientras todavía se puede cambiar. Hay quien
+ * sube cualquiera para entrar a entrenar y la buena la toma después.
+ */
+function reciente(angulo: Angulo) {
+  const ultima = props.estado.ultimas[angulo]
+  if (!ultima || !cambiableHasta(ultima.createdAt, props.estado.diasParaCambiar)) return null
+  return ultima
+}
+
+function hasta(angulo: Angulo) {
+  const limite = cambiableHasta(reciente(angulo)!.createdAt, props.estado.diasParaCambiar)!
+  return limite.toLocaleDateString('es-EC', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'short',
+    timeZone: 'America/Guayaquil',
+  })
 }
 
 function referencia(angulo: Angulo) {
-  const ultima = props.estado.ultimas[angulo]
-  if (!ultima) return null
-  // La de hoy no sirve de referencia de sí misma.
-  if (new Date(ultima.createdAt).toDateString() === new Date().toDateString()) return null
-  return ultima
+  // La que todavía se puede cambiar no sirve de referencia de sí misma.
+  if (reciente(angulo)) return null
+  return props.estado.ultimas[angulo] ?? null
 }
 
 function cuando(iso: string) {
@@ -91,14 +102,24 @@ async function quitar(angulo: Angulo) {
       <div v-for="a in ANGULOS_PEDIDOS" :key="a" class="hueco">
         <p class="hueco__label">{{ ETIQUETA_ANGULO[a] }}</p>
 
-        <!-- Ya subió esta toma: se ve, y se puede rehacer -->
-        <div v-if="deHoy(a)" class="hueco__caja hueco__caja--lista">
-          <img :src="deHoy(a)!.url" :alt="`Tu foto ${ETIQUETA_ANGULO[a].toLowerCase()} de hoy`" />
+        <!-- Ya subió esta toma: se ve, y se puede cambiar unos días -->
+        <div v-if="reciente(a)" class="hueco__caja hueco__caja--lista">
+          <img :src="reciente(a)!.url" :alt="`Tu foto ${ETIQUETA_ANGULO[a].toLowerCase()}`" />
           <button type="button" class="hueco__quitar" aria-label="Quitar" @click="quitar(a)">
             <FaIcon icon="xmark" />
           </button>
-          <span class="hueco__ok"><FaIcon icon="check" /> Subida hoy</span>
+          <label class="hueco__ok hueco__cambiar">
+            <FaIcon :icon="subiendo === a ? 'spinner' : 'camera'" :spin="subiendo === a" />
+            {{ subiendo === a ? 'Subiendo…' : 'Cambiar' }}
+            <input
+              type="file"
+              accept="image/*"
+              :disabled="Boolean(subiendo)"
+              @change="elegir($event, a)"
+            />
+          </label>
         </div>
+        <p v-if="reciente(a)" class="hueco__plazo">Puedes cambiarla hasta el {{ hasta(a) }}</p>
 
         <label v-else class="hueco__caja hueco__caja--vacia">
           <FaIcon :icon="subiendo === a ? 'spinner' : 'camera'" :spin="subiendo === a" />
@@ -248,6 +269,23 @@ async function quitar(angulo: Angulo) {
   background-color: rgba($ink, 0.7);
   font-size: 0.66rem;
   color: $cream;
+}
+
+.hueco__cambiar {
+  cursor: pointer;
+
+  input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+  }
+}
+
+.hueco__plazo {
+  font-size: 0.66rem;
+  line-height: 1.35;
+  color: $ink-muted;
 }
 
 .hueco__ref {
