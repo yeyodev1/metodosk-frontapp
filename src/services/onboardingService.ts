@@ -1,4 +1,5 @@
 import APIBase from './httpBase'
+import { comprimirFoto } from './comprimirFoto'
 
 export type Angulo = 'frente' | 'espalda' | 'lado'
 
@@ -140,7 +141,7 @@ class OnboardingService extends APIBase {
    */
   async subirACloudinary(firma: FirmaCloudinary, archivo: File): Promise<string> {
     const cuerpo = new FormData()
-    cuerpo.append('file', archivo)
+    cuerpo.append('file', await comprimirFoto(archivo), 'foto.jpg')
     cuerpo.append('api_key', firma.apiKey)
     cuerpo.append('timestamp', String(firma.timestamp))
     cuerpo.append('signature', firma.signature)
@@ -149,7 +150,15 @@ class OnboardingService extends APIBase {
     cuerpo.append('type', firma.type)
 
     const r = await fetch(firma.uploadUrl, { method: 'POST', body: cuerpo })
-    if (!r.ok) throw new Error('No pudimos subir la foto')
+    if (!r.ok) {
+      // Cloudinary dice por qué la rechazó; sin eso solo queda adivinar.
+      const motivo = await r
+        .json()
+        .then((d: { error?: { message?: string } }) => d.error?.message)
+        .catch(() => undefined)
+      console.error('[cloudinary] subida rechazada', r.status, motivo)
+      throw new Error('No pudimos subir la foto. Intenta de nuevo o escríbenos por Telegram.')
+    }
 
     const data = (await r.json()) as { public_id?: string }
     if (!data.public_id) throw new Error('No pudimos subir la foto')
