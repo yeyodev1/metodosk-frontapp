@@ -38,6 +38,22 @@ const error = ref('')
 const form = ref<Formulario>({})
 
 /**
+ * La toma anterior que se está completando, o null si es una toma nueva.
+ * Hasta el 5/10 el peso en libras se perdía al guardar, y volver a guardar
+ * hoy no le devuelve el peso a su punto cero: hay que llenar esa misma toma.
+ */
+const completando = ref<Medida | null>(null)
+
+/** Los campos que se piden: todos en una toma nueva, solo los vacíos al completar. */
+const camposForm = computed(() =>
+  completando.value
+    ? CAMPOS_MEDIDA.filter((c) => completando.value![c.clave] === null)
+    : CAMPOS_MEDIDA,
+)
+
+const faltaAlgo = (toma: Medida) => CAMPOS_MEDIDA.some((c) => toma[c.clave] === null)
+
+/**
  * Acá casi todas se pesan en libras. El teclado decimal del celular no deja
  * escribir "lb", así que la unidad se elige aparte y el servidor convierte.
  */
@@ -103,6 +119,7 @@ function valoresDe(toma: Medida) {
 }
 
 function abrir() {
+  completando.value = null
   // Se precarga con la última toma: se cambian dos números, no se reescriben seis.
   form.value = Object.fromEntries(
     CAMPOS_MEDIDA.map((c) => [c.clave, ultima.value?.[c.clave]?.toString() ?? '']),
@@ -111,8 +128,16 @@ function abrir() {
   abierto.value = true
 }
 
+function abrirCompletar(toma: Medida) {
+  completando.value = toma
+  form.value = {}
+  error.value = ''
+  abierto.value = true
+}
+
 function cerrar() {
   abierto.value = false
+  completando.value = null
   error.value = ''
 }
 
@@ -123,7 +148,7 @@ async function guardar() {
     // Un input numérico entrega números, no texto, y "62,5" con coma es lo
     // normal acá: todo se normaliza a texto con punto antes de mandarlo.
     const cuerpo = Object.fromEntries(
-      CAMPOS_MEDIDA.map((c) => {
+      camposForm.value.map((c) => {
         const crudo = String(form.value[c.clave] ?? '')
           .trim()
           .replace(',', '.')
@@ -134,8 +159,14 @@ async function guardar() {
       }),
     ) as Record<ClaveMedida, string | null>
 
-    emit('actualizado', await onboardingService.guardarMedidas(cuerpo as never))
+    emit(
+      'actualizado',
+      completando.value
+        ? await onboardingService.completarMedidas(completando.value.createdAt, cuerpo)
+        : await onboardingService.guardarMedidas(cuerpo as never),
+    )
     abierto.value = false
+    completando.value = null
   } catch (e: unknown) {
     error.value = (e as { message?: string }).message ?? T.form.errorGenerico
   } finally {
@@ -195,11 +226,13 @@ async function borrar() {
     <!-- ── El formulario de la toma ── -->
     <Transition name="pliegue">
       <form v-if="abierto" class="form" novalidate @submit.prevent="guardar">
-        <p class="form__title">{{ T.form.titulo }}</p>
+        <p class="form__title">
+          {{ completando ? T.form.tituloCompletar(fecha(completando.createdAt)) : T.form.titulo }}
+        </p>
 
         <div class="form__campos">
           <label
-            v-for="(c, i) in CAMPOS_MEDIDA"
+            v-for="(c, i) in camposForm"
             :key="c.clave"
             class="campo"
             :style="{ '--i': i }"
@@ -229,7 +262,7 @@ async function borrar() {
           </label>
         </div>
 
-        <p class="form__nota">{{ T.form.nota }}</p>
+        <p class="form__nota">{{ completando ? T.form.notaCompletar : T.form.nota }}</p>
 
         <p v-if="error" class="form__error" role="alert">
           <FaIcon icon="triangle-exclamation" /> {{ error }}
@@ -261,7 +294,15 @@ async function borrar() {
           </p>
 
           <!-- El movimiento: la razón de ser del bloque -->
-          <p v-if="ultima[c.clave] === null" class="cifra__delta cifra__delta--muted">
+          <button
+            v-if="ultima[c.clave] === null && !abierto"
+            type="button"
+            class="cifra__completar"
+            @click="abrirCompletar(ultima)"
+          >
+            <FaIcon icon="plus" /> {{ T.cifras.completar }}
+          </button>
+          <p v-else-if="ultima[c.clave] === null" class="cifra__delta cifra__delta--muted">
             {{ T.cifras.sinDato }}
           </p>
           <p v-else-if="delta(c.clave) === null" class="cifra__delta cifra__delta--muted">
@@ -296,6 +337,16 @@ async function borrar() {
               <span class="fila__valor-label">{{ v.label }}</span> {{ v.texto }}
             </span>
           </span>
+          <button
+            v-if="faltaAlgo(toma) && !abierto"
+            type="button"
+            class="fila__borrar"
+            :aria-label="T.historial.completar"
+            :title="T.historial.completar"
+            @click="abrirCompletar(toma)"
+          >
+            <FaIcon icon="plus" />
+          </button>
           <button
             type="button"
             class="fila__borrar"
@@ -771,6 +822,30 @@ async function borrar() {
 .cifra__delta--alerta {
   background-color: $rose-soft;
   color: $wine;
+}
+
+/* El hueco de una toma se llena ahí mismo: es donde se nota que falta. */
+.cifra__completar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.3rem;
+  padding: 0.3rem 0.75rem;
+  border: 1px dashed $rose-deep;
+  border-radius: $radius-pill;
+  background: none;
+  font-family: $font-principal;
+  font-size: $text-xs;
+  font-weight: 600;
+  color: $rose-deep;
+  cursor: pointer;
+  transition: background-color 0.26s $ease;
+
+  @include focus-ring;
+
+  &:hover {
+    background-color: $rose-soft;
+  }
 }
 
 .cifra__delta--muted {

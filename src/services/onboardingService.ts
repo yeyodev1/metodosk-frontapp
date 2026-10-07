@@ -116,6 +116,18 @@ class OnboardingService extends APIBase {
     return data
   }
 
+  /** Llena lo que le faltó a una toma anterior. Lo ya apuntado no se toca. */
+  async completarMedidas(
+    fechaIso: string,
+    medidas: Partial<Record<ClaveMedida, string | null>>,
+  ) {
+    const { data } = await this.patch<EstadoOnboarding>(
+      `onboarding/medidas/${encodeURIComponent(fechaIso)}`,
+      medidas,
+    )
+    return data
+  }
+
   async quitarMedidas(fechaIso: string) {
     const { data } = await this.delete<EstadoOnboarding>(
       `onboarding/medidas/${encodeURIComponent(fechaIso)}`,

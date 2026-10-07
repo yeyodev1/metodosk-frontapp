@@ -51,6 +51,10 @@ export const PROGRESO = {
     },
     form: {
       titulo: 'Apunta lo que mediste hoy',
+      /** Completar una toma anterior: solo aparecen los campos que le faltan. */
+      tituloCompletar: (fecha: string) => `Completa tu toma del ${fecha}`,
+      notaCompletar:
+        'Apunta lo que mediste ese día. Para el peso en libras, toca "kg" y cámbialo a "lb".',
       nota: 'Deja en blanco lo que no midas. Para el peso en libras, toca "kg" y cámbialo a "lb".',
       guardar: 'Guardar toma',
       guardando: 'Guardando…',
@@ -61,6 +65,7 @@ export const PROGRESO = {
       titulo: 'Tu última toma',
       primera: 'Primera toma',
       sinDato: 'Sin apuntar',
+      completar: 'Apuntar',
       igual: 'Igual que antes',
     },
     historial: {
@@ -68,6 +73,7 @@ export const PROGRESO = {
       verTodas: (n: number) => `Ver las ${n} tomas`,
       verMenos: 'Ver menos',
       borrar: 'Borrar esta toma',
+      completar: 'Completar esta toma',
       borrando: 'Borrando…',
       confirmar: '¿Borrar esta toma? No se puede deshacer.',
     },
