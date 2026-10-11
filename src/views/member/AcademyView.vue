@@ -2,22 +2,21 @@
 /**
  * El reto de la alumna: en qué semana va y qué le toca.
  *
- * Los cursos llegan del backend ya filtrados por su reto y por el mes en que
- * está. Lo que todavía no se sube se muestra igual, marcado como próximamente:
- * la estructura ya se vendió, así que ocultarla la dejaría creyendo que compró
- * menos de lo que compró.
+ * Los cursos llegan del backend ya filtrados por su reto y por el bloque en
+ * que está. Lo que todavía no se sube se muestra igual, marcado como
+ * próximamente: la estructura ya se vendió, así que ocultarla la dejaría
+ * creyendo que compró menos de lo que compró.
+ *
+ * Cada curso abre su propia página (ClaseView), no una ventana encima de esta.
  */
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
-import { useBodyScrollLock } from '@/composables/useBodyScroll'
 import CldImage from '@/components/ui/CldImage.vue'
 import MisRetos from '@/components/member/MisRetos.vue'
-import VideoPlayer from '@/components/ui/video/VideoPlayer.vue'
 import CountdownCard from '@/components/member/CountdownCard.vue'
-import courseService, { type CursoAlumna } from '@/services/courseService'
+import type { CursoAlumna } from '@/services/courseService'
 import perksService from '@/services/perksService'
-import progressService, { type MiAvance } from '@/services/progressService'
-import { useVideoProgress } from '@/composables/useVideoProgress'
+import { useCursos, cuandoAbre } from '@/composables/useCursos'
 import { useSessionStore } from '@/stores/session'
 import { useVistaPrevia } from '@/composables/useVistaPrevia'
 import { ETAPAS, SEMANAS } from '@/config/academy'
@@ -26,8 +25,15 @@ const session = useSessionStore()
 const user = computed(() => session.user)
 const esAdmin = computed(() => session.isAdmin)
 
-const cursos = ref<CursoAlumna[]>([])
-const cargando = ref(true)
+const {
+  visibles: cursosVisibles,
+  avance,
+  cargando,
+  error,
+  cargar,
+  cargarAvance,
+  avanceDe,
+} = useCursos()
 
 /**
  * Cuándo abre, del servidor. Acá se ven los cursos con candado, así que la
@@ -39,94 +45,10 @@ perksService
   .beneficios()
   .then((b) => (apertura.value = b.apertura))
   .catch(() => {})
-const error = ref('')
-const abierto = ref<CursoAlumna | null>(null)
 
-// El scroll del fondo se congela mientras hay un curso abierto — y se suelta
-// solo al desmontar, aunque se navegue desde la barra lateral sin cerrar.
-useBodyScrollLock(computed(() => Boolean(abierto.value)))
-
-/* ── Avance ─────────────────────────────────────────────────────────────────
-   Lo calcula el backend y no cada pantalla: si la barra del curso y la del
+/* Lo calcula el backend y no cada pantalla: si la barra del curso y la del
    método se computaran por separado, acabarían diciendo cosas distintas. */
-const avance = ref<MiAvance | null>(null)
-
 const porcentajeMetodo = computed(() => avance.value?.porcentajeTotal ?? 0)
-
-function avanceDe(courseId: string) {
-  return avance.value?.cursos.find((c) => c.courseId === courseId) ?? null
-}
-
-/* ── El video que se está viendo ────────────────────────────────────────── */
-type Reproduciendo = {
-  lessonId: string
-  title: string
-  embedUrl: string
-  hlsUrl: string | null
-  thumbnail: string | null
-  seconds: number
-}
-
-const viendo = ref<Reproduciendo | null>(null)
-const marcando = ref(false)
-const { terminado, seguir, soltar, reportar, terminar, enlazar } = useVideoProgress()
-
-function ver(curso: CursoAlumna, leccion: CursoAlumna['lessons'][number]) {
-  if (!leccion.embedUrl) return
-  soltar()
-  viendo.value = {
-    lessonId: leccion.id,
-    title: leccion.title,
-    embedUrl: leccion.embedUrl,
-    hlsUrl: leccion.hlsUrl ?? null,
-    thumbnail: leccion.thumbnail ?? null,
-    seconds: leccion.seconds,
-  }
-  seguir(null, curso.id, leccion.id, leccion.seconds)
-}
-
-/**
- * Marcar a mano.
- *
- * El reproductor va en otro marco, y hay navegadores y extensiones que no
- * dejan pasar sus mensajes. Sin este botón, una alumna en ese caso vería su
- * avance congelado sin poder hacer nada.
- */
-async function marcarVista(curso: CursoAlumna, lessonId: string) {
-  marcando.value = true
-  try {
-    await progressService.marcarVista(curso.id, lessonId)
-    await cargarAvance()
-    const l = curso.lessons.find((x) => x.id === lessonId)
-    if (l) l.completed = true
-    if (lessonId === 'welcome' && curso.welcomeVideo) curso.welcomeVideo.completed = true
-  } catch {
-    // Si falla, el estado real sigue siendo el del servidor: no se miente acá.
-  } finally {
-    marcando.value = false
-  }
-}
-
-/**
- * ¿La que se está viendo ya está marcada?
- *
- * El botón decía "Marcar como vista" siempre, incluso después de marcarla: no
- * había forma de saber si el clic había servido, y se marcaba dos y tres veces.
- */
-const vistaActual = computed(() => {
-  const curso = abierto.value
-  if (!curso) return false
-  if (!viendo.value) return Boolean(curso.welcomeVideo?.completed)
-  return Boolean(curso.lessons.find((l) => l.id === viendo.value!.lessonId)?.completed)
-})
-
-async function cargarAvance() {
-  try {
-    avance.value = await progressService.mio()
-  } catch {
-    // Sin avance la academia se ve igual, solo sin barras.
-  }
-}
 
 /** La cuenta de administración no compró reto: el reto y la semana los elige en la franja. */
 const vista = useVistaPrevia()
@@ -162,32 +84,6 @@ const fechaFin = computed(() =>
 const nombre = computed(() => user.value?.name?.split(' ')[0] || '')
 
 /**
- * Los cursos que se pintan.
- *
- * En administración el servidor manda el material de los dos retos, y el
- * selector de arriba solo cambiaba las tarjetas de "Tu reto": abajo seguían
- * saliendo los dos "Qué necesitas". Ahora "ver como quien compró" filtra
- * también la lista, que es lo que la frase promete — ver la app como la ve
- * ella, no una mezcla que ninguna alumna tiene delante.
- */
-const cursosVisibles = computed<CursoAlumna[]>(() => {
-  if (!esAdmin.value) return cursos.value
-  const retoId = vista.retoId.value
-  /*
-   * A la administración el servidor le manda todo abierto. Para que la vista
-   * previa diga la verdad, lo que la alumna simulada todavía no tiene se cierra
-   * acá igual que se le cierra a ella: con candado y "se abre en tu semana 5".
-   */
-  return cursos.value
-    .filter((c) => !retoId || c.challenge === 'ambas' || c.challenge === retoId)
-    .map((c) =>
-      c.estado === 'abierto' && !c.enlace && c.unlockMonth > vista.bloque.value
-        ? { ...c, estado: 'cerrado' as const, abreEl: null }
-        : c,
-    )
-})
-
-/**
  * Cuándo hay que decir a qué reto pertenece cada curso.
  *
  * Solo cuando de verdad se ve material de los dos. En administración ya no
@@ -218,86 +114,24 @@ function etiqueta(curso: CursoAlumna) {
   return ETIQUETA[curso.estado]
 }
 
-/** Cuándo vuelve: con fecha si la hay, y si no, lo que sepamos. */
-function cuandoAbre(curso: CursoAlumna) {
-  if (curso.estado === 'cerrado') {
-    const semana = `Se abre en tu semana ${semanaDeApertura(curso)}`
-    if (!curso.abreEl) return semana
-    const fecha = new Date(curso.abreEl).toLocaleDateString('es-EC', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-    })
-    return `${semana}: el ${fecha}`
-  }
-  if (!curso.abreEl) return 'Se publica pronto'
-
-  const fecha = new Date(curso.abreEl)
-  const dia = fecha.toLocaleDateString('es-EC', { weekday: 'long', day: 'numeric', month: 'long' })
-  const hora = fecha.toLocaleTimeString('es-EC', { hour: 'numeric', minute: '2-digit' })
-  return `Se abre el ${dia} a las ${hora}`
-}
-
-function duracion(segundos: number | null) {
-  if (!segundos) return null
-  const min = Math.round(segundos / 60)
-  return `${min} min`
-}
-
-function abrir(curso: CursoAlumna) {
-  if (curso.estado !== 'abierto') return
-  abierto.value = curso
-  viendo.value = null
-  // La bienvenida también guarda por dónde va, igual que las clases.
-  if (curso.welcomeVideo) seguir(null, curso.id, 'welcome', curso.welcomeVideo.seconds ?? 0)
-}
-
-function cerrar() {
-  // Guardar antes de desmontar: cerrar es cuando más avance se pierde.
-  soltar()
-  viendo.value = null
-  abierto.value = null
-  cargarAvance()
-}
-
-async function cargar() {
-  cargando.value = true
-  error.value = ''
-  try {
-    cursos.value = await courseService.mios(mes.value)
-  } catch (e: unknown) {
-    error.value = (e as { message?: string }).message ?? 'No pudimos cargar tu reto'
-  } finally {
-    cargando.value = false
-  }
-}
-
-watch(mes, cargar)
-
-// El video terminó: el avance ya se guardó, falta reflejarlo en las barras.
-watch(terminado, (fin) => {
-  if (fin) cargarAvance()
-})
-
 /**
  * Al volver a la pestaña, se vuelven a pedir los cursos.
  *
- * La lista se cargaba una sola vez al entrar, así que quien dejaba la app
- * abierta seguía viendo el material viejo cuando publicábamos algo: pasó el
- * día que subimos los entrenamientos y en el grupo decían que no les aparecía.
- * El aviso de versión nueva no cubre esto — ese mira el código, y acá lo que
- * cambia es el contenido.
+ * Quien dejaba la app abierta seguía viendo el material viejo cuando
+ * publicábamos algo: pasó el día que subimos los entrenamientos y en el grupo
+ * decían que no les aparecía.
  */
 function alVolver() {
   if (document.visibilityState === 'visible') {
-    cargar()
+    cargar(true)
     cargarAvance()
   }
 }
 
 onMounted(async () => {
   if (!session.user) await session.restore()
-  await Promise.all([cargar(), cargarAvance()])
+  // Siempre se piden al entrar: puede venir de una clase donde marcó avance.
+  await Promise.all([cargar(cursosVisibles.value.length > 0), cargarAvance()])
   document.addEventListener('visibilitychange', alVolver)
 })
 
@@ -434,14 +268,13 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', alVolver)
             Ir a la comunidad
           </RouterLink>
 
-          <button
+          <RouterLink
             v-else-if="c.estado === 'abierto'"
-            type="button"
+            :to="`/academia/${c.slug}`"
             class="modulo__cta"
-            @click="abrir(c)"
           >
             Entrar al curso
-          </button>
+          </RouterLink>
 
           <!--
             Un botón muerto que dice "Aún no disponible" no responde lo único
@@ -456,121 +289,6 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', alVolver)
       </article>
     </section>
 
-    <!-- Detalle del curso -->
-    <Transition name="modal">
-      <div v-if="abierto" class="modal" @click.self="cerrar">
-        <div class="modal__card" role="dialog" aria-modal="true">
-          <button type="button" class="modal__close" aria-label="Cerrar" @click="cerrar">×</button>
-
-          <p class="modal__eyebrow">Curso {{ String(abierto.order).padStart(2, '0') }}</p>
-          <h3 class="modal__title">{{ abierto.title }}</h3>
-          <p class="modal__text">{{ abierto.summary }}</p>
-
-          <!-- El reproductor: la clase elegida, o la bienvenida por defecto -->
-          <div v-if="viendo || abierto.welcomeVideo" class="video">
-            <VideoPlayer
-              :key="viendo?.lessonId || 'welcome'"
-              :src="viendo ? viendo.hlsUrl : abierto.welcomeVideo!.hlsUrl"
-              :embed-url="viendo?.embedUrl || abierto.welcomeVideo!.embedUrl"
-              :poster="viendo ? viendo.thumbnail : abierto.welcomeVideo!.thumbnail"
-              :desde="viendo ? viendo.seconds : (abierto.welcomeVideo!.seconds ?? 0)"
-              :titulo="viendo?.title || 'Video de bienvenida'"
-              :autoplay="Boolean(viendo)"
-              @progreso="reportar"
-              @terminado="terminar"
-              @marco="enlazar"
-            />
-          </div>
-
-          <div v-if="viendo || abierto.welcomeVideo" class="viendo">
-            <p class="viendo__title">{{ viendo?.title || 'Video de bienvenida' }}</p>
-            <button
-              type="button"
-              class="viendo__marcar"
-              :class="{ 'viendo__marcar--vista': vistaActual }"
-              :disabled="marcando || vistaActual"
-              @click="marcarVista(abierto, viendo?.lessonId || 'welcome')"
-            >
-              <template v-if="vistaActual">
-                <FaIcon icon="check" /> Vista
-              </template>
-              <template v-else-if="marcando">Marcando…</template>
-              <template v-else>Marcar como vista</template>
-            </button>
-          </div>
-
-          <!--
-            El video de Karen cuenta cómo comer; la guía es el cómo. Quien
-            acaba de verlo tiene que poder ir ahí sin buscar en el menú.
-          -->
-          <RouterLink v-if="abierto.slug === 'nutricion'" to="/guia" class="modal__guia">
-            <FaIcon icon="book-open" />
-            <span class="modal__guia-texto">
-              Tu guía de nutrición
-              <small>Tu menú de 7 días, las porciones y los intercambios</small>
-            </span>
-            <FaIcon icon="arrow-right" />
-          </RouterLink>
-
-          <!-- El material que se lee, no se mira: va con el video, no aparte. -->
-          <section v-for="n in abierto.notas || []" :key="n.titulo" class="nota">
-            <h4 class="nota__title">{{ n.titulo }}</h4>
-            <p v-for="linea in n.cuerpo" :key="linea">{{ linea }}</p>
-          </section>
-
-          <!--
-            Un curso de un solo video no tiene clases que esperar: anunciarlas
-            hacía parecer que faltaba material donde no falta nada.
-          -->
-          <template v-if="abierto.lessons.length || !abierto.welcomeVideo">
-            <h4 class="modal__sub">Clases</h4>
-          </template>
-          <ul v-if="abierto.lessons.length" class="clases">
-            <li v-for="l in abierto.lessons" :key="l.id">
-              <button
-                type="button"
-                class="clase"
-                :class="{
-                  'clase--activa': viendo?.lessonId === l.id,
-                  'clase--vista': l.completed,
-                  'clase--pendiente': !l.embedUrl,
-                }"
-                :disabled="!l.embedUrl"
-                @click="ver(abierto, l)"
-              >
-                <span class="clase__tick" aria-hidden="true">
-                  <svg v-if="l.completed" viewBox="0 0 12 12" width="11" height="11">
-                    <path
-                      d="M1.5 6.2 4.4 9l6-6.4"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </svg>
-                  <FaIcon v-else-if="!l.embedUrl" icon="lock" />
-                  <span v-else class="clase__num">{{ String(l.order).padStart(2, '0') }}</span>
-                </span>
-                <span class="clase__texto">
-                  <span class="clase__title">{{ l.title }}</span>
-                  <span v-if="l.summary" class="clase__sum">{{ l.summary }}</span>
-                </span>
-                <span v-if="l.completed" class="clase__dur">Vista</span>
-                <span v-else-if="l.seconds > 10" class="clase__dur">A medias</span>
-                <span v-else-if="duracion(l.durationSeconds)" class="clase__dur">
-                  {{ duracion(l.durationSeconds) }}
-                </span>
-                <span v-else-if="!l.embedUrl" class="clase__dur">Próximamente</span>
-              </button>
-            </li>
-          </ul>
-          <p v-else-if="!abierto.welcomeVideo" class="aviso">
-            Las clases de este curso se publican pronto.
-          </p>
-        </div>
-      </div>
-    </Transition>
   </div>
 </template>
 
@@ -843,28 +561,6 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', alVolver)
   gap: 0.6rem;
 }
 
-.nota {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin: 0.2rem 0 $space-sm;
-  padding: 1.1rem 1.2rem;
-  border-radius: $radius-md;
-  background-color: $cream;
-
-  p {
-    font-size: $text-xs;
-    line-height: 1.6;
-    color: $ink-soft;
-  }
-}
-
-.nota__title {
-  font-family: $font-display;
-  font-size: $text-base;
-  color: $ink;
-}
-
 .modulo__num {
   font-family: $font-display;
   font-size: $text-base;
@@ -943,333 +639,5 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', alVolver)
   }
 
   @include focus-ring;
-}
-
-/* ── Detalle ── */
-.modal {
-  position: fixed;
-  inset: 0;
-  z-index: 120;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  background-color: rgba($ink, 0.55);
-  backdrop-filter: blur(3px);
-
-  @include from('md') {
-    align-items: center;
-    padding: 1rem;
-  }
-}
-
-.modal__card {
-  position: relative;
-  /* Ancho para que la clase se vea grande: es a lo que se entra. */
-  width: min(880px, 100%);
-  max-height: 90vh;
-  overflow-y: auto;
-  padding: clamp(1.3rem, 4vw, 2.2rem);
-  padding-bottom: max(1.3rem, env(safe-area-inset-bottom));
-  border-radius: $radius-lg $radius-lg 0 0;
-  background-color: $bone;
-
-  @include from('md') {
-    max-height: 86vh;
-    border-radius: $radius-lg;
-  }
-}
-
-.modal__close {
-  position: absolute;
-  top: 0.8rem;
-  right: 0.9rem;
-  width: 34px;
-  height: 34px;
-  border: none;
-  border-radius: 50%;
-  background-color: rgba($ink, 0.06);
-  font-size: 1.2rem;
-  line-height: 1;
-  color: $ink;
-  cursor: pointer;
-  transition: background-color 0.3s $ease;
-
-  &:hover {
-    background-color: rgba($ink, 0.12);
-  }
-}
-
-.modal__eyebrow {
-  @include eyebrow;
-  color: $rose-deep;
-}
-
-.modal__title {
-  font-family: $font-display;
-  font-size: $text-xl;
-  color: $ink;
-}
-
-.modal__text {
-  margin: 0.4rem 0 $space-sm;
-  font-size: $text-sm;
-  line-height: 1.6;
-  color: $ink-soft;
-}
-
-.video {
-  margin-bottom: $space-md;
-}
-
-.modal__guia {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  /* El mismo respiro que deja el bloque del video: si no, "Clases" se le pega. */
-  margin: 0.2rem 0 $space-md;
-  padding: 0.95rem 1.1rem;
-  border-radius: $radius-md;
-  background-color: $ink;
-  font-size: $text-sm;
-  font-weight: 600;
-  color: $cream;
-  transition: background-color 0.26s $ease;
-
-  &:hover {
-    background-color: $wine;
-  }
-
-  svg:first-child {
-    color: $rose-soft;
-  }
-
-  svg:last-child {
-    margin-left: auto;
-  }
-}
-
-.modal__guia-texto {
-  display: flex;
-  flex-direction: column;
-
-  small {
-    font-size: $text-xs;
-    font-weight: 400;
-    color: rgba($cream, 0.7);
-  }
-}
-
-.modal__sub {
-  @include eyebrow;
-  margin-bottom: 0.5rem;
-  color: $ink-muted;
-}
-
-.clases {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  list-style: none;
-}
-
-/* El video que se está viendo */
-.viendo {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.6rem;
-  margin: -0.8rem 0 $space-md;
-}
-
-.viendo__title {
-  font-size: $text-sm;
-  color: $ink;
-}
-
-/* Ya vista: deja de ser un botón que invita y pasa a ser un estado. */
-.viendo__marcar--vista {
-  border-color: transparent !important;
-  background-color: $alert-success-bg;
-  color: #4a7a45 !important;
-  opacity: 1 !important;
-  cursor: default;
-}
-
-.viendo__marcar {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.35rem 0.85rem;
-  border: 1px solid rgba($ink, 0.2);
-  border-radius: $radius-pill;
-  background: none;
-  font-family: inherit;
-  font-size: $text-xs;
-  color: $ink-soft;
-  cursor: pointer;
-  transition: border-color 0.28s $ease, color 0.28s $ease;
-
-  &:hover:not(:disabled) {
-    border-color: $ink;
-    color: $ink;
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  @include focus-ring;
-}
-
-.clase {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.7rem;
-  width: 100%;
-  padding: 0.7rem 0.85rem;
-  border: none;
-  border-radius: $radius-sm;
-  background-color: $cream;
-  font-family: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition: background-color 0.26s $ease;
-
-  &:hover:not(:disabled) {
-    background-color: $sand;
-  }
-
-  &:disabled {
-    cursor: not-allowed;
-  }
-
-  @include focus-ring;
-}
-
-/*
- * Un día de la semana que todavía no tiene video: se ve en gris y en su
- * lugar. Antes solo bajaba la opacidad y se confundía con una clase normal
- * mal cargada; ahora es un hueco anunciado — borde punteado, candado, sin
- * fondo — para que se lea "viene" y no "se rompió".
- */
-.clase--pendiente {
-  border: 1px dashed $clay;
-  background-color: transparent;
-
-  .clase__tick {
-    background-color: $sand;
-    color: $ink-muted;
-    font-size: 0.7rem;
-  }
-
-  .clase__title,
-  .clase__sum,
-  .clase__dur {
-    color: $ink-muted;
-  }
-}
-
-.clase--activa {
-  background-color: $rose-soft;
-}
-
-.clase__tick {
-  flex: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background-color: rgba($ink, 0.06);
-  color: $ink-muted;
-}
-
-.clase--vista .clase__tick {
-  background-color: $alert-success-bg;
-  color: #4a7a45;
-}
-
-/* Y la fila entera baja el tono: lo que ya viste deja de pedir atención. */
-.clase--vista .clase__title {
-  color: $ink-muted;
-}
-
-.clase--vista .clase__dur {
-  color: #4a7a45;
-  font-weight: 600;
-}
-
-.clase__num {
-  font-family: $font-display;
-  font-size: 0.72rem;
-  font-style: italic;
-  color: $rose-deep;
-}
-
-.clase__texto {
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-  min-width: 0;
-}
-
-.clase__title {
-  font-size: $text-sm;
-  color: $ink;
-}
-
-.clase__sum {
-  font-size: $text-xs;
-  color: $ink-muted;
-}
-
-.clase__dur {
-  flex: none;
-  font-size: $text-xs;
-  color: $ink-muted;
-}
-
-/* ── Transiciones ── */
-.modal-enter-active .modal__card {
-  animation: card-in 0.34s $ease;
-}
-
-.modal-leave-active .modal__card {
-  animation: card-in 0.2s $ease reverse;
-}
-
-.modal-enter-active,
-.modal-leave-active {
-  animation: veil 0.28s ease-out;
-}
-
-.modal-leave-active {
-  animation-direction: reverse;
-}
-
-@keyframes veil {
-  from {
-    opacity: 0;
-  }
-}
-
-@keyframes card-in {
-  from {
-    opacity: 0;
-    transform: translateY(24px);
-  }
-}
-
-@include reduced-motion {
-  .modal-enter-active,
-  .modal-leave-active,
-  .modal-enter-active .modal__card,
-  .modal-leave-active .modal__card {
-    animation: none;
-  }
 }
 </style>

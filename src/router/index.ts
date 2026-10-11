@@ -61,6 +61,14 @@ const routes: Array<RouteRecordRaw> = [
         meta: { title: 'La academia — Método SK', requiresAuth: true },
       },
       {
+        // Cada clase en su página, como en YouTube: video grande, lista al
+        // lado y un enlace propio. Sin clase, entra a la que le falta ver.
+        path: 'academia/:slug/:clase?',
+        name: 'Clase',
+        component: () => import('../views/member/ClaseView.vue'),
+        meta: { title: 'Tu clase — Método SK', requiresAuth: true },
+      },
+      {
         /*
          * La guía de nutrición, por secciones.
          *
