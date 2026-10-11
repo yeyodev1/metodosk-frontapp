@@ -6,6 +6,13 @@
  */
 import { library } from '@fortawesome/fontawesome-svg-core'
 import {
+  faRuler,
+  faComment,
+  faFire,
+  faShoePrints,
+  faHand,
+  faTrophy,
+  faBolt,
   faDumbbell,
   faPlay,
   faCirclePlay,
@@ -55,6 +62,13 @@ import {
 import { faWhatsapp, faTelegram, faInstagram, faAmazon } from '@fortawesome/free-brands-svg-icons'
 
 library.add(
+  faRuler,
+  faComment,
+  faFire,
+  faShoePrints,
+  faHand,
+  faTrophy,
+  faBolt,
   faDumbbell,
   faPlay,
   faCirclePlay,
