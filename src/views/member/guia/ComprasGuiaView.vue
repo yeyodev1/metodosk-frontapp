@@ -10,14 +10,27 @@
  * Se abre una categoría a la vez: son catorce y cada una son dos páginas, así
  * que mostrarlas todas juntas sería bajar medio metro de fotos para llegar al
  * hummus.
+ *
+ * Los productos que Karen suma con el menú de cada mes van primero, marcados
+ * con su mes: son los que hacen falta para los platos nuevos. Llegan solo
+ * cuando el menú de ese mes ya está abierto.
  */
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import GuiaSeccion from '@/components/member/GuiaSeccion.vue'
 import GuiaImagen from '@/components/member/GuiaImagen.vue'
 import { useGuia, imagenDeCompras } from '@/composables/useGuia'
 
 const { guia } = useGuia()
 const abierta = ref<string | null>(null)
+
+const categorias = computed(() => {
+  const g = guia.value
+  if (!g) return []
+  const nuevas = [...(g.menus ?? [])]
+    .sort((a, b) => b.mes - a.mes)
+    .flatMap((m) => (m.compras ?? []).map((c) => ({ ...c, mes: m.mes as number | null })))
+  return [...nuevas, ...g.listaCompras.categorias.map((c) => ({ ...c, mes: null }))]
+})
 
 const alternar = (titulo: string) => {
   abierta.value = abierta.value === titulo ? null : titulo
@@ -27,7 +40,7 @@ const alternar = (titulo: string) => {
 <template>
   <GuiaSeccion v-if="guia" titulo="Lista de compras" :sub="guia.listaCompras.nota">
     <ul class="categorias">
-      <li v-for="c in guia.listaCompras.categorias" :key="c.titulo">
+      <li v-for="c in categorias" :key="c.titulo">
         <button
           type="button"
           class="cat"
@@ -35,7 +48,10 @@ const alternar = (titulo: string) => {
           :aria-expanded="abierta === c.titulo"
           @click="alternar(c.titulo)"
         >
-          <span>{{ c.titulo }}</span>
+          <span class="cat__nombre">
+            {{ c.titulo }}
+            <span v-if="c.mes" class="cat__nuevo">Nuevo · Mes {{ c.mes }}</span>
+          </span>
           <FaIcon :icon="abierta === c.titulo ? 'xmark' : 'arrow-right'" />
         </button>
 
@@ -90,6 +106,24 @@ const alternar = (titulo: string) => {
   }
 
   @include focus-ring;
+}
+
+.cat__nombre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cat__nuevo {
+  padding: 0.12rem 0.55rem;
+  border-radius: $radius-pill;
+  background-color: $rose-soft;
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: $ink;
 }
 
 .cat--abierta {

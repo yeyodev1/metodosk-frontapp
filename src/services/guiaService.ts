@@ -80,6 +80,8 @@ export interface MenuGuia {
   dias: DiaGuia[]
   tablas: TablaGuia[]
   recetario: string
+  /** Las categorías que se suman a la lista de compras con este menú. */
+  compras?: Array<{ titulo: string; imagenes: string[] }>
 }
 
 class GuiaService extends APIBase {
