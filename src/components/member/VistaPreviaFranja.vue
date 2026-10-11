@@ -5,13 +5,19 @@
  * Elegir reto y semana acá cambia Mi reto y Tu guía a la vez. Con la semana
  * se revisa lo que de otra forma no se ve nunca: qué tiene con candado una
  * alumna que acaba de comprar, y cuándo se le abre.
+ *
+ * Los selectores son los nuestros (BaseSelect), en su versión para fondo
+ * oscuro: el menú del sistema operativo no tiene lugar en la app.
  */
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
+import BaseSelect from '@/components/ui/BaseSelect.vue'
 import { CHALLENGES } from '@/config/site'
 import { OPCIONES_SEMANA, useVistaPrevia } from '@/composables/useVistaPrevia'
 
 const { reto, semana, bloque } = useVistaPrevia()
+
+const OPCIONES_RETO = CHALLENGES.map((c) => ({ value: c.name, label: c.name, hint: c.claim }))
 
 const semanaTexto = computed({
   get: () => String(semana.value),
@@ -20,40 +26,28 @@ const semanaTexto = computed({
 
 const resumen = computed(() =>
   bloque.value === 1
-    ? 'Tiene abierto el bloque 1. El bloque 2 y el menú del mes 2 los ve con candado hasta su semana 5.'
+    ? 'Tiene abierto el bloque 1. El bloque 2 y el menú del mes 2 le aparecen con candado hasta su semana 5.'
     : `Tiene abiertos los bloques 1 a ${bloque.value} y los menús hasta el mes ${bloque.value}.`,
 )
 </script>
 
 <template>
   <div class="franja">
-    <span class="franja__dot" aria-hidden="true" />
-
     <div class="franja__cuerpo">
-      <p class="franja__text">
-        Vista de alumna:
-        <label class="campo">
-          <span class="sr-only">Reto</span>
-          <select v-model="reto" class="campo__select">
-            <option v-for="c in CHALLENGES" :key="c.id" :value="c.name">{{ c.name }}</option>
-          </select>
-        </label>
-        en su
-        <label class="campo">
-          <span class="sr-only">Semana del reto</span>
-          <select v-model="semanaTexto" class="campo__select">
-            <option v-for="s in OPCIONES_SEMANA" :key="s.value" :value="s.value">
-              {{ s.label }} · {{ s.hint }}
-            </option>
-          </select>
-        </label>
+      <p class="franja__eyebrow">
+        <span class="franja__dot" aria-hidden="true" /> Vista de alumna
       </p>
+
+      <div class="franja__controles">
+        <BaseSelect v-model="reto" :options="OPCIONES_RETO" class="franja__select" />
+        <BaseSelect v-model="semanaTexto" :options="OPCIONES_SEMANA" class="franja__select" />
+      </div>
+
       <p class="franja__resumen">{{ resumen }}</p>
     </div>
 
     <RouterLink to="/admin" class="franja__back">
-      <span aria-hidden="true">←</span>
-      Volver al panel
+      <FaIcon icon="arrow-left" /> Volver al panel
     </RouterLink>
   </div>
 </template>
@@ -85,40 +79,58 @@ const resumen = computed(() =>
 
 .franja__cuerpo {
   display: flex;
-  flex: 1 1 18rem;
+  flex: 1 1 22rem;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.45rem;
   min-width: 0;
 }
 
-.franja__text {
+.franja__eyebrow {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.5rem;
+  font-size: 0.68rem;
   font-weight: 600;
-}
-
-.franja__resumen {
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
   color: rgba($cream, 0.75);
 }
 
-.campo__select {
-  padding: 0.22rem 0.5rem;
-  border: 1px solid rgba($cream, 0.4);
-  border-radius: $radius-pill;
-  background-color: rgba($cream, 0.12);
-  font-family: inherit;
-  font-size: $text-xs;
-  font-weight: 600;
-  color: $cream;
-  cursor: pointer;
+.franja__controles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
 
-  option {
-    color: $ink;
+/* BaseSelect sobre el vino: el disparador se vuelve translúcido y crema. */
+.franja__select {
+  :deep(.sel__trigger) {
+    padding: 0.5rem 0.95rem;
+    border-color: rgba($cream, 0.35);
+    background-color: rgba($cream, 0.1);
+    font-weight: 600;
+    color: $cream;
+
+    &:hover:not(:disabled) {
+      border-color: rgba($cream, 0.7);
+      background-color: rgba($cream, 0.16);
+    }
   }
 
-  @include focus-ring;
+  :deep(.sel__flecha) {
+    border-color: $cream;
+  }
+
+  :deep(.sel__lista) {
+    z-index: 210;
+    color: $ink;
+  }
+}
+
+.franja__resumen {
+  font-size: $text-xs;
+  line-height: 1.45;
+  color: rgba($cream, 0.8);
 }
 
 .franja__back {
@@ -137,14 +149,6 @@ const resumen = computed(() =>
   }
 }
 
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-}
 
 @include reduced-motion {
   .franja__dot {

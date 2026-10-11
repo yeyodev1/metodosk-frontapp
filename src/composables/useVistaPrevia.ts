@@ -23,11 +23,17 @@ export function bloqueDeSemana(n: number): number {
   return Math.min(Math.ceil(n / 4), 3)
 }
 
-export const OPCIONES_SEMANA = Array.from({ length: SEMANAS }, (_, i) => ({
-  value: String(i + 1),
-  label: `Semana ${i + 1}`,
-  hint: `Bloque ${bloqueDeSemana(i + 1)}`,
-}))
+export const OPCIONES_SEMANA = Array.from({ length: SEMANAS }, (_, i) => {
+  const n = i + 1
+  const bloque = bloqueDeSemana(n)
+  return {
+    value: String(n),
+    label: `Semana ${n}`,
+    // La semana en que se abre un bloque se dice: es la que se quiere revisar.
+    hint: n % 4 === 1 ? `Empieza el bloque ${bloque}` : `Bloque ${bloque}`,
+    short: `Semana ${n} · Bloque ${bloque}`,
+  }
+})
 
 export function useVistaPrevia() {
   const retoId = computed(() => CHALLENGES.find((c) => c.name === reto.value)?.id ?? null)

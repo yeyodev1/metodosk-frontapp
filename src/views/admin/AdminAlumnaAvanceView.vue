@@ -22,6 +22,7 @@ import { CAMPOS_MEDIDA, ETIQUETA_ANGULO } from '@/services/onboardingService'
 import BeforeAfter from '@/components/progress/BeforeAfter.vue'
 import HiloNotas from '@/components/progress/HiloNotas.vue'
 import ConfirmModal from '@/components/ui/ConfirmModal.vue'
+import BaseSelect from '@/components/ui/BaseSelect.vue'
 import { useBodyScrollLock } from '@/composables/useBodyScroll'
 import '@/plugins/icons'
 
@@ -57,6 +58,12 @@ watch(firma, (v) => {
 /* ── Redactar ── */
 const texto = ref('')
 const tomaDel = ref<string | null>(null)
+
+/** BaseSelect trabaja con texto: "" es la nota general, sin toma. */
+const tomaTexto = computed({
+  get: () => tomaDel.value ?? '',
+  set: (v: string) => (tomaDel.value = v || null),
+})
 const enviando = ref(false)
 const confirmacion = ref('')
 const errorEnvio = ref('')
@@ -126,6 +133,16 @@ function diaDelReto(iso: string) {
   if (!primera) return 1
   return Math.round((new Date(iso).getTime() - new Date(primera.fecha).getTime()) / 86_400_000) + 1
 }
+
+const opcionesToma = computed(() => [
+  ...(ficha.value?.tomas ?? []).map((t) => ({
+    value: t.fecha,
+    label: `Día ${diaDelReto(t.fecha)}`,
+    hint: fechaLarga(t.fecha),
+    short: `Día ${diaDelReto(t.fecha)} · ${fechaLarga(t.fecha)}`,
+  })),
+  { value: '', label: 'General', hint: 'Sin una toma en particular' },
+])
 
 function valor(n: number | null, unidad: string) {
   return n === null ? '—' : `${n} ${unidad}`
@@ -264,15 +281,13 @@ onBeforeUnmount(() => window.removeEventListener('keydown', cerrarConEscape))
                 </label>
               </fieldset>
 
-              <label v-if="ficha.tomas.length" class="campo">
-                <span>Sobre la toma</span>
-                <select v-model="tomaDel">
-                  <option v-for="t in ficha.tomas" :key="t.dia" :value="t.fecha">
-                    Día {{ diaDelReto(t.fecha) }} · {{ fechaLarga(t.fecha) }}
-                  </option>
-                  <option :value="null">General, sin una toma en particular</option>
-                </select>
-              </label>
+              <BaseSelect
+                v-if="ficha.tomas.length"
+                v-model="tomaTexto"
+                :options="opcionesToma"
+                label="Sobre la toma"
+                block
+              />
 
               <label class="campo">
                 <span class="sr-only">Tu recomendación</span>
@@ -707,7 +722,6 @@ onBeforeUnmount(() => window.removeEventListener('keydown', cerrarConEscape))
   font-weight: 600;
   color: $ink-muted;
 
-  select,
   textarea {
     width: 100%;
     padding: 0.7rem 0.9rem;
