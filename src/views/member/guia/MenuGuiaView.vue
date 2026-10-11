@@ -7,27 +7,36 @@
  */
 import GuiaSeccion from '@/components/member/GuiaSeccion.vue'
 import GuiaMenu from '@/components/member/GuiaMenu.vue'
+import GuiaMeses from '@/components/member/GuiaMeses.vue'
 import { useGuia } from '@/composables/useGuia'
 
-const { guia } = useGuia()
+const { menu } = useGuia()
 </script>
 
 <template>
   <GuiaSeccion
-    v-if="guia"
+    v-if="menu"
     titulo="Tu menú de la semana"
     sub="Siete días, y se repiten durante el mes. Los de pierna van marcados."
   >
-    <GuiaMenu :dias="guia.dias" :dias-de-pierna="guia.diasDePierna" />
+    <GuiaMeses />
+
+    <!-- La clave reinicia el día elegido al cambiar de mes. -->
+    <GuiaMenu
+      :key="menu.mes"
+      :dias="menu.dias"
+      :dias-de-pierna="menu.diasDePierna"
+      :mes="menu.mes"
+    />
 
     <!--
       Varias comidas dicen "revisar video recetario" y hasta ahora no había
       dónde revisarlo. Va acá, junto al menú, que es donde se lee la frase.
     -->
     <a
-      v-if="guia.recetario"
+      v-if="menu.recetario"
       class="recetario"
-      :href="guia.recetario"
+      :href="menu.recetario"
       target="_blank"
       rel="noopener"
     >
@@ -40,9 +49,9 @@ const { guia } = useGuia()
     </a>
 
     <section class="comousar">
-      <h2 class="comousar__title">Cómo usar tu menú</h2>
+      <h2 class="comousar__title">Cómo usar tu menú del mes {{ menu.mes }}</h2>
       <ul class="comousar__lista">
-        <li v-for="r in guia.comoUsar" :key="r">{{ r }}</li>
+        <li v-for="r in menu.comoUsar" :key="r">{{ r }}</li>
       </ul>
     </section>
   </GuiaSeccion>

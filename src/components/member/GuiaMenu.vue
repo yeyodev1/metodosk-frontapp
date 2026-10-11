@@ -12,7 +12,10 @@ import { computed, ref } from 'vue'
 import type { DiaGuia } from '@/services/guiaService'
 import { fotoDelDia } from '@/composables/useGuia'
 
-const props = defineProps<{ dias: DiaGuia[]; diasDePierna: number[] }>()
+const props = withDefaults(
+  defineProps<{ dias: DiaGuia[]; diasDePierna: number[]; mes?: number }>(),
+  { mes: 1 },
+)
 
 const activo = ref(props.dias[0]?.numero ?? 1)
 
@@ -42,7 +45,7 @@ const dia = computed<DiaGuia>(
 
     <article class="tarjeta">
       <img
-        :src="fotoDelDia(activo)"
+        :src="fotoDelDia(activo, 900, mes)"
         :alt="`Uno de los platos del día ${activo}`"
         class="tarjeta__foto"
         loading="lazy"

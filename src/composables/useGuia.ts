@@ -1,5 +1,5 @@
 import { computed, ref } from 'vue'
-import guiaService, { type Guia } from '@/services/guiaService'
+import guiaService, { type Guia, type MenuGuia } from '@/services/guiaService'
 
 /**
  * La guía, cargada una sola vez para todas sus rutas.
@@ -12,10 +12,41 @@ const guias = ref<Guia[]>([])
 const cargando = ref(false)
 const error = ref('')
 const elegida = ref(0)
+/** El mes del menú que está mirando. null = el último que tiene abierto. */
+const mesElegido = ref<number | null>(null)
 let pedida = false
 
 export function useGuia() {
   const guia = computed<Guia | null>(() => guias.value[elegida.value] ?? null)
+
+  /**
+   * Los menús que tiene, del mes 1 al último abierto.
+   *
+   * El del mes 1 es la guía misma; los siguientes llegan en `menus` cuando ya
+   * le tocan. El anterior no se esconde: hay quien quiere repetir un plato.
+   */
+  const menus = computed<MenuGuia[]>(() => {
+    const g = guia.value
+    if (!g) return []
+    const primero: MenuGuia = {
+      mes: 1,
+      titulo: 'Menú del mes 1',
+      comoUsar: g.comoUsar,
+      diasDePierna: g.diasDePierna,
+      dias: g.dias,
+      tablas: g.tablas,
+      recetario: g.recetario,
+    }
+    return [primero, ...(g.menus ?? [])].sort((a, b) => a.mes - b.mes)
+  })
+
+  /** Abre en el más nuevo: es el que le toca seguir ahora. */
+  const menu = computed<MenuGuia | null>(
+    () =>
+      menus.value.find((m) => m.mes === mesElegido.value) ??
+      menus.value[menus.value.length - 1] ??
+      null,
+  )
 
   async function cargar(forzar = false) {
     if (pedida && !forzar) return
@@ -32,7 +63,7 @@ export function useGuia() {
     }
   }
 
-  return { guias, guia, elegida, cargando, error, cargar }
+  return { guias, guia, elegida, menus, menu, mesElegido, cargando, error, cargar }
 }
 
 /**
@@ -47,8 +78,10 @@ export function useGuia() {
  */
 const CLOUD_ALUMNAS = 'kr8lmvcf'
 
-export function fotoDelDia(numero: number, ancho = 900): string {
-  return `https://res.cloudinary.com/${CLOUD_ALUMNAS}/image/upload/c_fill,g_auto,w_${ancho},q_auto,f_auto/metodosk/guias/platos/dia-${numero}`
+export function fotoDelDia(numero: number, ancho = 900, mes = 1): string {
+  // Las del mes 1 quedaron sin sufijo; cada mes siguiente tiene su carpeta.
+  const carpeta = mes === 1 ? 'platos' : `platos-mes-${mes}`
+  return `https://res.cloudinary.com/${CLOUD_ALUMNAS}/image/upload/c_fill,g_auto,w_${ancho},q_auto,f_auto/metodosk/guias/${carpeta}/dia-${numero}`
 }
 
 /**

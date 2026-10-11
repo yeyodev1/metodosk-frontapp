@@ -200,14 +200,32 @@ const ETIQUETA: Record<CursoAlumna['estado'], string> = {
   cerrado: 'Se abre más adelante',
 }
 
+/**
+ * El bloque N se abre en la semana (N - 1) * 4 + 1, contada desde su compra:
+ * el bloque 2 en la semana 5. Se dice en semanas y no en meses porque es como
+ * ella cuenta su reto (la barra de arriba va por semanas).
+ */
+function semanaDeApertura(curso: CursoAlumna) {
+  return (curso.unlockMonth - 1) * 4 + 1
+}
+
 function etiqueta(curso: CursoAlumna) {
-  if (curso.estado === 'cerrado') return `Se abre en el mes ${curso.unlockMonth}`
+  if (curso.estado === 'cerrado') return `Se abre en tu semana ${semanaDeApertura(curso)}`
   return ETIQUETA[curso.estado]
 }
 
 /** Cuándo vuelve: con fecha si la hay, y si no, lo que sepamos. */
 function cuandoAbre(curso: CursoAlumna) {
-  if (curso.estado === 'cerrado') return `Se abre en el mes ${curso.unlockMonth}`
+  if (curso.estado === 'cerrado') {
+    const semana = `Se abre en tu semana ${semanaDeApertura(curso)}`
+    if (!curso.abreEl) return semana
+    const fecha = new Date(curso.abreEl).toLocaleDateString('es-EC', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    })
+    return `${semana}: el ${fecha}`
+  }
   if (!curso.abreEl) return 'Se publica pronto'
 
   const fecha = new Date(curso.abreEl)

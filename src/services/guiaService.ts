@@ -64,6 +64,22 @@ export interface Guia {
   }>
   /** El recetario en video, que las comidas citan todo el tiempo. */
   recetario: string
+  /**
+   * Los menús de los meses siguientes. El servidor manda solo los que ya
+   * tiene abiertos: el del mes 2 llega en su semana 5.
+   */
+  menus?: MenuGuia[]
+}
+
+/** El menú de un mes: lo de arriba de la guía es el del mes 1. */
+export interface MenuGuia {
+  mes: number
+  titulo: string
+  comoUsar: string[]
+  diasDePierna: number[]
+  dias: DiaGuia[]
+  tablas: TablaGuia[]
+  recetario: string
 }
 
 class GuiaService extends APIBase {
