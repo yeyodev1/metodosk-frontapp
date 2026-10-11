@@ -9,6 +9,11 @@
  * Se cargan de inmediato, no perezosas: se piden al tocar "Ver las marcas", y
  * mientras llegan el hueco late — sin eso el botón parecía no hacer nada.
  *
+ * Ampliada se ve entera, ajustada a la pantalla: antes se agrandaba al ancho y
+ * la mitad de la página quedaba fuera, con lo que "ampliar" escondía marcas.
+ * Tocarla la acerca al ancho para leer una etiqueta; tocarla otra vez la
+ * vuelve a ajustar.
+ *
  * El menú del clic derecho y el arrastre van bloqueados. No impide una captura
  * —nada lo impide— pero evita el "guardar imagen" de un gesto.
  */
@@ -19,12 +24,15 @@ defineProps<{ src: string; alt: string }>()
 const cargada = ref(false)
 const fallo = ref(false)
 const ampliada = ref(false)
+/** Acercada: al ancho, con scroll, para leer el detalle de una marca. */
+const cerca = ref(false)
 
 function alTeclado(e: KeyboardEvent) {
   if (e.key === 'Escape') ampliada.value = false
 }
 
 watch(ampliada, (abierta) => {
+  cerca.value = false
   document.body.style.overflow = abierta ? 'hidden' : ''
   if (abierta) window.addEventListener('keydown', alTeclado)
   else window.removeEventListener('keydown', alTeclado)
@@ -64,13 +72,29 @@ onBeforeUnmount(() => {
     </button>
 
     <Teleport to="body">
-      <div v-if="ampliada" class="visor" role="dialog" aria-modal="true" @click.self="ampliada = false">
+      <div
+        v-if="ampliada"
+        class="visor"
+        :class="{ 'visor--cerca': cerca }"
+        role="dialog"
+        aria-modal="true"
+        :aria-label="alt"
+        @click.self="ampliada = false"
+      >
         <button type="button" class="visor__cerrar" aria-label="Cerrar" @click="ampliada = false">
           <FaIcon icon="xmark" />
         </button>
-        <div class="visor__lienzo">
-          <img :src="src" :alt="alt" draggable="false" @contextmenu.prevent />
-        </div>
+        <img
+          :src="src"
+          :alt="alt"
+          class="visor__img"
+          draggable="false"
+          @contextmenu.prevent
+          @click="cerca = !cerca"
+        />
+        <p class="visor__pista">
+          {{ cerca ? 'Toca la imagen para verla entera' : 'Toca la imagen para acercarte' }}
+        </p>
       </div>
     </Teleport>
   </div>
@@ -154,28 +178,62 @@ img {
   color: $cream;
 }
 
-/* ── A pantalla completa ── */
+/* ── A pantalla completa: entera, ajustada al alto y al ancho ── */
 .visor {
   position: fixed;
   inset: 0;
-  z-index: 70;
+  z-index: 300;
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  padding: 3.4rem 0.8rem 1.5rem;
-  overflow-y: auto;
+  gap: 0.6rem;
+  padding: 3.6rem 0.8rem 0.9rem;
+  overflow: hidden;
   background-color: rgba($ink, 0.94);
 }
 
-.visor__lienzo img {
+.visor__img {
+  flex: 0 1 auto;
   width: auto;
-  max-width: min(900px, 100%);
   height: auto;
-  max-height: none;
+  max-width: 100%;
+  max-height: calc(100dvh - 6.2rem);
+  min-height: 0;
   border-radius: $radius-sm;
   object-fit: contain;
   opacity: 1;
   background-color: $cream;
+  cursor: zoom-in;
+}
+
+/* Acercada: al ancho de lectura, y se recorre con scroll. */
+.visor--cerca {
+  justify-content: flex-start;
+  overflow-y: auto;
+
+  .visor__img {
+    flex: none;
+    width: min(1200px, 100%);
+    max-height: none;
+    cursor: zoom-out;
+  }
+}
+
+.visor__pista {
+  flex: none;
+  font-size: $text-xs;
+  color: rgba($cream, 0.7);
+
+  .visor--cerca & {
+    position: fixed;
+    bottom: 0.9rem;
+    left: 50%;
+    padding: 0.35rem 0.8rem;
+    border-radius: $radius-pill;
+    background-color: rgba($ink, 0.82);
+    transform: translateX(-50%);
+  }
 }
 
 .visor__cerrar {
