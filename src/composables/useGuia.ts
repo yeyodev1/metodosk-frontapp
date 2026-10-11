@@ -1,5 +1,7 @@
 import { computed, ref } from 'vue'
 import guiaService, { type Guia, type MenuGuia } from '@/services/guiaService'
+import { useSessionStore } from '@/stores/session'
+import { useVistaPrevia } from '@/composables/useVistaPrevia'
 
 /**
  * La guía, cargada una sola vez para todas sus rutas.
@@ -8,7 +10,7 @@ import guiaService, { type Guia, type MenuGuia } from '@/services/guiaService'
  * pantallas y pedirla de nuevo en cada una haría cuatro llamadas para leer el
  * menú y volver. Se trae al entrar y las rutas hijas leen de acá.
  */
-const guias = ref<Guia[]>([])
+const todas = ref<Guia[]>([])
 const cargando = ref(false)
 const error = ref('')
 const elegida = ref(0)
@@ -17,7 +19,22 @@ const mesElegido = ref<number | null>(null)
 let pedida = false
 
 export function useGuia() {
-  const guia = computed<Guia | null>(() => guias.value[elegida.value] ?? null)
+  const session = useSessionStore()
+  const vista = useVistaPrevia()
+
+  /**
+   * A la administración le llegan las dos guías con todos los menús. En la
+   * vista previa se le muestra solo lo que tendría la alumna simulada: la guía
+   * de su reto y los menús hasta el mes de su semana.
+   */
+  const guias = computed<Guia[]>(() => {
+    if (!session.isAdmin) return todas.value
+    return todas.value
+      .filter((g) => !vista.retoId.value || g.audiencia === vista.retoId.value)
+      .map((g) => ({ ...g, menus: (g.menus ?? []).filter((m) => m.mes <= vista.bloque.value) }))
+  })
+
+  const guia = computed<Guia | null>(() => guias.value[elegida.value] ?? guias.value[0] ?? null)
 
   /**
    * Los menús que tiene, del mes 1 al último abierto.
@@ -54,7 +71,7 @@ export function useGuia() {
     cargando.value = true
     error.value = ''
     try {
-      guias.value = await guiaService.mias()
+      todas.value = await guiaService.mias()
     } catch (e: unknown) {
       error.value = (e as { message?: string }).message || 'No pudimos abrir tu guía.'
       pedida = false

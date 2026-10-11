@@ -11,7 +11,6 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useBodyScrollLock } from '@/composables/useBodyScroll'
 import CldImage from '@/components/ui/CldImage.vue'
-import BaseSelect from '@/components/ui/BaseSelect.vue'
 import MisRetos from '@/components/member/MisRetos.vue'
 import VideoPlayer from '@/components/ui/video/VideoPlayer.vue'
 import CountdownCard from '@/components/member/CountdownCard.vue'
@@ -20,7 +19,7 @@ import perksService from '@/services/perksService'
 import progressService, { type MiAvance } from '@/services/progressService'
 import { useVideoProgress } from '@/composables/useVideoProgress'
 import { useSessionStore } from '@/stores/session'
-import { CHALLENGES } from '@/config/site'
+import { useVistaPrevia } from '@/composables/useVistaPrevia'
 import { ETAPAS, SEMANAS } from '@/config/academy'
 
 const session = useSessionStore()
@@ -129,14 +128,8 @@ async function cargarAvance() {
   }
 }
 
-/** La cuenta de administración no compró reto: elige cuál revisar. */
-const retoPreview = ref(CHALLENGES[0]!.name)
-
-const OPCIONES_RETO = CHALLENGES.map((c) => ({
-  value: c.name,
-  label: c.name,
-  hint: c.claim,
-}))
+/** La cuenta de administración no compró reto: el reto y la semana los elige en la franja. */
+const vista = useVistaPrevia()
 
 const fin = computed(() => (user.value?.accessUntil ? new Date(user.value.accessUntil) : null))
 
@@ -149,7 +142,8 @@ const inicio = computed(() => {
 })
 
 const semana = computed(() => {
-  if (esAdmin.value || !inicio.value) return 1
+  if (esAdmin.value) return vista.semana.value
+  if (!inicio.value) return 1
   const transcurridas = Math.floor((Date.now() - inicio.value.getTime()) / (7 * 86_400_000))
   return Math.min(Math.max(transcurridas + 1, 1), SEMANAS)
 })
@@ -178,9 +172,19 @@ const nombre = computed(() => user.value?.name?.split(' ')[0] || '')
  */
 const cursosVisibles = computed<CursoAlumna[]>(() => {
   if (!esAdmin.value) return cursos.value
-  const elegido = CHALLENGES.find((c) => c.name === retoPreview.value)
-  if (!elegido) return cursos.value
-  return cursos.value.filter((c) => c.challenge === 'ambas' || c.challenge === elegido.id)
+  const retoId = vista.retoId.value
+  /*
+   * A la administración el servidor le manda todo abierto. Para que la vista
+   * previa diga la verdad, lo que la alumna simulada todavía no tiene se cierra
+   * acá igual que se le cierra a ella: con candado y "se abre en tu semana 5".
+   */
+  return cursos.value
+    .filter((c) => !retoId || c.challenge === 'ambas' || c.challenge === retoId)
+    .map((c) =>
+      c.estado === 'abierto' && !c.enlace && c.unlockMonth > vista.bloque.value
+        ? { ...c, estado: 'cerrado' as const, abreEl: null }
+        : c,
+    )
 })
 
 /**
@@ -303,17 +307,19 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', alVolver)
 <template>
   <div class="academia">
     <header class="hola">
-      <p class="hola__eyebrow">Método SK · Reto de 3 meses</p>
-      <h1 class="hola__title">
-        Hola<span v-if="nombre">, {{ nombre }}</span>
-      </h1>
-      <div v-if="esAdmin" class="hola__reto">
-        <BaseSelect
-          v-model="retoPreview"
-          :options="OPCIONES_RETO"
-          label="Ver como quien compró"
-        />
-      </div>
+      <template v-if="esAdmin">
+        <p class="hola__eyebrow">Vista previa · {{ vista.reto.value }}</p>
+        <h1 class="hola__title">Así ve su reto una alumna</h1>
+        <p class="hola__nota">
+          Es su semana {{ vista.semana.value }}. Cambia el reto o la semana en la franja de arriba.
+        </p>
+      </template>
+      <template v-else>
+        <p class="hola__eyebrow">Método SK · Reto de 3 meses</p>
+        <h1 class="hola__title">
+          Hola<span v-if="nombre">, {{ nombre }}</span>
+        </h1>
+      </template>
     </header>
 
     <!-- Cuándo abre, junto a los candados que lo hacen preguntar -->
@@ -342,7 +348,10 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', alVolver)
       </div>
       <div class="rail__pies">
         <p class="rail__pct">{{ avanceSemanas }}% del tiempo</p>
-        <p class="rail__pct rail__pct--metodo">{{ porcentajeMetodo }}% del método visto</p>
+        <!-- El avance es de la cuenta que mira: en administración no dice nada. -->
+        <p v-if="!esAdmin" class="rail__pct rail__pct--metodo">
+          {{ porcentajeMetodo }}% del método visto
+        </p>
       </div>
     </section>
 
@@ -355,7 +364,7 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', alVolver)
       <a class="cerrado__cta" href="/#precio">Ver el reto</a>
     </section>
 
-    <MisRetos :preview="esAdmin ? retoPreview : null" class="bloque-retos" />
+    <MisRetos :preview="esAdmin ? vista.reto.value : null" class="bloque-retos" />
 
     <section class="modulos">
       <h2 class="modulos__title">
@@ -590,12 +599,10 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', alVolver)
   color: $ink;
 }
 
-.hola__reto {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.7rem;
-  margin-top: 0.55rem;
+.hola__nota {
+  margin-top: 0.45rem;
+  font-size: $text-sm;
+  color: $ink-muted;
 }
 
 .bloque-cuenta {

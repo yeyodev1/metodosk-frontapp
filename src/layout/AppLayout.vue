@@ -18,6 +18,7 @@ import ConfirmModal from '@/components/ui/ConfirmModal.vue'
 import OnboardingFlow from '@/components/member/OnboardingFlow.vue'
 import AvisoVersion from '@/components/ui/AvisoVersion.vue'
 import PresaleBand from '@/components/member/PresaleBand.vue'
+import VistaPreviaFranja from '@/components/member/VistaPreviaFranja.vue'
 import TelegramBand from '@/components/member/TelegramBand.vue'
 import TiendaBand from '@/components/member/TiendaBand.vue'
 import '@/plugins/icons'
@@ -135,18 +136,9 @@ function salir() {
            Se puede cerrar y vuelve a las dos semanas (ver TiendaBand). -->
       <TiendaBand />
 
-      <!-- Vista previa: la administración sabe dónde está y cómo volver -->
+      <!-- Vista previa: a quién está mirando la administración y cómo volver -->
       <Transition name="franja">
-        <div v-if="session.isAdmin" class="franja">
-          <span class="franja__dot" aria-hidden="true" />
-          <p class="franja__text">
-            Estás viendo la app <strong>como la ve una alumna</strong>
-          </p>
-          <RouterLink to="/admin" class="franja__back">
-            <span aria-hidden="true">←</span>
-            Volver al panel
-          </RouterLink>
-        </div>
+        <VistaPreviaFranja v-if="session.isAdmin" />
       </Transition>
 
       <button
@@ -212,64 +204,6 @@ $side-w: 250px;
 }
 
 /* ── Franja de vista previa ── */
-.franja {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.55rem 1rem 0.55rem 4rem;
-  background-color: $wine;
-  color: $cream;
-  font-size: $text-xs;
-
-  @include from('lg') {
-    padding: 0.55rem clamp(1rem, 3vw, 2.5rem);
-  }
-}
-
-.franja__dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background-color: $rose-soft;
-  animation: latir 2.4s infinite;
-}
-
-.franja__text {
-  flex: 1 1 auto;
-  min-width: 0;
-
-  strong {
-    font-weight: 600;
-  }
-}
-
-.franja__back {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.28rem 0.8rem;
-  border: 1px solid rgba($cream, 0.35);
-  border-radius: $radius-pill;
-  color: $cream;
-  white-space: nowrap;
-  transition: background-color 0.28s $ease;
-
-  &:hover {
-    background-color: rgba($cream, 0.14);
-  }
-}
-
-@keyframes latir {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.35;
-  }
-}
-
 /* ── Barra lateral ── */
 .side {
   position: fixed;
@@ -589,7 +523,6 @@ $side-w: 250px;
 }
 
 @include reduced-motion {
-  .franja__dot,
   .franja-enter-active,
   .franja-leave-active,
   .veil-enter-active,

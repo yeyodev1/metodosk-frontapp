@@ -9,11 +9,18 @@
  *
  * Se puede cerrar, y se recuerda cerrada: repetirle lo mismo en cada carga a
  * quien ya lo entendió es ruido.
+ *
+ * Pasado el día de apertura desaparece sola: a quien compra después le decía
+ * "el contenido se abre el 14 de septiembre" con el reto ya abierto.
  */
-import { ref } from 'vue'
-import { PREVENTA } from '@/config/preventa'
+import { computed, ref } from 'vue'
+import { APERTURA_ISO, PREVENTA } from '@/config/preventa'
 
-defineProps<{ apertura?: string | null }>()
+const props = defineProps<{ apertura?: string | null }>()
+
+const yaAbrio = computed(
+  () => Date.now() >= new Date(props.apertura || APERTURA_ISO).getTime(),
+)
 
 const CLAVE = 'preventa_banda_cerrada'
 
@@ -40,7 +47,7 @@ function cerrar() {
 
 <template>
   <Transition name="banda">
-    <div v-if="!cerrada" class="banda">
+    <div v-if="!cerrada && !yaAbrio" class="banda">
       <span class="banda__dot" aria-hidden="true" />
       <p class="banda__texto">
         <strong>{{ PREVENTA.banda.titulo }}.</strong>

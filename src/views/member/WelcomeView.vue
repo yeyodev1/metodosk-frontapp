@@ -23,13 +23,25 @@ import perksService, { type Beneficios } from '@/services/perksService'
 import settingsService, { type Vsl } from '@/services/settingsService'
 import { useSessionStore } from '@/stores/session'
 import { BRAND } from '@/config/site'
+import { APERTURA_ISO } from '@/config/preventa'
 
 const session = useSessionStore()
 const vsl = ref<Vsl | null>(null)
 const cargando = ref(true)
 const beneficios = ref<Beneficios | null>(null)
 
-const nombre = computed(() => session.user?.name?.split(' ')[0] || '')
+// La administración no tiene nombre de alumna: "Empieza aquí, Administración" no le habla a nadie.
+const nombre = computed(() => (session.isAdmin ? '' : session.user?.name?.split(' ')[0] || ''))
+
+/**
+ * La explicación de la pre-venta ("tu reto arranca en unos días") solo sirve
+ * antes de que abra. Pasada la fecha, a quien compra hoy le decía que su reto
+ * todavía no empezaba, con todo ya abierto delante.
+ */
+const yaAbrio = computed(() => {
+  const iso = beneficios.value?.apertura || APERTURA_ISO
+  return Date.now() >= new Date(iso).getTime()
+})
 
 /** Los tres pasos de la primera semana: qué hago hoy, en concreto. */
 onMounted(async () => {
@@ -76,6 +88,10 @@ const PRIMEROS_PASOS = [
       <h1 class="hero__title">
         Empieza aquí<span v-if="nombre">, {{ nombre }}</span>
       </h1>
+      <p v-if="session.isAdmin" class="hero__admin">
+        <FaIcon icon="eye" /> Esta es la primera pantalla que ve una alumna después de comprar: el
+        video de bienvenida, sus primeros pasos y las preguntas del arranque.
+      </p>
       <p class="hero__sub">
         Antes de la primera rutina, míralo. Scarlet y Karen te cuentan cómo está armado el reto de
         3 meses, por qué el orden importa y qué esperar de cada mes. Es lo único que hay que ver
@@ -88,7 +104,7 @@ const PRIMEROS_PASOS = [
         <!-- Lo primero: cuándo abre. Contesta "¿ya pagué y no me sale nada?" -->
         <CountdownCard v-if="!cargando" :apertura="beneficios?.apertura" />
 
-        <PresaleExplainer />
+        <PresaleExplainer v-if="!cargando && !yaAbrio" />
 
         <div v-if="vsl" class="video">
           <VslPlayer
@@ -133,7 +149,8 @@ const PRIMEROS_PASOS = [
 
         <CreatorsCard />
 
-        <PerksCard v-if="beneficios" :beneficios="beneficios" />
+        <!-- Los beneficios dependen de cuándo compró: la administración no compró. -->
+        <PerksCard v-if="beneficios && !session.isAdmin" :beneficios="beneficios" />
 
         <!-- El primer día es cuando se sale a comprar: la tienda va acá, en corto. -->
         <TiendaCard compacta />
@@ -166,6 +183,18 @@ const PRIMEROS_PASOS = [
 .hero {
   max-width: 70ch;
   margin-bottom: $space-md;
+}
+
+.hero__admin {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-top: 0.8rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: $radius-md;
+  background-color: $cream;
+  font-size: $text-sm;
+  color: $ink-soft;
 }
 
 .hero__eyebrow {

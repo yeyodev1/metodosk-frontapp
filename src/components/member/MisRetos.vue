@@ -37,8 +37,13 @@ const misRetos = computed<string[]>(() => {
  * Esta tarjeta mira lo que compró la cuenta, y Scarlet y Karen no compraron
  * nada: son las dueñas del método. Sin esto, la app le ofrecía a Karen
  * comprarle su propio reto por $67.
+ *
+ * En la vista previa, en cambio, manda el reto simulado: si las dos tarjetas
+ * dicen "el tuyo" no se puede revisar lo que ve una alumna con uno solo. El
+ * botón de compra se muestra pero no compra nada.
  */
-const tengo = (c: Challenge) => session.isAdmin || misRetos.value.includes(c.name)
+const tengo = (c: Challenge) =>
+  props.preview ? misRetos.value.includes(c.name) : session.isAdmin || misRetos.value.includes(c.name)
 
 const tengoLosDos = computed(() => CHALLENGES.every(tengo))
 
@@ -113,6 +118,10 @@ function comprar(c: Challenge) {
 
           <p v-if="tengo(c)" class="reto__estado">
             <FaIcon icon="circle-play" /> Su material está abierto más abajo
+          </p>
+
+          <p v-else-if="preview" class="reto__estado">
+            <FaIcon icon="lock" /> Aquí ella ve el botón para sumarlo por {{ precio }}
           </p>
 
           <button v-else type="button" class="reto__cta" @click="comprar(c)">
