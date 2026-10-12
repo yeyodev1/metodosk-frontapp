@@ -82,7 +82,10 @@ function onSubmit() {
     </BaseButton>
 
     <p class="form__legal">
-      Al continuar aceptas recibir el acceso y las novedades del reto en tu correo.
+      Al pagar aceptas los
+      <a href="/terminos" target="_blank" rel="noopener">términos y condiciones</a>,
+      incluida la cláusula de salud y lesiones, y recibir el acceso y las novedades del
+      reto en tu correo.
     </p>
   </form>
 </template>
@@ -142,5 +145,10 @@ function onSubmit() {
 .form__legal {
   font-size: $text-xs;
   color: $ink-muted;
+
+  a {
+    color: $rose-deep;
+    text-decoration: underline;
+  }
 }
 </style>

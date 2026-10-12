@@ -8,6 +8,12 @@ const routes: Array<RouteRecordRaw> = [
     meta: { title: 'Método SK — Reto de 3 meses' },
   },
   {
+    path: '/terminos',
+    name: 'Terminos',
+    component: () => import('../views/TerminosView.vue'),
+    meta: { title: 'Términos y condiciones — Método SK' },
+  },
+  {
     // URL de respuesta de PayPhone: llega con ?id= y ?clientTransactionId=
     //
     // La Cajita ignora el responseUrl que le enviamos y usa el que esté

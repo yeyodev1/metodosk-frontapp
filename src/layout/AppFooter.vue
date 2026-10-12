@@ -17,6 +17,7 @@ const year = new Date().getFullYear()
       <nav class="footer__links" aria-label="Enlaces">
         <RouterLink to="/login">Ya compré · Entrar</RouterLink>
         <RouterLink to="/registro">No me llegó mi acceso</RouterLink>
+        <RouterLink to="/terminos">Términos y condiciones</RouterLink>
         <a
           v-for="creator in CREATORS"
           :key="creator.handle"
