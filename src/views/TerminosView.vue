@@ -10,7 +10,6 @@ import { TERMS } from '@/config/legal'
       <RouterLink to="/" class="terms__back">← {{ BRAND.name }}</RouterLink>
 
       <h1 class="terms__title">{{ TERMS.title }}</h1>
-      <p class="terms__updated">Última actualización: {{ TERMS.updatedAt }}</p>
       <p class="terms__intro">{{ TERMS.intro }}</p>
 
       <section v-for="section in TERMS.sections" :key="section.title" class="terms__section">
@@ -44,11 +43,6 @@ import { TERMS } from '@/config/legal'
 .terms__title {
   @include display($display-sm);
   color: $ink;
-}
-
-.terms__updated {
-  font-size: $text-xs;
-  color: $ink-muted;
 }
 
 .terms__intro {

@@ -11,7 +11,6 @@ export interface LegalSection {
 
 export const TERMS = {
   title: 'Términos y condiciones',
-  updatedAt: '11 de octubre de 2026',
   intro: `Estos términos regulan la compra y el uso del Reto ${BRAND.name}. Al completar el pago aceptas todo lo que se indica en esta página. Si no estás de acuerdo con alguno de los puntos, no realices la compra.`,
   sections: [
     {
