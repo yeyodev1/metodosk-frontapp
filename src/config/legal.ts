@@ -28,9 +28,10 @@ export const TERMS = {
       ],
     },
     {
-      title: '3. Pagos y reembolsos',
+      title: '3. Pagos y devoluciones',
       paragraphs: [
-        'Los pagos se procesan a través de PayPhone. Por tratarse de un producto digital con acceso inmediato al contenido, una vez entregado el acceso no se realizan reembolsos.',
+        'Los pagos se procesan a través de PayPhone. Por tratarse de un producto digital con acceso inmediato al contenido, no hay devoluciones ni reembolsos de ningún tipo, ni totales ni parciales, una vez realizado el pago.',
+        'El reto es exclusivo para mujeres. Si se detecta que un hombre se registró o usa la cuenta haciéndose pasar por mujer, se le retirará el acceso de inmediato y no se le devolverá el dinero.',
       ],
     },
     {
