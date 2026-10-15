@@ -33,6 +33,13 @@ export const PARAM = 'cupon'
 const cupon = ref<Cupon | null>(null)
 const cargando = ref(false)
 const error = ref('')
+/**
+ * true cuando el cupón llegó en el link de esta visita. Quien toca un link de
+ * descuento viene a comprar: la landing le abre el checkout de una vez.
+ */
+const desdeLink = ref(false)
+/** Por qué no entró el cupón del link, para decírselo en la página. */
+const errorLink = ref('')
 
 function recordar(code: string | null) {
   try {
@@ -99,9 +106,15 @@ export function iniciarCupon() {
   if (iniciado || typeof window === 'undefined') return
   iniciado = true
 
-  const desdeLink = new URLSearchParams(window.location.search).get(PARAM)
-  const code = desdeLink || recordado()
-  if (code) void aplicar(code, { silencioso: !desdeLink })
+  const delLink = new URLSearchParams(window.location.search).get(PARAM)
+  const code = delLink || recordado()
+  if (!code) return
+
+  void aplicar(code, { silencioso: !delLink }).then((ok) => {
+    if (!delLink) return
+    if (ok) desdeLink.value = true
+    else errorLink.value = error.value || 'Este cupón no está disponible.'
+  })
 }
 
 /** Link de compra con el cupón ya puesto. */
@@ -114,5 +127,5 @@ export function useCupon() {
   const precio = computed(() => cupon.value?.finalCents ?? PRICES.regular)
   const ahorro = computed(() => (cupon.value ? cupon.value.baseCents - cupon.value.finalCents : 0))
 
-  return { cupon, cargando, error, precio, ahorro, aplicar, quitar }
+  return { cupon, cargando, error, errorLink, desdeLink, precio, ahorro, aplicar, quitar }
 }

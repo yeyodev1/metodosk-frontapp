@@ -15,13 +15,30 @@ import TiendaSection from '@/components/home/TiendaSection.vue'
 import PricingSection from '@/components/home/PricingSection.vue'
 import PromiseSection from '@/components/home/PromiseSection.vue'
 import TimelineSection from '@/components/home/TimelineSection.vue'
-import { onMounted } from 'vue'
+import { onMounted, watch } from 'vue'
+import { useCheckout } from '@/composables/useCheckout'
 import { CHALLENGES } from '@/config/site'
 import { PRICES } from '@/config/payment'
 import { trackMeta } from '@/composables/useMetaPixel'
 import { useCupon } from '@/composables/useCupon'
 
-const { cupon } = useCupon()
+const { cupon, desdeLink } = useCupon()
+const { open } = useCheckout()
+
+/**
+ * Quien entra por un link con cupón viene a comprar: se le abre el checkout
+ * con el descuento ya puesto, una sola vez. Si lo cierra, la barra de abajo
+ * se lo sigue recordando.
+ */
+watch(
+  desdeLink,
+  (vino) => {
+    if (!vino) return
+    desdeLink.value = false
+    open()
+  },
+  { immediate: true },
+)
 
 /**
  * ViewContent: la landing ES la página del producto.

@@ -13,7 +13,7 @@ import { useCupon } from '@/composables/useCupon'
 import { formatUsd } from '@/config/payment'
 
 const { open } = useCheckout()
-const { cupon } = useCupon()
+const { cupon, errorLink } = useCupon()
 
 const vence = computed(() => {
   if (!cupon.value?.endsAt) return ''
@@ -27,7 +27,12 @@ const vence = computed(() => {
 
 <template>
   <Transition name="barra">
-    <button v-if="cupon" type="button" class="barra" @click="open()">
+    <!-- El link traía un cupón que no entró: se dice, no se calla. -->
+    <div v-if="!cupon && errorLink" class="barra barra--aviso" role="alert">
+      <span class="barra__titulo">{{ errorLink }} El precio que ves es el normal.</span>
+      <button type="button" class="barra__cerrar" @click="errorLink = ''">Entendido</button>
+    </div>
+    <button v-else-if="cupon" type="button" class="barra" @click="open()">
       <span class="barra__texto">
         <span class="barra__pct">−{{ cupon.percent }}%</span>
         <span class="barra__detalle">
@@ -79,6 +84,27 @@ const vence = computed(() => {
     outline: 2px solid $cream;
     outline-offset: -4px;
   }
+}
+
+.barra--aviso {
+  cursor: default;
+
+  &:hover {
+    background-color: $wine;
+  }
+}
+
+.barra__cerrar {
+  flex: none;
+  padding: 0.5rem 1.1rem;
+  border: 1px solid rgba($cream, 0.6);
+  border-radius: $radius-pill;
+  background: none;
+  font-family: inherit;
+  font-size: $text-xs;
+  font-weight: 700;
+  color: $cream;
+  cursor: pointer;
 }
 
 .barra__texto {
