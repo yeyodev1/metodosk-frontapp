@@ -28,6 +28,9 @@ export interface AdminOrder {
   email: string | null
   phoneNumber: string | null
   challenge: string | null
+  /** Cupón con el que se compró, si hubo. */
+  couponCode?: string | null
+  discountPercent?: number | null
   accessMonths: number | null
   accessUntil: string | null
   authorizationCode: string | null

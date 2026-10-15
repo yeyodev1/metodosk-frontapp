@@ -4,10 +4,12 @@ import { useBodyScrollLock } from '@/composables/useBodyScroll'
 import { useRouter } from 'vue-router'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import CheckoutForm from './CheckoutForm.vue'
+import CheckoutPrecio from './CheckoutPrecio.vue'
 import { useCheckout } from '@/composables/useCheckout'
 import { CHALLENGES } from '@/config/site'
 import { buildTransaction, renderPayphoneBox } from '@/composables/usePayphone'
-import { PAYMENT_MODE, PRICES, formatUsd } from '@/config/payment'
+import { PAYMENT_MODE } from '@/config/payment'
+import { useCupon } from '@/composables/useCupon'
 import { trackMeta } from '@/composables/useMetaPixel'
 import type { CheckoutContact } from './checkout'
 import paymentService from '@/services/paymentService'
@@ -16,6 +18,7 @@ import type { Challenge } from '@/config/site'
 
 const router = useRouter()
 const { isOpen, selected, needsChoice, select, close } = useCheckout()
+const { cupon, precio, quitar: quitarCupon, error: errorCupon } = useCupon()
 
 const dialog = ref<HTMLElement | null>(null)
 const body = ref<HTMLElement | null>(null)
@@ -86,7 +89,7 @@ watch(isOpen, async (open) => {
 async function submit(contact: CheckoutContact) {
   const transaction = buildTransaction({
     planId: selected.value.id,
-    amount: PRICES.regular,
+    amount: precio.value,
     reference: `Método SK · ${selected.value.name} · ${contact.name}`,
     email: contact.email,
   })
@@ -98,7 +101,7 @@ async function submit(contact: CheckoutContact) {
    * calidad del emparejamiento— aunque después no complete el pago.
    */
   trackMeta('Lead', {
-    value: PRICES.regular / 100,
+    value: precio.value / 100,
     contentIds: [selected.value.id],
     contentName: selected.value.name,
     contact: { name: contact.name, email: contact.email, phone: contact.phone },
@@ -126,13 +129,31 @@ async function submit(contact: CheckoutContact) {
    * pestaña, y entonces las credenciales se iban al correo de su tarjeta en
    * vez de al que escribió. Se espera esta llamada antes de abrir la cajita.
    */
-  await paymentService.saveIntent({
+  const intent = await paymentService.saveIntent({
     clientTransactionId: transaction.clientTransactionId,
     name: contact.name,
     email: contact.email,
     phone: contact.phone,
     challenge: selected.value.name,
+    coupon: cupon.value?.code,
   })
+
+  /**
+   * Con cupón se cobra el monto que fijó el servidor, no el que pintó el
+   * navegador. Si el cupón dejó de valer entre que lo vio y que pagó, no se
+   * le cobra el precio lleno por sorpresa: se le avisa y decide ella.
+   */
+  if (cupon.value) {
+    if (!intent.cupon) {
+      quitarCupon()
+      errorCupon.value = intent.guardado
+        ? 'Tu cupón ya no está vigente. Revisa el precio antes de seguir.'
+        : 'No pudimos validar tu cupón. Intenta de nuevo en unos segundos.'
+      return
+    }
+    transaction.amount = intent.cupon.finalCents
+    transaction.amountWithoutTax = intent.cupon.finalCents
+  }
 
   // Y en el navegador, que responde al instante cuando sí sobrevive.
   rememberCheckout(transaction.clientTransactionId, {
@@ -146,7 +167,7 @@ async function submit(contact: CheckoutContact) {
    * enseguida y una petición normal se cancelaría al descargar el documento.
    */
   trackMeta('AddPaymentInfo', {
-    value: PRICES.regular / 100,
+    value: precio.value / 100,
     contentIds: [selected.value.id],
     contentName: selected.value.name,
     contact: { name: contact.name, email: contact.email, phone: contact.phone },
@@ -193,10 +214,7 @@ async function submit(contact: CheckoutContact) {
               </div>
             </Transition>
 
-            <p class="checkout__amount">
-              {{ formatUsd(PRICES.regular) }}
-            </p>
-            <p class="checkout__note">Un solo pago por los 3 meses del reto.</p>
+            <CheckoutPrecio />
 
             <p v-if="PAYMENT_MODE === 'simulation'" class="checkout__demo">
               Modo demostración — no se realizará ningún cobro.
@@ -322,28 +340,6 @@ async function submit(contact: CheckoutContact) {
 
 .checkout__claim {
   font-size: $text-sm;
-}
-
-.checkout__amount {
-  display: flex;
-  align-items: baseline;
-  gap: 0.6rem;
-  margin-top: $space-sm;
-  font-family: $font-display;
-  font-size: clamp(2.4rem, 6vw, 3.2rem);
-  line-height: 1;
-  color: $cream;
-
-  s {
-    font-family: $font-principal;
-    font-size: $text-base;
-    color: rgba($cream, 0.45);
-  }
-}
-
-.checkout__note {
-  font-size: $text-xs;
-  color: rgba($cream, 0.55);
 }
 
 .checkout__demo {

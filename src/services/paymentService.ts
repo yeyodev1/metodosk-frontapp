@@ -62,6 +62,12 @@ export interface MiPago {
   createdAt: string
 }
 
+/** El cupón tal como lo validó el servidor al guardar el intent. */
+export interface IntentGuardado {
+  guardado: boolean
+  cupon: { code: string; percent: number; finalCents: number; baseCents: number } | null
+}
+
 class PaymentService extends APIBase {
   /** Las compras de quien tiene la sesión abierta. */
   async mine() {
@@ -88,12 +94,14 @@ class PaymentService extends APIBase {
     email?: string
     phone?: string
     challenge?: string
-  }) {
+    /** Cupón aplicado: el servidor lo revalida y fija el monto a cobrar. */
+    coupon?: string
+  }): Promise<IntentGuardado> {
     try {
-      await this.post('payments/intent', data)
-      return true
+      const { data: r } = await this.post<IntentGuardado>('payments/intent', data)
+      return { guardado: Boolean(r?.guardado), cupon: r?.cupon ?? null }
     } catch {
-      return false
+      return { guardado: false, cupon: null }
     }
   }
 

@@ -6,8 +6,10 @@ import { useCheckout } from '@/composables/useCheckout'
 import { CREATORS, HERO, PRICING } from '@/config/site'
 import { HERO_VIDEO } from '@/config/media'
 import { formatUsd } from '@/config/payment'
+import { useCupon } from '@/composables/useCupon'
 
 const { open } = useCheckout()
+const { cupon, precio } = useCupon()
 
 const poster = cldPoster(HERO_VIDEO)
 const video = ref<HTMLVideoElement | null>(null)
@@ -85,7 +87,8 @@ onMounted(async () => {
 
       <p class="hero__price">
         Un solo pago
-        <strong>{{ formatUsd(PRICING.regular) }}</strong>
+        <s v-if="cupon">{{ formatUsd(PRICING.regular) }}</s>
+        <strong>{{ formatUsd(precio) }}</strong>
         por 3 meses
       </p>
     </div>

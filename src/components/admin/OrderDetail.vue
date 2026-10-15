@@ -66,7 +66,9 @@ const campos = computed(() => {
     {
       rotulo: '¿Monto reconocido?',
       valor: o.amountVerified
-        ? 'Sí, es uno de nuestros precios'
+        ? o.couponCode
+          ? `Sí, precio con el cupón ${o.couponCode} (−${o.discountPercent}%)`
+          : 'Sí, es uno de nuestros precios'
         : 'No coincide con ningún precio nuestro',
       mono: false,
     },

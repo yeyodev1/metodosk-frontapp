@@ -4,6 +4,7 @@ import App from './App.vue'
 import router from './router'
 import { vReveal } from '@/composables/useScrollReveal'
 import { initMetaPixel } from '@/composables/useMetaPixel'
+import { iniciarCupon } from '@/composables/useCupon'
 import '@/styles/global.scss'
 
 /**
@@ -12,6 +13,9 @@ import '@/styles/global.scss'
  * que llega del anuncio— se pierde.
  */
 initMetaPixel()
+
+// El cupón del link (`/?cupon=…`) se valida apenas carga, antes del primer clic.
+iniciarCupon()
 
 const app = createApp(App)
 

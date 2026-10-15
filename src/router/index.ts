@@ -210,6 +210,13 @@ const routes: Array<RouteRecordRaw> = [
         meta: { title: 'Comentarios — Método SK', requiresAuth: true, requiresAdmin: true },
       },
       {
+        // Cupones de descuento con su link listo para compartir.
+        path: 'admin/cupones',
+        name: 'AdminCupones',
+        component: () => import('../views/admin/AdminCuponesView.vue'),
+        meta: { title: 'Cupones — Método SK', requiresAuth: true, requiresAdmin: true },
+      },
+      {
         path: 'admin/cursos',
         name: 'AdminCourses',
         component: () => import('../views/admin/AdminCoursesView.vue'),

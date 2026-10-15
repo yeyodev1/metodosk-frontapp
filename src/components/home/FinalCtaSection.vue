@@ -4,9 +4,11 @@ import { cldImage } from '@/composables/useCloudinary'
 import { useCheckout } from '@/composables/useCheckout'
 import { FINAL_CTA } from '@/config/site'
 import { PHOTO } from '@/config/photos'
-import { PRICES, formatUsd } from '@/config/payment'
+import { formatUsd } from '@/config/payment'
+import { useCupon } from '@/composables/useCupon'
 
 const { open } = useCheckout()
+const { precio } = useCupon()
 const background = cldImage(PHOTO.finalCta.id, { width: 1600, ratio: '16:9' })
 </script>
 
@@ -22,7 +24,7 @@ const background = cldImage(PHOTO.finalCta.id, { width: 1600, ratio: '16:9' })
       <BaseButton variant="light" size="lg" @click="open()">{{ FINAL_CTA.cta }}</BaseButton>
 
       <p class="final__price">
-        {{ formatUsd(PRICES.regular) }} · un solo pago por los 3 meses
+        {{ formatUsd(precio) }} · un solo pago por los 3 meses
       </p>
     </div>
   </section>

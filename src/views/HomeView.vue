@@ -8,6 +8,7 @@ import ForWhoSection from '@/components/home/ForWhoSection.vue'
 import CommunitySection from '@/components/home/CommunitySection.vue'
 import HeroSection from '@/components/home/HeroSection.vue'
 import PreventaBar from '@/components/home/PreventaBar.vue'
+import CuponBar from '@/components/home/CuponBar.vue'
 import IncludesSection from '@/components/home/IncludesSection.vue'
 import NutritionSection from '@/components/home/NutritionSection.vue'
 import TiendaSection from '@/components/home/TiendaSection.vue'
@@ -18,6 +19,9 @@ import { onMounted } from 'vue'
 import { CHALLENGES } from '@/config/site'
 import { PRICES } from '@/config/payment'
 import { trackMeta } from '@/composables/useMetaPixel'
+import { useCupon } from '@/composables/useCupon'
+
+const { cupon } = useCupon()
 
 /**
  * ViewContent: la landing ES la página del producto.
@@ -57,7 +61,9 @@ onMounted(() => {
 
     <AppFooter />
 
-    <PreventaBar />
+    <!-- Mismo lugar, una sola barra: con cupón manda el cupón. -->
+    <CuponBar />
+    <PreventaBar v-if="!cupon" />
   </div>
 </template>
 

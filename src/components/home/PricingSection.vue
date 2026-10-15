@@ -3,9 +3,11 @@ import BaseButton from '@/components/ui/BaseButton.vue'
 import SectionHeading from '@/components/ui/SectionHeading.vue'
 import { useCheckout } from '@/composables/useCheckout'
 import { formatUsd } from '@/config/payment'
+import { useCupon } from '@/composables/useCupon'
 import { CHALLENGES, PRICING } from '@/config/site'
 
 const { selectedId, select, open } = useCheckout()
+const { cupon, precio } = useCupon()
 </script>
 
 <template>
@@ -38,7 +40,11 @@ const { selectedId, select, open } = useCheckout()
 
         <aside class="pricing__box">
           <p class="pricing__regular">Un solo pago</p>
-          <p class="pricing__amount">{{ formatUsd(PRICING.regular) }}</p>
+          <p v-if="cupon" class="pricing__cupon">
+            Cupón {{ cupon.code }} · −{{ cupon.percent }}% · antes
+            <s>{{ formatUsd(PRICING.regular) }}</s>
+          </p>
+          <p class="pricing__amount">{{ formatUsd(precio) }}</p>
           <p class="pricing__save">por los 3 meses completos</p>
 
           <BaseButton size="lg" block @click="open()">{{ PRICING.cta }}</BaseButton>
@@ -164,6 +170,16 @@ const { selectedId, select, open } = useCheckout()
 .pricing__regular {
   @include eyebrow;
   color: rgba($cream, 0.5);
+
+  s {
+    color: rgba($cream, 0.5);
+  }
+}
+
+.pricing__cupon {
+  font-size: $text-xs;
+  letter-spacing: 0.04em;
+  color: $rose-soft;
 
   s {
     color: rgba($cream, 0.5);

@@ -27,6 +27,7 @@ function activo(to: string) {
 
 const ENLACES = [
   { to: '/admin', label: 'Compras', hint: 'Quién compró y cuánto', icono: 'bag-shopping' },
+  { to: '/admin/cupones', label: 'Cupones', hint: 'Descuentos con link listo', icono: 'ticket' },
   { to: '/admin/avances', label: 'Avances', hint: 'Sus fotos y tus comentarios', icono: 'camera' },
   { to: '/admin/cursos', label: 'Cursos', hint: 'La ruta del método y sus videos', icono: 'film' },
   { to: '/admin/comentarios', label: 'Comentarios', hint: 'Lo que preguntan las alumnas', icono: 'comments' },

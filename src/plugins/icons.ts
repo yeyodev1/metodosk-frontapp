@@ -58,6 +58,11 @@ import {
   faCheckDouble,
   faExpand,
   faMagnifyingGlass,
+  faTicket,
+  faCopy,
+  faLink,
+  faPause,
+  faPen,
 } from '@fortawesome/free-solid-svg-icons'
 import { faWhatsapp, faTelegram, faInstagram, faAmazon } from '@fortawesome/free-brands-svg-icons'
 
@@ -114,6 +119,11 @@ library.add(
   faCheckDouble,
   faExpand,
   faMagnifyingGlass,
+  faTicket,
+  faCopy,
+  faLink,
+  faPause,
+  faPen,
   faWhatsapp,
   faTelegram,
   faInstagram,

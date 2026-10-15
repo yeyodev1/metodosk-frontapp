@@ -4,11 +4,14 @@ import { useCheckout } from '@/composables/useCheckout'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import { validateContact, type CheckoutContact, type CheckoutErrors } from './checkout'
 import PhoneInput from './PhoneInput.vue'
-import { PAYMENT_MODE } from '@/config/payment'
+import CuponCampo from './CuponCampo.vue'
+import { PAYMENT_MODE, formatUsd } from '@/config/payment'
+import { useCupon } from '@/composables/useCupon'
 
 const emit = defineEmits<{ submit: [contact: CheckoutContact] }>()
 
 const { prefill } = useCheckout()
+const { precio } = useCupon()
 
 /**
  * Quien ya tiene sesión no vuelve a escribir sus datos.
@@ -77,8 +80,11 @@ function onSubmit() {
       <p v-if="errors.phone" id="error-phone" class="field__error">{{ errors.phone }}</p>
     </div>
 
+    <CuponCampo />
+
+    <!-- El monto en el botón: es lo último que lee antes de pagar. -->
     <BaseButton type="submit" size="lg" block>
-      {{ PAYMENT_MODE === 'simulation' ? 'Simular pago' : 'Ir a pagar' }}
+      {{ PAYMENT_MODE === 'simulation' ? 'Simular pago' : 'Ir a pagar' }} · {{ formatUsd(precio) }}
     </BaseButton>
 
     <p class="form__legal">
