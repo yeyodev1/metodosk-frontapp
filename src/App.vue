@@ -1,7 +1,3 @@
-<script setup lang="ts">
-import PayphoneCheckout from '@/components/payment/PayphoneCheckout.vue'
-</script>
-
 <template>
   <div class="app-container">
     <!--
@@ -29,7 +25,6 @@ import PayphoneCheckout from '@/components/payment/PayphoneCheckout.vue'
       </Transition>
     </RouterView>
 
-    <PayphoneCheckout />
   </div>
 </template>
 

@@ -26,9 +26,8 @@ const { cupon, desdeLink } = useCupon()
 const { open } = useCheckout()
 
 /**
- * Quien entra por un link con cupón viene a comprar: se le abre el checkout
- * con el descuento ya puesto, una sola vez. Si lo cierra, la barra de abajo
- * se lo sigue recordando.
+ * Links viejos con cupón (`/?cupon=…`): quien los toca viene a comprar, así
+ * que pasa directo a la página de compra con el descuento puesto.
  */
 watch(
   desdeLink,

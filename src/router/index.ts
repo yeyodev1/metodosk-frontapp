@@ -14,6 +14,14 @@ const routes: Array<RouteRecordRaw> = [
     meta: { title: 'Términos y condiciones — Método SK' },
   },
   {
+    // La compra, en página propia. El link de un cupón cae acá:
+    // /comprar?cupon=CODIGO (y ?reto= para llegar con el reto elegido).
+    path: '/comprar',
+    name: 'Comprar',
+    component: () => import('../views/CheckoutView.vue'),
+    meta: { title: 'Inscripción — Método SK' },
+  },
+  {
     // URL de respuesta de PayPhone: llega con ?id= y ?clientTransactionId=
     //
     // La Cajita ignora el responseUrl que le enviamos y usa el que esté

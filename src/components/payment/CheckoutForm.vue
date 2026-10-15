@@ -8,6 +8,7 @@ import CuponCampo from './CuponCampo.vue'
 import { PAYMENT_MODE, formatUsd } from '@/config/payment'
 import { useCupon } from '@/composables/useCupon'
 
+defineProps<{ enviando?: boolean }>()
 const emit = defineEmits<{ submit: [contact: CheckoutContact] }>()
 
 const { prefill } = useCheckout()
@@ -83,8 +84,11 @@ function onSubmit() {
     <CuponCampo />
 
     <!-- El monto en el botón: es lo último que lee antes de pagar. -->
-    <BaseButton type="submit" size="lg" block>
-      {{ PAYMENT_MODE === 'simulation' ? 'Simular pago' : 'Ir a pagar' }} · {{ formatUsd(precio) }}
+    <BaseButton type="submit" size="lg" block :disabled="enviando">
+      <template v-if="enviando">Preparando tu pago…</template>
+      <template v-else>
+        {{ PAYMENT_MODE === 'simulation' ? 'Simular pago' : 'Ir a pagar' }} · {{ formatUsd(precio) }}
+      </template>
     </BaseButton>
 
     <p class="form__legal">

@@ -47,7 +47,7 @@ const { cupon, precio } = useCupon()
           <p class="pricing__amount">{{ formatUsd(precio) }}</p>
           <p class="pricing__save">por los 3 meses completos</p>
 
-          <BaseButton size="lg" block @click="open()">{{ PRICING.cta }}</BaseButton>
+          <BaseButton size="lg" block @click="open(selectedId ?? undefined)">{{ PRICING.cta }}</BaseButton>
 
           <p class="pricing__note">{{ PRICING.note }}</p>
 

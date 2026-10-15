@@ -9,7 +9,7 @@
 import { nextTick, ref } from 'vue'
 import { useCupon } from '@/composables/useCupon'
 
-const { cupon, cargando, error, aplicar, quitar } = useCupon()
+const { cupon, cargando, error, errorLink, aplicar, quitar } = useCupon()
 
 const abierto = ref(false)
 const codigo = ref('')
@@ -65,7 +65,8 @@ async function enviar() {
       </button>
     </div>
 
-    <p v-if="error && !cupon" id="error-cupon" class="cupon__error">{{ error }}</p>
+    <!-- Si el cupón vino del link y falló, el aviso ya está arriba en la página. -->
+    <p v-if="error && !cupon && !errorLink" id="error-cupon" class="cupon__error">{{ error }}</p>
   </div>
 </template>
 

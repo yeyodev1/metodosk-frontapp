@@ -1,7 +1,7 @@
 /**
  * El cupón de descuento aplicado, compartido por toda la landing.
  *
- * Llega de dos formas: por el link (`/?cupon=PrimerMesSk1000`), que es como lo
+ * Llega de dos formas: por el link (`/comprar?cupon=PrimerMesSk1000`), que es como lo
  * reparte la administración en anuncios y mensajes, o escrito a mano en el
  * checkout. En los dos casos lo valida el backend: acá solo se guarda lo que
  * él respondió, para pintarlo.
@@ -59,7 +59,13 @@ function recordado(): string | null {
 }
 
 async function consultar(code: string): Promise<Cupon> {
-  const response = await fetch(`${resolveApiBaseUrl()}/payments/cupon/${encodeURIComponent(code)}`)
+  let response: Response
+  try {
+    response = await fetch(`${resolveApiBaseUrl()}/payments/cupon/${encodeURIComponent(code)}`)
+  } catch {
+    // Sin conexión: el mensaje del navegador ("Failed to fetch") no le dice nada a nadie.
+    throw new Error('No pudimos validar tu cupón. Revisa tu conexión e inténtalo de nuevo.')
+  }
   const data = await response.json().catch(() => ({}))
   if (!response.ok) throw new Error(data?.message || 'No pudimos validar el cupón')
   return data as Cupon
@@ -112,14 +118,16 @@ export function iniciarCupon() {
 
   void aplicar(code, { silencioso: !delLink }).then((ok) => {
     if (!delLink) return
-    if (ok) desdeLink.value = true
+    // Los links viejos (`/?cupon=`) caen en la landing: ella los manda a la
+    // página de compra. Los nuevos ya llegan a `/comprar`.
+    if (ok) desdeLink.value = window.location.pathname === '/'
     else errorLink.value = error.value || 'Este cupón no está disponible.'
   })
 }
 
 /** Link de compra con el cupón ya puesto. */
 export function linkConCupon(code: string, origin = window.location.origin): string {
-  return `${origin}/?${PARAM}=${encodeURIComponent(code)}`
+  return `${origin}/comprar?${PARAM}=${encodeURIComponent(code)}`
 }
 
 export function useCupon() {
