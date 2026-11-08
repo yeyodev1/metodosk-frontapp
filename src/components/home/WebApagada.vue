@@ -45,7 +45,9 @@ const id = `gru1::${Math.random().toString(36).slice(2, 7)}-${Date.now()}-${Math
 }
 
 .nf__title {
+  font-family: inherit; // el h1 global usa la serif de la marca y delataría
   font-size: 20px;
+  letter-spacing: 0;
   font-weight: 500;
   line-height: 1.4;
 }
