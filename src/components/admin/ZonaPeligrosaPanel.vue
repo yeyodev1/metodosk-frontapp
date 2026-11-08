@@ -46,11 +46,11 @@ onMounted(cargar)
       <h2 class="peligro__title">{{ apagada ? 'La web está apagada' : 'Desactivar la web' }}</h2>
       <p class="peligro__sub">
         <template v-if="apagada">
-          Quien entra a metodosk.com ve «regresa pronto» y nadie puede comprar. La app de las
+          Quien entra a metodosk.ec ve un error 404 como si la web se hubiera caído, y nadie puede comprar. La app de las
           alumnas y este panel siguen funcionando.
         </template>
         <template v-else>
-          El home deja de vender y muestra «regresa pronto» con sus fotos. Las alumnas siguen
+          El home deja de vender y muestra un error 404, como si la web ya no existiera. Las alumnas siguen
           entrando a su cuenta. Se puede volver a activar cuando quieras.
         </template>
       </p>
@@ -68,7 +68,7 @@ onMounted(cargar)
       :message="
         apagada
           ? 'El home vuelve a mostrar la venta del reto y se puede comprar otra vez.'
-          : 'Nadie va a poder comprar hasta que la reactives. El home mostrará «El Método SK regresa pronto».'
+          : 'Nadie va a poder comprar hasta que la reactives. El home mostrará un error 404, como si la web se hubiera caído.'
       "
       :confirm-label="apagada ? 'Sí, reactivar' : 'Sí, desactivar la web'"
       :danger="!apagada"
