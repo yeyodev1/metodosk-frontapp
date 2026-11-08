@@ -15,7 +15,9 @@ import TiendaSection from '@/components/home/TiendaSection.vue'
 import PricingSection from '@/components/home/PricingSection.vue'
 import PromiseSection from '@/components/home/PromiseSection.vue'
 import TimelineSection from '@/components/home/TimelineSection.vue'
-import { onMounted, watch } from 'vue'
+import WebApagada from '@/components/home/WebApagada.vue'
+import { onMounted, ref, watch } from 'vue'
+import settingsService from '@/services/settingsService'
 import { useCheckout } from '@/composables/useCheckout'
 import { CHALLENGES } from '@/config/site'
 import { PRICES } from '@/config/payment'
@@ -24,6 +26,14 @@ import { useCupon } from '@/composables/useCupon'
 
 const { cupon, desdeLink } = useCupon()
 const { open } = useCheckout()
+
+/**
+ * Apagada desde el panel: el home muestra "regresa pronto" en vez de vender.
+ * La landing se pinta de una y se reemplaza cuando el API confirma: esperar
+ * dejaría el home en blanco cada vez que el servidor arranca frío. Si el API
+ * falla, se vende: una web caída por un error nuestro sería peor.
+ */
+const webApagada = ref(false)
 
 /**
  * Links viejos con cupón (`/?cupon=…`): quien los toca viene a comprar, así
@@ -47,7 +57,10 @@ watch(
  * que Meta optimiza el tramo alto del embudo. Un PageView de /login no sirve
  * para eso.
  */
-onMounted(() => {
+onMounted(async () => {
+  webApagada.value = await settingsService.webApagada().catch(() => false)
+  // Con la web apagada no hay producto que ver: no ensuciar el remarketing.
+  if (webApagada.value) return
   trackMeta('ViewContent', {
     value: PRICES.regular / 100,
     contentIds: CHALLENGES.map((challenge) => challenge.id),
@@ -57,7 +70,9 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="vista-home">
+  <WebApagada v-if="webApagada" />
+
+  <div v-else class="vista-home">
     <AppHeader />
 
     <main>

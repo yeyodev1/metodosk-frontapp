@@ -33,6 +33,17 @@ class SettingsService extends APIBase {
   async borrarVsl() {
     await this.delete('admin/vsl')
   }
+
+  /** Público: la landing pregunta si está apagada antes de pintarse. */
+  async webApagada() {
+    const { data } = await this.get<{ apagada: boolean }>('settings/web')
+    return data.apagada
+  }
+
+  async cambiarWeb(apagada: boolean) {
+    const { data } = await this.put<{ apagada: boolean }>('admin/web', { apagada })
+    return data.apagada
+  }
 }
 
 export default new SettingsService()

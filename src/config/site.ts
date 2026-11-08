@@ -332,3 +332,13 @@ export const FINAL_CTA = {
   text: 'La diferencia no es la motivación. Es tener un método y seguirlo.',
   cta: 'Empezar el reto',
 }
+
+/** Lo que ve quien entra al home con la web apagada desde el panel. */
+export const WEB_APAGADA = {
+  eyebrow: 'Método SK',
+  title: 'Estamos preparando\nalgo nuevo.',
+  text: 'El Método SK está cerrado por ahora. Estamos afinando el próximo reto y regresamos pronto, con todo listo.',
+  nota: 'Si ya eres alumna, tu acceso sigue intacto.',
+  cta: 'Entrar a mi cuenta',
+  sigue: 'Mientras tanto, síguenos',
+}

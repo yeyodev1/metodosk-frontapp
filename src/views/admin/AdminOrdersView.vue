@@ -8,6 +8,7 @@ import RecursosPanel from '@/components/admin/RecursosPanel.vue'
 import TelegramPanel from '@/components/admin/TelegramPanel.vue'
 import AccesoExclusivoPanel from '@/components/admin/AccesoExclusivoPanel.vue'
 import NovedadPanel from '@/components/admin/NovedadPanel.vue'
+import ZonaPeligrosaPanel from '@/components/admin/ZonaPeligrosaPanel.vue'
 import { ESTADOS, ESTADOS_FILTRO, GRUPOS } from '@/components/admin/etiquetas'
 import adminService, { type OrdersResponse } from '@/services/adminService'
 import { useSessionStore } from '@/stores/session'
@@ -165,6 +166,8 @@ onMounted(load)
         </tbody>
       </table>
     </div>
+
+    <ZonaPeligrosaPanel />
   </main>
 </template>
 
