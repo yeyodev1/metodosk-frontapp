@@ -28,12 +28,14 @@ const { cupon, desdeLink } = useCupon()
 const { open } = useCheckout()
 
 /**
- * Apagada desde el panel: el home muestra "regresa pronto" en vez de vender.
- * La landing se pinta de una y se reemplaza cuando el API confirma: esperar
- * dejaría el home en blanco cada vez que el servidor arranca frío. Si el API
- * falla, se vende: una web caída por un error nuestro sería peor.
+ * Apagada desde el panel: el home se ve como un 404 en vez de vender.
+ *
+ * Hasta que el API responda no se pinta nada: si la landing apareciera un
+ * instante antes del 404, se notaría que la web sigue viva. El costo es que
+ * la landing tarda lo que tarde el API en arrancar. Si el API falla, se
+ * vende: una web caída por un error nuestro sería peor.
  */
-const webApagada = ref(false)
+const webApagada = ref<boolean | null>(null)
 
 /**
  * Links viejos con cupón (`/?cupon=…`): quien los toca viene a comprar, así
@@ -72,7 +74,7 @@ onMounted(async () => {
 <template>
   <WebApagada v-if="webApagada" />
 
-  <div v-else class="vista-home">
+  <div v-else-if="webApagada === false" class="vista-home">
     <AppHeader />
 
     <main>
